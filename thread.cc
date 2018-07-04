@@ -8,16 +8,22 @@ BaseThread::BaseThread()
 
 BaseThread::~BaseThread()
 {
-    Stop();
+
 }
 
 int BaseThread::Start()
 {
-    return uv_thread_create(&_tid, Run, this);
+    return uv_thread_create(&_tid, BaseThread::Callback, this);
 }
 
 void BaseThread::Stop()
 {
     Terminate();
     uv_thread_join(&_tid);
+}
+
+void BaseThread::Callback(void * arg)
+{
+    (BaseThread *)ptr = (BaseThread *)arg;
+    ptr->Run();
 }

@@ -10,10 +10,13 @@ public:
     virtual ~BaseThread();
     int Start();
     void Stop();
-    virtual void Run(void * arg) = 0;
+    virtual void Run() = 0;
 
     inline void Terminate() { _terminated = true; }
     inline bool IsTerminated() { return _terminated; }
+
+private:
+    static void Callback(void * arg);
 
 protected:
     uv_thread_t _tid;
