@@ -13,9 +13,7 @@ set(CMAKE_BUILD_TYPE Debug)
 # 第三方类库
 include_directories(3rd/libuv/include)
 link_directories(3rd/libuv/lib)
-if (WIN32)
-    link_libraries(libuv.lib)
-endif()
+link_libraries(uv)
 
 # 生成方案
 add_library(libcommon STATIC ${SRCS})
@@ -23,4 +21,6 @@ add_library(libcommon STATIC ${SRCS})
 # 链接第三方类库
 if (WIN32)
     target_link_libraries(libcommon libuv.lib)
+else()
+    target_link_libraries(libcommon libuv.a)
 endif()

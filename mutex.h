@@ -1,7 +1,7 @@
 #ifndef __LIB_COMMON_MUTEX_H__
 #define __LIB_COMMON_MUTEX_H__
 
-#include "3rd/libuv/include/uv.h"
+#include "uv.h"
 
 class Mutex
 {
