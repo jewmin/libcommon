@@ -24,6 +24,6 @@ void BaseThread::Stop()
 
 void BaseThread::Callback(void * arg)
 {
-    (BaseThread *)ptr = (BaseThread *)arg;
-    ptr->Run();
+    BaseThread * thread = (BaseThread *)arg;
+    thread->Run();
 }
