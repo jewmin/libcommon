@@ -8,7 +8,7 @@ BaseThread::BaseThread()
 
 BaseThread::~BaseThread()
 {
-
+    Stop();
 }
 
 int BaseThread::Start()
@@ -18,12 +18,17 @@ int BaseThread::Start()
 
 void BaseThread::Stop()
 {
-    Terminate();
-    uv_thread_join(&_tid);
+    if (_tid != 0)
+    {
+        Terminate();
+        uv_thread_join(&_tid);
+    }
 }
 
 void BaseThread::Callback(void * arg)
 {
     BaseThread * thread = (BaseThread *)arg;
     thread->Run();
+    thread->OnTerminated();
+    thread->_tid = 0;
 }
