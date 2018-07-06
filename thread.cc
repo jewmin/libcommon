@@ -25,6 +25,11 @@ void BaseThread::Stop()
     }
 }
 
+void BaseThread::OnTerminated()
+{
+
+}
+
 void BaseThread::Callback(void * arg)
 {
     BaseThread * thread = (BaseThread *)arg;

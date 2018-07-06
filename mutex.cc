@@ -1,8 +1,11 @@
 #include "mutex.h"
 
-Mutex::Mutex()
+Mutex::Mutex(bool recursive)
 {
-    uv_mutex_init(&_mutex);
+    if (recursive)
+        uv_mutex_init_recursive(&_mutex);
+    else
+        uv_mutex_init(&_mutex);
 }
 
 Mutex::~Mutex()

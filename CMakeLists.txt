@@ -1,26 +1,28 @@
-# cmakeç‰ˆæœ¬
+# cmake°æ±¾
 cmake_minimum_required(VERSION 3.9.4)
 
-# é¡¹ç›®å
-project(libcommon)
+# ÏîÄ¿Ãû
+project(libcommon VERSION 1.0.0)
 
-# æºæ–‡ä»¶
-aux_source_directory(. SRCS)
+# Include files
+FILE(GLOB all_headers "*.h*")
+source_group("include" FILES ${all_headers})
 
-# è®¾ç½®
+# Source files
+FILE(GLOB all_srcs "*.c*")
+source_group("src" FILES ${all_srcs})
+
+# ÉèÖÃ
 set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+set(CMAKE_SUPPRESS_REGENERATION true)
 
-# ç¬¬ä¸‰æ–¹ç±»åº“
+# µÚÈı·½Àà¿â
 include_directories(3rd/libuv/include)
-link_directories(3rd/libuv/lib)
-link_libraries(uv)
 
-# ç”Ÿæˆæ–¹æ¡ˆ
-add_library(libcommon STATIC ${SRCS})
+# Éú³É¾²Ì¬¿â
+add_library(libcommon STATIC ${all_headers} ${all_srcs})
 
-# é“¾æ¥ç¬¬ä¸‰æ–¹ç±»åº“
-if (WIN32)
-    target_link_libraries(libcommon libuv.lib)
-else()
-    target_link_libraries(libcommon libuv.a)
-endif()
+# Ìí¼Óµ¥Ôª²âÊÔÏîÄ¿
+add_subdirectory(test)

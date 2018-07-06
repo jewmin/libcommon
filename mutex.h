@@ -6,8 +6,8 @@
 class Mutex
 {
 public:
-    Mutex();
-    ~Mutex();
+    explicit Mutex(bool recursive = false);
+    virtual ~Mutex();
     void Lock();
     void Unlock();
     int TryLock();
