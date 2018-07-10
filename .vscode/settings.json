@@ -1,6 +1,15 @@
 {
     "files.associations": {
-        "xmemory0": "c"
+        "xmemory0": "c",
+        "queue": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "vector": "cpp",
+        "xstring": "cpp",
+        "map": "cpp",
+        "xtree": "cpp",
+        "iosfwd": "cpp",
+        "xutility": "cpp"
     },
     "files.encoding": "gbk"
 }

@@ -9,7 +9,7 @@ public:
     BaseThread();
     virtual ~BaseThread();
     int Start();
-    void Stop();
+    virtual void Stop();
 
     inline void Terminate() { _terminated = true; }
     inline bool IsTerminated() { return _terminated; }

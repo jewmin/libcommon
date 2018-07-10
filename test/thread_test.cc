@@ -24,3 +24,13 @@ TEST(ThreadTest, thread_loop)
     EXPECT_GT(MockLoopThread::ThreadCalled, 1);
     EXPECT_EQ(MockLoopThread::ThreadTerminated, 1);
 }
+
+TEST(ThreadTest, thread_stop)
+{
+    MockStopThread * pd = new MockStopThread();
+    pd->Start();
+    pd->Stop();
+    BaseThread * pb = new MockStopThread();
+    pb->Start();
+    pb->Stop();
+}

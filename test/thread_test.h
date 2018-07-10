@@ -44,4 +44,28 @@ protected:
     }
 };
 
+class MockStopThread : public BaseThread
+{
+public:
+    void Stop()
+    {
+        Terminate();
+        BaseThread::Stop();
+    }
+
+protected:
+    virtual void Run()
+    {
+        while (!IsTerminated())
+        {
+            Sleep(10);
+        }
+    }
+
+    virtual void OnTerminated()
+    {
+        
+    }
+};
+
 #endif
