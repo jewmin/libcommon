@@ -28,13 +28,13 @@ public:
     inline void Lock()
     {
         if (_mutex)
-            _mutex.Lock();
+            _mutex->Lock();
     }
 
     inline void Unlock()
     {
         if (_mutex)
-            _mutex.Unlock();
+            _mutex->Unlock();
     }
 
     inline void Push(const T & data)

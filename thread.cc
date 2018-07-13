@@ -8,7 +8,7 @@ BaseThread::BaseThread()
 
 BaseThread::~BaseThread()
 {
-    Stop();
+
 }
 
 int BaseThread::Start()
