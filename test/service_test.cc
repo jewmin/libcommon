@@ -5,6 +5,6 @@ TEST(ServiceTest, RunLoop)
 {
     BaseService service;
     service.Start();
-    Sleep(300000);
+    Sleep(10);
     service.Stop();
 }

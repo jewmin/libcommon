@@ -7,6 +7,8 @@
 
 class BaseService : public BaseThread
 {
+    typedef BaseThread Super;
+
 public:
     explicit BaseService(ILog * logger = nullptr);
     virtual ~BaseService();
@@ -19,7 +21,8 @@ protected:
     static void AsyncCallback(uv_async_t * handle);
     static void WalkCallback(uv_handle_t * handle, void * arg);
 
-private:
+protected:
+    uv_loop_t * _loop;
     uv_async_t _stop_handle;
     ILog * _logger;
 };

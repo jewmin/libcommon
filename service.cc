@@ -3,27 +3,26 @@
 BaseService::BaseService(ILog * logger)
 {
     _logger = logger;
+    _loop = uv_loop_new();
 }
 
 BaseService::~BaseService()
 {
-
+    uv_loop_delete(_loop);
 }
 
 void BaseService::Stop()
 {
     uv_async_send(&_stop_handle);
-    BaseThread::Stop();
+    Super::Stop();
 }
 
 void BaseService::Run()
 {
-    uv_loop_t * loop = uv_loop_new();
-    uv_async_init(loop, &_stop_handle, BaseService::AsyncCallback);
-    uv_run(loop, UV_RUN_DEFAULT);
-    uv_walk(loop, BaseService::WalkCallback, NULL);
-    uv_run(loop, UV_RUN_DEFAULT);
-    uv_loop_delete(loop);
+    uv_async_init(_loop, &_stop_handle, BaseService::AsyncCallback);
+    uv_run(_loop, UV_RUN_DEFAULT);
+    uv_walk(_loop, BaseService::WalkCallback, NULL);
+    uv_run(_loop, UV_RUN_DEFAULT);
 }
 
 void BaseService::OnTerminated()
