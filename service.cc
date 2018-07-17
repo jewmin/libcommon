@@ -2,33 +2,33 @@
 
 BaseService::BaseService(ILog * logger)
 {
-    _logger = logger;
-    _loop = uv_loop_new();
+    this->_logger = logger;
+    this->_loop = uv_loop_new();
 }
 
 BaseService::~BaseService()
 {
-    uv_loop_delete(_loop);
+    uv_loop_delete(this->_loop);
 }
 
 void BaseService::Stop()
 {
-    uv_async_send(&_stop_handle);
+    uv_async_send(&this->_stop_handle);
     Super::Stop();
 }
 
 void BaseService::Run()
 {
-    uv_async_init(_loop, &_stop_handle, BaseService::AsyncCallback);
-    uv_run(_loop, UV_RUN_DEFAULT);
-    uv_walk(_loop, BaseService::WalkCallback, NULL);
-    uv_run(_loop, UV_RUN_DEFAULT);
+    uv_async_init(this->_loop, &this->_stop_handle, BaseService::AsyncCallback);
+    uv_run(this->_loop, UV_RUN_DEFAULT);
+    uv_walk(this->_loop, BaseService::WalkCallback, NULL);
+    uv_run(this->_loop, UV_RUN_DEFAULT);
 }
 
 void BaseService::OnTerminated()
 {
-    if (_logger)
-        _logger->Info("BaseService Terminated");
+    if (this->_logger)
+        this->_logger->Info("BaseService Terminated");
 }
 
 void BaseService::AsyncCallback(uv_async_t * handle)

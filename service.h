@@ -10,7 +10,7 @@ class BaseService : public BaseThread
     typedef BaseThread Super;
 
 public:
-    explicit BaseService(ILog * logger = nullptr);
+    explicit BaseService(ILog * logger = NULL);
     virtual ~BaseService();
     virtual void Stop();
 

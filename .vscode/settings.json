@@ -9,7 +9,9 @@
         "map": "cpp",
         "xtree": "cpp",
         "iosfwd": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "xlocale": "cpp",
+        "system_error": "cpp"
     },
     "files.encoding": "gbk"
 }
