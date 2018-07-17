@@ -10,7 +10,7 @@ class TcpConnection : public TcpService
     typedef TcpService Super;
 
 public:
-    TcpConnection(TcpServer & server);
+    explicit TcpConnection(TcpServer & server);
     virtual ~TcpConnection();
 
 protected:

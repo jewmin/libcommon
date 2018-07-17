@@ -63,25 +63,25 @@ void TcpClient::OnTick()
 void TcpClient::OnConnected()
 {
     if (this->_logger)
-        this->_logger->Debug("Tcp Server Connected");
+        this->_logger->Debug("Tcp Client Connected");
 }
 
 void TcpClient::OnConnectFailed()
 {
     if (this->_logger)
-        this->_logger->Debug("Tcp Server Connect Failed");
+        this->_logger->Debug("Tcp Client Connect Failed");
 }
 
 void TcpClient::OnDisconnect()
 {
     if (this->_logger)
-        this->_logger->Debug("Tcp Server Disconnect");
+        this->_logger->Debug("Tcp Client Disconnect");
 }
 
 void TcpClient::OnDisconnected()
 {
     if (this->_logger)
-        this->_logger->Debug("Tcp Server Disconnected");
+        this->_logger->Debug("Tcp Client Disconnected");
 }
 
 void TcpClient::OnRecv(const char * data, int nread)
