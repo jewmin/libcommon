@@ -20,7 +20,7 @@ void BaseThread::Stop()
 {
     if (_tid != 0)
     {
-        Terminate();
+        this->Terminate();
         uv_thread_join(&_tid);
     }
 }

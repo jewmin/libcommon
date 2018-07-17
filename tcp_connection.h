@@ -7,6 +7,7 @@
 class TcpConnection : public TcpService
 {
     friend class TcpService;
+    friend class TcpServer;
     typedef TcpService Super;
 
 public:

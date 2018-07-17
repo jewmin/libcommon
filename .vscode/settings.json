@@ -11,7 +11,13 @@
         "iosfwd": "cpp",
         "xutility": "cpp",
         "xlocale": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "forward_list": "cpp",
+        "initializer_list": "cpp",
+        "ios": "cpp",
+        "xiosbase": "cpp",
+        "set": "cpp",
+        "type_traits": "cpp"
     },
     "files.encoding": "gbk"
 }

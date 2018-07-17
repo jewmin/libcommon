@@ -1,4 +1,5 @@
 #include "tcp_server.h"
+#include "tcp_connection.h"
 
 TcpServer::TcpServer(const char * name, uint32_t tick, uint32_t max_out_buffer_size, uint32_t max_in_buffer_size, ILog * logger)
     : Super(logger)
@@ -12,7 +13,7 @@ TcpServer::TcpServer(const char * name, uint32_t tick, uint32_t max_out_buffer_s
 
 TcpServer::~TcpServer()
 {
-
+    this->_connection_map.clear();
 }
 
 void TcpServer::Listen(const char * host, uint16_t port)
@@ -53,41 +54,8 @@ void TcpServer::Listen(const char * host, uint16_t port)
         this->_logger->Error("TCP Server Listen Error: %s", uv_strerror(r));
 }
 
-void TcpServer::OnClosed()
-{
-
-}
-
 void TcpServer::OnTick()
 {
-    
-}
-
-void TcpServer::OnConnected()
-{
-    if (this->_logger)
-        this->_logger->Debug("Tcp Server Connected");
-}
-
-void TcpServer::OnConnectFailed()
-{
-    if (this->_logger)
-        this->_logger->Debug("Tcp Server Connect Failed");
-}
-
-void TcpServer::OnDisconnect()
-{
-    if (this->_logger)
-        this->_logger->Debug("Tcp Server Disconnect");
-}
-
-void TcpServer::OnDisconnected()
-{
-    if (this->_logger)
-        this->_logger->Debug("Tcp Server Disconnected");
-}
-
-void TcpServer::OnRecv(const char * data, int nread)
-{
-    
+    for (ConnectionMapIter it = this->_connection_map.begin(); it != this->_connection_map.end(); it++)
+        it->second->OnTick();
 }
