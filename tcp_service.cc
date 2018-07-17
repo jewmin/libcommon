@@ -35,19 +35,20 @@ void TcpService::ConnectionCallback(uv_stream_t * server, int status)
     TcpConnection * connection = service->NewConnection(*service);
     if (uv_accept(server, &connection->_handle.stream) == 0)
     {
-        uv_read_start(&connection->_handle.stream, TcpService::AllocBufferCallback, TcpService::ReadCallback);
         connection->OnConnected();
+        uv_read_start(&connection->_handle.stream, TcpService::AllocBufferCallback, TcpService::ReadCallback);
     }
     else
     {
+        connection->OnDisconnect();
         uv_close(&connection->_handle.handle, TcpService::CloseCallback);
     }
 }
 
 void TcpService::CloseCallback(uv_handle_t * handle)
 {
-    TcpConnection * connection = (TcpConnection *)handle->data;
-    connection->Close();
+    TcpService * service = (TcpService *)handle->data;
+    service->OnClosed();
 }
 
 void TcpService::ConnectCallback(uv_connect_t * req, int status)
@@ -63,28 +64,32 @@ void TcpService::ConnectCallback(uv_connect_t * req, int status)
         return;
     }
 
-    uv_read_start(&service->_handle.stream, TcpService::AllocBufferCallback, TcpService::ReadCallback);
     service->OnConnected();
+    uv_read_start(&service->_handle.stream, TcpService::AllocBufferCallback, TcpService::ReadCallback);
 }
 
 void TcpService::AllocBufferCallback(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf)
 {
-
+    buf->base = (char *)malloc(suggested_size);
+    buf->len = suggested_size;
 }
 
-// void TcpService::ReadCallback(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
-// {
-//     TcpService * service = (TcpService *)stream->data;
+void TcpService::ReadCallback(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
+{
+    TcpService * service = (TcpService *)stream->data;
 
-//     if (nread < 0)
-//     {
-//         if (service->_logger)
-//             service->_logger->Error("TCP Socket Read Error: %s", uv_strerror(nread));
+    if (nread < 0)
+    {
+        if (nread != UV_EOF && service->_logger)
+            service->_logger->Error("TCP Socket Read Error: %s", uv_strerror(nread));
         
-//         return;
-//     }
-//     else if (nread > 0)
-//     {
-//         service->OnRecv(buf->base, nread);
-//     }
-// }
+        service->OnDisconnect();
+        uv_close(&service->_handle.handle, TcpService::CloseCallback);
+        free(buf->base);
+        return;
+    }
+
+    if (nread > 0)
+        service->OnRecv(buf->base, nread);
+    free(buf->base);
+}

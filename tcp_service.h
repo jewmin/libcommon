@@ -12,6 +12,8 @@ public:
     virtual ~TcpService();
 
 protected:
+    //已关闭连接函数，子类继承
+    virtual void OnClosed() = 0;
     //定时器处理函数，子类继承
     virtual void OnTick() = 0;
     //连接成功通知函数，子类继承

@@ -50,32 +50,41 @@ void TcpClient::Connect(const char * host, uint16_t port)
         this->_logger->Error("TCP Client Connect Error: %s", uv_strerror(r));
 }
 
+void TcpClient::OnClosed()
+{
+    this->OnDisconnected();
+}
+
 void TcpClient::OnTick()
 {
-
+    
 }
 
 void TcpClient::OnConnected()
 {
-
+    if (this->_logger)
+        this->_logger->Debug("Tcp Server Connected");
 }
 
 void TcpClient::OnConnectFailed()
 {
-
+    if (this->_logger)
+        this->_logger->Debug("Tcp Server Connect Failed");
 }
 
 void TcpClient::OnDisconnect()
 {
-
+    if (this->_logger)
+        this->_logger->Debug("Tcp Server Disconnect");
 }
 
 void TcpClient::OnDisconnected()
 {
-
+    if (this->_logger)
+        this->_logger->Debug("Tcp Server Disconnected");
 }
 
 void TcpClient::OnRecv(const char * data, int nread)
 {
-
+    
 }

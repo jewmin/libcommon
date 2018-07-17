@@ -53,32 +53,41 @@ void TcpServer::Listen(const char * host, uint16_t port)
         this->_logger->Error("TCP Server Listen Error: %s", uv_strerror(r));
 }
 
-void TcpServer::OnTick()
+void TcpServer::OnClosed()
 {
 
+}
+
+void TcpServer::OnTick()
+{
+    
 }
 
 void TcpServer::OnConnected()
 {
-
+    if (this->_logger)
+        this->_logger->Debug("Tcp Server Connected");
 }
 
 void TcpServer::OnConnectFailed()
 {
-
+    if (this->_logger)
+        this->_logger->Debug("Tcp Server Connect Failed");
 }
 
 void TcpServer::OnDisconnect()
 {
-
+    if (this->_logger)
+        this->_logger->Debug("Tcp Server Disconnect");
 }
 
 void TcpServer::OnDisconnected()
 {
-
+    if (this->_logger)
+        this->_logger->Debug("Tcp Server Disconnected");
 }
 
 void TcpServer::OnRecv(const char * data, int nread)
 {
-
+    
 }
