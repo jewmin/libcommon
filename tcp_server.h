@@ -18,6 +18,7 @@ public:
     virtual ~TcpServer();
 
     int Listen(const char * host, uint16_t port);
+    void ShutdownAllConnections();
 
 protected:
     //创建连接函数

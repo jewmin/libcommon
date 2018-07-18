@@ -15,6 +15,18 @@ TcpService::~TcpService()
 
 }
 
+void TcpService::OnEstablished()
+{
+    this->OnConnected();
+    uv_read_start(&this->_handle.stream, TcpService::AllocBufferCallback, TcpService::ReadCallback);
+}
+
+void TcpService::Close()
+{
+    this->OnClosing();
+    uv_close(&this->_handle.handle, TcpService::CloseCallback);
+}
+
 void TcpService::OnClosing()
 {
 
@@ -76,13 +88,11 @@ void TcpService::ConnectionCallback(uv_stream_t * server, int status)
     TcpConnection * connection = service->NewConnection(*service);
     if (uv_accept(server, &connection->_handle.stream) == 0)
     {
-        connection->OnConnected();
-        uv_read_start(&connection->_handle.stream, TcpService::AllocBufferCallback, TcpService::ReadCallback);
+        connection->OnEstablished();
     }
     else
     {
-        connection->OnClosing();
-        uv_close(&connection->_handle.handle, TcpService::CloseCallback);
+        connection->Close();
     }
 }
 
@@ -105,8 +115,7 @@ void TcpService::ConnectCallback(uv_connect_t * req, int status)
         return;
     }
 
-    service->OnConnected();
-    uv_read_start(&service->_handle.stream, TcpService::AllocBufferCallback, TcpService::ReadCallback);
+    service->OnEstablished();
 }
 
 void TcpService::AllocBufferCallback(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf)
@@ -126,8 +135,7 @@ void TcpService::ReadCallback(uv_stream_t * stream, ssize_t nread, const uv_buf_
         if (nread != UV_EOF && service->_logger)
             service->_logger->Error("TCP Socket Read Error: %s", uv_strerror(nread));
         
-        service->OnClosing();
-        uv_close(&service->_handle.handle, TcpService::CloseCallback);
+        
         free(buf->base);
         return;
     }

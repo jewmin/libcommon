@@ -12,6 +12,11 @@ public:
     virtual ~TcpService();
 
 protected:
+    //已建立连接
+    void OnEstablished();
+    //关闭连接
+    void Close();
+
     //正在关闭事件通知函数
     virtual void OnClosing();
     //已关闭事件通知函数

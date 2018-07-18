@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include <deque>
 #include <queue>
+#include <vector>
+#include "time.h"
 
 TEST(StdTest, deque)
 {
@@ -17,13 +19,29 @@ TEST(StdTest, deque)
 
 TEST(StdTest, queue)
 {
-	std::queue<int> a;
-	a.push(10);
-	a.push(20);
-	a.push(30);
-	a.front();
-	a.pop();
-	a.size();
-	a.back();
-	a.empty();
+    std::queue<int> a;
+    a.push(10);
+    a.push(20);
+    a.push(30);
+    a.front();
+    a.pop();
+    a.size();
+    a.back();
+    a.empty();
+}
+
+TEST(StdTest, vector)
+{
+    std::vector<int> vec;
+    for (int i = 0; i < 100; i++)
+        vec.push_back(i);
+
+    std::vector<int> dst_vec;
+    for (int i = -1; i > -10; i--)
+        dst_vec.push_back(i);
+
+    clock_t start = clock();
+    dst_vec.insert(dst_vec.end(), vec.begin(), vec.end());
+    clock_t end = clock();
+    printf("std::vector insert run time: %ld\n", end - start);
 }
