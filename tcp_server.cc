@@ -2,13 +2,15 @@
 #include "tcp_connection.h"
 
 TcpServer::TcpServer(const char * name, uint32_t tick, uint32_t max_out_buffer_size, uint32_t max_in_buffer_size, ILog * logger)
-    : Super(logger)
+    : Super(max_in_buffer_size, logger)
 {
     strncpy(this->_name, name, sizeof(this->_name));
-    this->_tick = tick;
-    this->_max_in_buffer_size = max_in_buffer_size;
     this->_max_out_buffer_size = max_out_buffer_size;
+    this->_tick = tick;
     this->_tick_handle.data = this;
+
+    uv_tcp_init(this->_loop, &this->_handle.tcp);
+    uv_timer_init(this->_loop, &this->_tick_handle);
 }
 
 TcpServer::~TcpServer()
@@ -16,7 +18,7 @@ TcpServer::~TcpServer()
     this->_connection_map.clear();
 }
 
-void TcpServer::Listen(const char * host, uint16_t port)
+int TcpServer::Listen(const char * host, uint16_t port)
 {
     strncpy(this->_host, host, sizeof(this->_host));
     this->_port = port;
@@ -33,18 +35,12 @@ void TcpServer::Listen(const char * host, uint16_t port)
         r = uv_ip6_addr(host, port, &s.addr6);
 
     if (r == 0)
-        r = uv_tcp_init(this->_loop, &this->_handle.tcp);
-
-    if (r == 0)
         r = uv_tcp_bind(&this->_handle.tcp, &s.addr, 0);
 
     if (r == 0)
         r = uv_listen(&this->_handle.stream, 128, TcpService::ConnectionCallback);
 
-    if (r == 0)
-        r = uv_timer_init(this->_loop, &this->_tick_handle);
-    
-    if (r == 0)
+    if (r == 0 && this->_tick > 0)
         r = uv_timer_start(&this->_tick_handle, TcpService::TimerCallback, this->_tick, this->_tick);
 
     if (r == 0)
@@ -52,10 +48,22 @@ void TcpServer::Listen(const char * host, uint16_t port)
 
     if (r != 0 && this->_logger)
         this->_logger->Error("TCP Server Listen Error: %s", uv_strerror(r));
+
+    return r;
+}
+
+TcpConnection * TcpServer::NewConnection(TcpServer & server)
+{
+    return new TcpConnection(server);
+}
+
+void TcpServer::DestroyConnection(TcpConnection * connection)
+{
+    delete connection;
 }
 
 void TcpServer::OnTick()
 {
-    for (ConnectionMapIter it = this->_connection_map.begin(); it != this->_connection_map.end(); it++)
-        it->second->OnTick();
+    for (auto & pairs : this->_connection_map)
+        pairs.second->OnTick();
 }

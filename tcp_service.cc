@@ -3,13 +3,54 @@
 #include "tcp_client.h"
 #include "tcp_connection.h"
 
-TcpService::TcpService(ILog * logger)
+TcpService::TcpService(uint32_t max_in_buffer_size, ILog * logger)
     : Super(logger)
 {
+    this->_max_in_buffer_size = max_in_buffer_size;
     this->_handle.handle.data = this;
 }
 
 TcpService::~TcpService()
+{
+
+}
+
+void TcpService::OnClosing()
+{
+
+}
+
+void TcpService::OnClosed()
+{
+
+}
+
+void TcpService::OnTick()
+{
+
+}
+
+void TcpService::OnConnected()
+{
+
+}
+
+void TcpService::OnConnectFailed()
+{
+
+}
+
+void TcpService::OnDisconnect()
+{
+
+}
+
+void TcpService::OnDisconnected()
+{
+
+}
+
+void TcpService::OnRecv(const char * data, int nread)
 {
 
 }
@@ -40,7 +81,7 @@ void TcpService::ConnectionCallback(uv_stream_t * server, int status)
     }
     else
     {
-        connection->OnDisconnect();
+        connection->OnClosing();
         uv_close(&connection->_handle.handle, TcpService::CloseCallback);
     }
 }
@@ -70,8 +111,10 @@ void TcpService::ConnectCallback(uv_connect_t * req, int status)
 
 void TcpService::AllocBufferCallback(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf)
 {
-    buf->base = (char *)malloc(suggested_size);
-    buf->len = suggested_size;
+    TcpService * service = (TcpService *)handle->data;
+
+    buf->base = (char *)malloc(service->_max_in_buffer_size);
+    buf->len = service->_max_in_buffer_size;
 }
 
 void TcpService::ReadCallback(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
@@ -83,7 +126,7 @@ void TcpService::ReadCallback(uv_stream_t * stream, ssize_t nread, const uv_buf_
         if (nread != UV_EOF && service->_logger)
             service->_logger->Error("TCP Socket Read Error: %s", uv_strerror(nread));
         
-        service->OnDisconnect();
+        service->OnClosing();
         uv_close(&service->_handle.handle, TcpService::CloseCallback);
         free(buf->base);
         return;
@@ -91,5 +134,6 @@ void TcpService::ReadCallback(uv_stream_t * stream, ssize_t nread, const uv_buf_
 
     if (nread > 0)
         service->OnRecv(buf->base, nread);
+
     free(buf->base);
 }

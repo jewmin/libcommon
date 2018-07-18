@@ -31,6 +31,7 @@ void BaseService::PostMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uin
     msg.param4 = param4;
     msg.param5 = param5;
     this->_msg_queue.Push(msg);
+    uv_async_send(&this->_msg_handle);
 }
 
 void BaseService::Run()
@@ -44,8 +45,7 @@ void BaseService::Run()
 
 void BaseService::OnTerminated()
 {
-    if (this->_logger)
-        this->_logger->Info("BaseService Terminated");
+
 }
 
 void BaseService::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5)

@@ -3,7 +3,7 @@
 BaseThread::BaseThread()
 {
     _tid = 0;
-    _terminated = false;
+    _terminated = true;
 }
 
 BaseThread::~BaseThread()
@@ -33,6 +33,7 @@ void BaseThread::OnTerminated()
 void BaseThread::Callback(void * arg)
 {
     BaseThread * thread = (BaseThread *)arg;
+    thread->_terminated = false;
     thread->Run();
     thread->OnTerminated();
     thread->_tid = 0;

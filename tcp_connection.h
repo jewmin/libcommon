@@ -15,19 +15,21 @@ public:
     virtual ~TcpConnection();
 
 protected:
-    //已关闭连接函数，子类继承
+    //正在关闭事件通知函数
+    virtual void OnClosing();
+    //已关闭事件通知函数
     virtual void OnClosed();
-    //定时器处理函数，子类继承
+    //定时器处理函数
     virtual void OnTick();
-    //连接成功通知函数，子类继承
+    //连接成功事件通知函数
     virtual void OnConnected();
-    //连接失败通知函数，子类继承
+    //连接失败事件通知函数
     virtual void OnConnectFailed();
-    //断开连接通知函数，子类继承
+    //断开连接事件通知函数
     virtual void OnDisconnect();
-    //已断开连接通知函数，子类继承
+    //已断开连接事件通知函数
     virtual void OnDisconnected();
-    //接收到数据，通知处理函数，子类继承
+    //数据接收处理事件通知函数
     virtual void OnRecv(const char * data, int nread);
 
 protected:

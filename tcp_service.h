@@ -8,24 +8,26 @@ class TcpService : public BaseService
     typedef BaseService Super;
 
 public:
-    explicit TcpService(ILog * logger = NULL);
+    explicit TcpService(uint32_t max_in_buffer_size, ILog * logger = NULL);
     virtual ~TcpService();
 
 protected:
-    //已关闭连接函数，子类继承
-    virtual void OnClosed() = 0;
-    //定时器处理函数，子类继承
-    virtual void OnTick() = 0;
-    //连接成功通知函数，子类继承
-    virtual void OnConnected() = 0;
-    //连接失败通知函数，子类继承
-    virtual void OnConnectFailed() = 0;
-    //断开连接通知函数，子类继承
-    virtual void OnDisconnect() = 0;
-    //已断开连接通知函数，子类继承
-    virtual void OnDisconnected() = 0;
-    //接收到数据，通知处理函数，子类继承
-    virtual void OnRecv(const char * data, int nread) = 0;
+    //正在关闭事件通知函数
+    virtual void OnClosing();
+    //已关闭事件通知函数
+    virtual void OnClosed();
+    //定时器处理函数
+    virtual void OnTick();
+    //连接成功事件通知函数
+    virtual void OnConnected();
+    //连接失败事件通知函数
+    virtual void OnConnectFailed();
+    //断开连接事件通知函数
+    virtual void OnDisconnect();
+    //已断开连接事件通知函数
+    virtual void OnDisconnected();
+    //数据接收处理事件通知函数
+    virtual void OnRecv(const char * data, int nread);
 
     //libuv回调处理函数
     static void TimerCallback(uv_timer_t * handle);
@@ -41,6 +43,8 @@ protected:
         uv_stream_t stream;
         uv_tcp_t tcp;
     } _handle;
+
+    uint32_t _max_in_buffer_size;
 };
 
 #endif
