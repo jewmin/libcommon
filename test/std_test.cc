@@ -33,15 +33,15 @@ TEST(StdTest, queue)
 TEST(StdTest, vector)
 {
     std::vector<int> vec;
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 10000; i++)
         vec.push_back(i);
 
     std::vector<int> dst_vec;
-    for (int i = -1; i > -10; i--)
+    for (int i = -1; i > -10000; i--)
         dst_vec.push_back(i);
 
     clock_t start = clock();
     dst_vec.insert(dst_vec.end(), vec.begin(), vec.end());
     clock_t end = clock();
-    printf("std::vector insert run time: %ld\n", end - start);
+    printf("std::vector insert run time: %ld, count: %d\n", end - start, dst_vec.size());
 }

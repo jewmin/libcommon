@@ -11,7 +11,7 @@ public:
 
     MockService() { recv_count = 0; }
     virtual ~MockService() {}
-    virtual void OnRecvMsg() { recv_count++; }
+	virtual void OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5) { recv_count++; }
 };
 
 #endif

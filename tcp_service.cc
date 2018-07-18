@@ -88,6 +88,7 @@ void TcpService::ConnectionCallback(uv_stream_t * server, int status)
     TcpConnection * connection = service->NewConnection(*service);
     if (uv_accept(server, &connection->_handle.stream) == 0)
     {
+        service->AddConnection(connection);
         connection->OnEstablished();
     }
     else

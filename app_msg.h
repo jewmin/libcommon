@@ -12,4 +12,7 @@ typedef struct {
     uint64_t param5; //消息参数5
 } AppMessage;
 
+//TCP消息
+#define APP_MSG_TCP_SHUTDOWN_ALL        0x00000001 //关闭所有连接
+
 #endif

@@ -2,7 +2,7 @@
 #define __LIB_COMMON_TCP_SERVER_H__
 
 #include "tcp_service.h"
-#include <map>
+#include <set>
 
 class TcpConnection;
 class TcpServer : public TcpService
@@ -10,8 +10,8 @@ class TcpServer : public TcpService
     friend class TcpService;
     friend class TcpConnection;
     typedef TcpService Super;
-    typedef std::map<uint32_t, TcpConnection *> ConnectionMap;
-    typedef std::map<uint32_t, TcpConnection *>::iterator ConnectionMapIter;
+    typedef std::set<TcpConnection *> ConnectionSet;
+    typedef std::set<TcpConnection *>::iterator ConnectionSetIter;
 
 public:
     TcpServer(const char * name, uint32_t tick, uint32_t max_out_buffer_size, uint32_t max_in_buffer_size, ILog * logger = NULL);
@@ -21,6 +21,10 @@ public:
     void ShutdownAllConnections();
 
 protected:
+    void AddConnection(TcpConnection * connection);
+    void RemoveConnection(TcpConnection * connection);
+
+    virtual void OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5);
     //创建连接函数
     virtual TcpConnection * NewConnection(TcpServer & server);
     //销毁连接函数
@@ -29,8 +33,10 @@ protected:
     virtual void OnTick();
 
 protected:
+    uint32_t _generate_id;
+
     uv_timer_t _tick_handle;
-    ConnectionMap _connection_map;
+    ConnectionSet _connections;
 
     char _name[64];
     uint32_t _tick;

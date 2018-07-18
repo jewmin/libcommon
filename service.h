@@ -5,8 +5,8 @@
 #include "thread.h"
 #include "log.h"
 #include "mutex.h"
-#include "lock_queue.h"
 #include "app_msg.h"
+#include "lock_queue.h"
 
 class BaseService : public BaseThread
 {

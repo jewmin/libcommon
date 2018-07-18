@@ -14,6 +14,14 @@ public:
     explicit TcpConnection(TcpServer & server);
     virtual ~TcpConnection();
 
+    inline bool operator < (const TcpConnection & right) const
+    {
+        if (this->_index < right._index)
+            return true;
+        else
+            return false;
+    }
+
 protected:
     //正在关闭事件通知函数
     virtual void OnClosing();
@@ -33,6 +41,7 @@ protected:
     virtual void OnRecv(const char * data, int nread);
 
 protected:
+    uint32_t _index;
     TcpServer * _server;
 };
 

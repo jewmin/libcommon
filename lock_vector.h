@@ -38,7 +38,7 @@ public:
     }
 
 private:
-    Mutex _mutex;
+    Mutex * _mutex;
 };
 
 #endif

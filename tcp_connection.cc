@@ -3,6 +3,7 @@
 TcpConnection::TcpConnection(TcpServer & server)
     : Super(server._max_in_buffer_size, server._logger)
 {
+    this->_index = 0;
     this->_server = &server;
     uv_tcp_init(this->_server->_loop, &this->_handle.tcp);
 }
@@ -20,6 +21,7 @@ void TcpConnection::OnClosing()
 void TcpConnection::OnClosed()
 {
     this->OnDisconnected();
+    this->_server->RemoveConnection(this);
     this->_server->DestroyConnection(this);
 }
 
