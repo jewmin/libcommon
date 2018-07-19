@@ -38,6 +38,12 @@ int TcpClient::Connect(const char * host, uint16_t port)
 
     if (r == 0)
         r = uv_tcp_connect(&this->_tcp_connect_req, &this->_handle.tcp, &s.addr, TcpService::ConnectCallback);
+
+    if (r == 0)
+        r = uv_send_buffer_size(&this->_handle.handle, (int *)&this->_max_out_buffer_size);
+
+    if (r == 0)
+        r = uv_recv_buffer_size(&this->_handle.handle, (int *)&this->_max_in_buffer_size);
     
     if (r == 0 && this->_tick > 0)
         r = uv_timer_start(&this->_tick_handle, TcpService::TimerCallback, this->_tick, this->_tick);
@@ -66,6 +72,12 @@ int TcpClient::ReConnect()
 
     if (r == 0)
         r = uv_tcp_connect(&this->_tcp_connect_req, &this->_handle.tcp, &s.addr, TcpService::ConnectCallback);
+
+    if (r == 0)
+        r = uv_send_buffer_size(&this->_handle.handle, (int *)&this->_max_out_buffer_size);
+
+    if (r == 0)
+        r = uv_recv_buffer_size(&this->_handle.handle, (int *)&this->_max_in_buffer_size);
     
     if (r == 0 && this->_tick > 0)
         r = uv_timer_start(&this->_tick_handle, TcpService::TimerCallback, this->_tick, this->_tick);
