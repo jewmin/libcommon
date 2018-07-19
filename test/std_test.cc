@@ -3,6 +3,9 @@
 #include <queue>
 #include <vector>
 #include "time.h"
+#include "lock_vector.h"
+#include "lock_queue.h"
+#include "mutex.h"
 
 TEST(StdTest, deque)
 {
@@ -32,16 +35,83 @@ TEST(StdTest, queue)
 
 TEST(StdTest, vector)
 {
+    int count = 10000;
     std::vector<int> vec;
-    for (int i = 0; i < 10000; i++)
+    vec.reserve(count);
+    for (int i = 0; i < count; i++)
         vec.push_back(i);
 
     std::vector<int> dst_vec;
-    for (int i = -1; i > -10000; i--)
+    dst_vec.reserve(count);
+    for (int i = -1; i > -count; i--)
         dst_vec.push_back(i);
 
     clock_t start = clock();
+    dst_vec.reserve(dst_vec.size() + vec.size());
     dst_vec.insert(dst_vec.end(), vec.begin(), vec.end());
     clock_t end = clock();
-    printf("std::vector insert run time: %ld, count: %d\n", end - start, dst_vec.size());
+    printf("std::vector insert run time: %ld, count: %llu\n", end - start, dst_vec.size());
+}
+
+TEST(LockVectorTest, mutex)
+{
+    LockVector<int> lv;
+    lv.Lock();
+    lv.Unlock();
+    ASSERT_TRUE(lv.GetMutex() == NULL);
+
+    Mutex lock1;
+    ASSERT_TRUE(lv.SetMutex(&lock1) == NULL);
+
+    LockVector<int> lv2(&lock1);
+    lv2.Lock();
+    lv2.Unlock();
+    ASSERT_TRUE(lv2.GetMutex() == &lock1);
+    
+    Mutex lock2;
+    ASSERT_TRUE(lv2.SetMutex(&lock2) == &lock1);
+}
+
+TEST(LockQueueTest, mutex)
+{
+    Mutex lock;
+    LockQueue<int> lq;
+    lq.SetMutex(&lock);
+    lq.Push(100);
+    lq.Push(200);
+    EXPECT_EQ(lq.GetAppendSize(), 2);
+    EXPECT_EQ(lq.size(), 0);
+    lq.Flush();
+    EXPECT_EQ(lq.GetAppendSize(), 0);
+    EXPECT_EQ(lq.size(), 2);
+
+    std::vector<int> vec;
+    vec.push_back(300);
+    vec.push_back(400);
+    lq.Push(vec);
+    EXPECT_EQ(lq.GetAppendSize(), 2);
+    lq.Flush();
+    EXPECT_EQ(lq[2], 300);
+}
+
+TEST(StdTest, set)
+{
+    std::set<int> s;
+    s.insert(1);
+    s.insert(2);
+    s.insert(3);
+    std::set<int>::iterator it = s.find(3);
+    if (it != s.end())
+        s.erase(it);
+
+    it = s.find(4);
+    if (it != s.end())
+        s.erase(it);
+
+    s.clear();
+    it = s.find(2);
+    if (it != s.end())
+        s.erase(it);
+
+    s.erase(4);
 }

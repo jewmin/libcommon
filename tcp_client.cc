@@ -3,7 +3,7 @@
 TcpClient::TcpClient(const char * name, uint32_t tick, uint32_t max_out_buffer_size, uint32_t max_in_buffer_size, uint32_t reconnect_tick, ILog * logger)
     : Super(max_in_buffer_size, logger)
 {
-    strncpy(this->_name, name, sizeof(this->_name));
+    strncpy(this->_name, name, sizeof(this->_name) - 1);
     this->_tick = tick;
     this->_max_out_buffer_size = max_out_buffer_size;
     this->_reconnect_tick = reconnect_tick;
@@ -46,7 +46,7 @@ int TcpClient::Connect(const char * host, uint16_t port)
         r = Super::Start();
 
     if (r != 0 && this->_logger)
-        this->_logger->Error("TCP Client Connect Error: %s", uv_strerror(r));
+        this->_logger->Error("%s Connect Error: %s", this->GetName(), uv_strerror(r));
 
     return r;
 }
@@ -70,11 +70,8 @@ int TcpClient::ReConnect()
     if (r == 0 && this->_tick > 0)
         r = uv_timer_start(&this->_tick_handle, TcpService::TimerCallback, this->_tick, this->_tick);
 
-    if (r == 0 && Super::IsTerminated())
-        r = Super::Start();
-
     if (r != 0 && this->_logger)
-        this->_logger->Error("TCP Client Connect Error: %s", uv_strerror(r));
+        this->_logger->Error("%s Connect Error: %s", this->GetName(), uv_strerror(r));
 
     return r;
 }

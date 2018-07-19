@@ -6,6 +6,7 @@
 TcpService::TcpService(uint32_t max_in_buffer_size, ILog * logger)
     : Super(logger)
 {
+    memset(this->_name, 0, sizeof(this->_name));
     this->_max_in_buffer_size = max_in_buffer_size;
     this->_handle.handle.data = this;
 }
@@ -80,7 +81,7 @@ void TcpService::ConnectionCallback(uv_stream_t * server, int status)
     if (status < 0)
     {
         if (service->_logger)
-            service->_logger->Error("TCP Server New Connection Error: %s", uv_strerror(status));
+            service->_logger->Error("%s New Connection Error: %s", service->GetName(), uv_strerror(status));
         
         return;
     }
@@ -110,7 +111,7 @@ void TcpService::ConnectCallback(uv_connect_t * req, int status)
     if (status < 0)
     {
         if (service->_logger)
-            service->_logger->Error("TCP Client Connect Error: %s", uv_strerror(status));
+            service->_logger->Error("%s Connect Error: %s", service->GetName(), uv_strerror(status));
         
         service->OnConnectFailed();
         return;
@@ -134,14 +135,11 @@ void TcpService::ReadCallback(uv_stream_t * stream, ssize_t nread, const uv_buf_
     if (nread < 0)
     {
         if (nread != UV_EOF && service->_logger)
-            service->_logger->Error("TCP Socket Read Error: %s", uv_strerror(nread));
+            service->_logger->Error("%s Read Error: %s", service->GetName(), uv_strerror(nread));
         
-        
-        free(buf->base);
-        return;
+        service->Close();
     }
-
-    if (nread > 0)
+    else if (nread > 0)
         service->OnRecv(buf->base, nread);
 
     free(buf->base);

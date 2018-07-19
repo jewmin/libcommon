@@ -6,7 +6,7 @@ TcpServer::TcpServer(const char * name, uint32_t tick, uint32_t max_out_buffer_s
 {
     this->_generate_id = 0;
 
-    strncpy(this->_name, name, sizeof(this->_name));
+    strncpy(this->_name, name, sizeof(this->_name) - 1);
     this->_max_out_buffer_size = max_out_buffer_size;
     this->_tick = tick;
     this->_tick_handle.data = this;
@@ -49,19 +49,18 @@ int TcpServer::Listen(const char * host, uint16_t port)
         r = this->Start();
 
     if (r != 0 && this->_logger)
-        this->_logger->Error("TCP Server Listen Error: %s", uv_strerror(r));
+        this->_logger->Error("%s Listen Error: %s", this->GetName(), uv_strerror(r));
 
     return r;
 }
 
 void TcpServer::ShutdownAllConnections()
 {
-    this->PostMsg(APP_MSG_TCP_SHUTDOWN_ALL, 0, 0, 0, 0, 0);
+    this->PostMsg(ShutdownAll, 0, 0, 0, 0, 0);
 }
 
 void TcpServer::AddConnection(TcpConnection * connection)
 {
-    connection->_index = ++this->_generate_id;
     this->_connections.insert(connection);
 }
 
@@ -72,7 +71,7 @@ void TcpServer::RemoveConnection(TcpConnection * connection)
 
 void TcpServer::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5)
 {
-    if (msg_id == APP_MSG_TCP_SHUTDOWN_ALL)
+    if (msg_id == ShutdownAll)
     {
         for (auto & it : this->_connections)
             it->Close();

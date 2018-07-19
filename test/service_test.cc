@@ -13,7 +13,7 @@ TEST(ServiceTest, msg)
 {
     MockService service;
     service.Start();
-	Sleep(1);
+	Sleep(10);
     for (int i = 0; i < 10; i++)
         service.PostMsg(i, 0, 0, 0, 0, 0);
     Sleep(10);

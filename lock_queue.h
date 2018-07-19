@@ -21,7 +21,7 @@ public:
         this->Unlock();
     }
 
-    inline size_t AppendSize()
+    inline size_t GetAppendSize()
     {
         return this->_append_vector.size();
     }

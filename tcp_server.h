@@ -13,6 +13,12 @@ class TcpServer : public TcpService
     typedef std::set<TcpConnection *> ConnectionSet;
     typedef std::set<TcpConnection *>::iterator ConnectionSetIter;
 
+    //TCP消息
+    enum TcpMsg
+    {
+        ShutdownAll = 1, //关闭所有连接
+    };
+
 public:
     TcpServer(const char * name, uint32_t tick, uint32_t max_out_buffer_size, uint32_t max_in_buffer_size, ILog * logger = NULL);
     virtual ~TcpServer();
@@ -38,7 +44,6 @@ protected:
     uv_timer_t _tick_handle;
     ConnectionSet _connections;
 
-    char _name[64];
     uint32_t _tick;
     uint32_t _max_out_buffer_size;
 

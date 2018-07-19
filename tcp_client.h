@@ -41,7 +41,6 @@ protected:
     uv_timer_t _reconnect_tick_handle;
     uv_connect_t _tcp_connect_req;
 
-    char _name[64];
     uint32_t _tick;
     uint32_t _max_out_buffer_size;
     uint32_t _reconnect_tick;

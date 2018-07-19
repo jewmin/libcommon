@@ -12,6 +12,8 @@ BaseService::~BaseService()
 {
     this->_msg_queue.Flush();
     this->_msg_queue.clear();
+    uv_walk(this->_loop, BaseService::WalkCallback, NULL);
+    uv_run(this->_loop, UV_RUN_DEFAULT);
     uv_loop_delete(this->_loop);
 }
 

@@ -11,6 +11,11 @@ public:
     explicit TcpService(uint32_t max_in_buffer_size, ILog * logger = NULL);
     virtual ~TcpService();
 
+    inline const char * GetName() const
+    {
+        return this->_name;
+    }
+
 protected:
     //已建立连接
     void OnEstablished();
@@ -49,6 +54,7 @@ protected:
         uv_tcp_t tcp;
     } _handle;
 
+    char _name[64];
     uint32_t _max_in_buffer_size;
 };
 

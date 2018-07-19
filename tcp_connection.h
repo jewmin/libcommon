@@ -31,8 +31,6 @@ protected:
     virtual void OnTick();
     //连接成功事件通知函数
     virtual void OnConnected();
-    //连接失败事件通知函数
-    virtual void OnConnectFailed();
     //断开连接事件通知函数
     virtual void OnDisconnect();
     //已断开连接事件通知函数
