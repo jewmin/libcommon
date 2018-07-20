@@ -7,12 +7,12 @@ TcpClient::TcpClient(const char * name, uint32_t tick, uint32_t max_out_buffer_s
     this->_tick = tick;
     this->_max_out_buffer_size = max_out_buffer_size;
     this->_reconnect_tick = reconnect_tick;
-    this->_tick_handle.data = this;
-    this->_reconnect_tick_handle.data = this;
 
     uv_tcp_init(this->_loop, &this->_handle.tcp);
     uv_timer_init(this->_loop, &this->_tick_handle);
+    this->_tick_handle.data = this;
     uv_timer_init(this->_loop, &this->_reconnect_tick_handle);
+    this->_reconnect_tick_handle.data = this;
 }
 
 TcpClient::~TcpClient()
@@ -86,6 +86,17 @@ int TcpClient::ReConnect()
         this->_logger->Error("%s Connect Error: %s", this->GetName(), uv_strerror(r));
 
     return r;
+}
+
+void TcpClient::Shutdown()
+{
+    this->PostMsg(eShutdown, 0, 0, 0, 0, 0);
+}
+
+void TcpClient::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5)
+{
+    if (msg_id == eShutdown)
+        this->Close();
 }
 
 void TcpClient::OnClosing()

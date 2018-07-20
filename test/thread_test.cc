@@ -10,7 +10,6 @@ TEST(ThreadTest, thread_create)
 {
     MockThread thread;
     thread.Start();
-	Sleep(1);
     thread.Stop();
     EXPECT_EQ(MockThread::ThreadCalled, 1);
     EXPECT_EQ(MockThread::ThreadTerminated, 1);
@@ -30,10 +29,8 @@ TEST(ThreadTest, thread_stop)
 {
     MockStopThread * pd = new MockStopThread();
     pd->Start();
-	Sleep(1);
     pd->Stop();
     BaseThread * pb = new MockStopThread();
     pb->Start();
-	Sleep(1);
     pb->Stop();
 }

@@ -9,10 +9,10 @@ TcpServer::TcpServer(const char * name, uint32_t tick, uint32_t max_out_buffer_s
     strncpy(this->_name, name, sizeof(this->_name) - 1);
     this->_max_out_buffer_size = max_out_buffer_size;
     this->_tick = tick;
-    this->_tick_handle.data = this;
 
     uv_tcp_init(this->_loop, &this->_handle.tcp);
     uv_timer_init(this->_loop, &this->_tick_handle);
+    this->_tick_handle.data = this;
 }
 
 TcpServer::~TcpServer()
@@ -56,7 +56,7 @@ int TcpServer::Listen(const char * host, uint16_t port)
 
 void TcpServer::ShutdownAllConnections()
 {
-    this->PostMsg(ShutdownAll, 0, 0, 0, 0, 0);
+    this->PostMsg(eShutdownAll, 0, 0, 0, 0, 0);
 }
 
 void TcpServer::AddConnection(TcpConnection * connection)
@@ -71,7 +71,7 @@ void TcpServer::RemoveConnection(TcpConnection * connection)
 
 void TcpServer::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5)
 {
-    if (msg_id == ShutdownAll)
+    if (msg_id == eShutdownAll)
     {
         for (auto & it : this->_connections)
             it->Close();

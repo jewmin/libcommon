@@ -3,9 +3,7 @@
 #include <queue>
 #include <vector>
 #include "time.h"
-#include "lock_vector.h"
 #include "lock_queue.h"
-#include "mutex.h"
 
 TEST(StdTest, deque)
 {
@@ -53,30 +51,9 @@ TEST(StdTest, vector)
     printf("std::vector insert run time: %ld, count: %llu\n", end - start, dst_vec.size());
 }
 
-TEST(LockVectorTest, mutex)
-{
-    LockVector<int> lv;
-    lv.Lock();
-    lv.Unlock();
-    ASSERT_TRUE(lv.GetMutex() == NULL);
-
-    Mutex lock1;
-    ASSERT_TRUE(lv.SetMutex(&lock1) == NULL);
-
-    LockVector<int> lv2(&lock1);
-    lv2.Lock();
-    lv2.Unlock();
-    ASSERT_TRUE(lv2.GetMutex() == &lock1);
-    
-    Mutex lock2;
-    ASSERT_TRUE(lv2.SetMutex(&lock2) == &lock1);
-}
-
 TEST(LockQueueTest, mutex)
 {
-    Mutex lock;
     LockQueue<int> lq;
-    lq.SetMutex(&lock);
     lq.Push(100);
     lq.Push(200);
     EXPECT_EQ(lq.GetAppendSize(), 2);

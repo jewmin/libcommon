@@ -8,14 +8,23 @@ class TcpClient : public TcpService
     friend class TcpService;
     typedef TcpService Super;
 
+    //TCP消息
+    enum TcpMsg
+    {
+        eShutdown = 1, //关闭连接
+    };
+
 public:
     TcpClient(const char * name, uint32_t tick, uint32_t max_out_buffer_size, uint32_t max_in_buffer_size, uint32_t reconnect_tick, ILog * logger = NULL);
     virtual ~TcpClient();
 
     int Connect(const char * host, uint16_t port);
     int ReConnect();
+    void Shutdown();
 
 protected:
+    virtual void OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5);
+
     //正在关闭事件通知函数
     virtual void OnClosing();
     //已关闭事件通知函数

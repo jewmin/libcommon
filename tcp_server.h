@@ -16,7 +16,7 @@ class TcpServer : public TcpService
     //TCP消息
     enum TcpMsg
     {
-        ShutdownAll = 1, //关闭所有连接
+        eShutdownAll = 1, //关闭所有连接
     };
 
 public:

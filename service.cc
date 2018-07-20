@@ -3,8 +3,10 @@
 BaseService::BaseService(ILog * logger)
 {
     this->_logger = logger;
+
     this->_loop = uv_loop_new();
-    this->_msg_queue.SetMutex(&this->_lock);
+    uv_async_init(this->_loop, &this->_stop_handle, BaseService::AsyncCallback);
+    uv_async_init(this->_loop, &this->_msg_handle, BaseService::MsgCallback);
     this->_msg_handle.data = this;
 }
 
@@ -12,6 +14,7 @@ BaseService::~BaseService()
 {
     this->_msg_queue.Flush();
     this->_msg_queue.clear();
+
     uv_walk(this->_loop, BaseService::WalkCallback, NULL);
     uv_run(this->_loop, UV_RUN_DEFAULT);
     uv_loop_delete(this->_loop);
@@ -38,8 +41,6 @@ void BaseService::PostMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uin
 
 void BaseService::Run()
 {
-    uv_async_init(this->_loop, &this->_stop_handle, BaseService::AsyncCallback);
-    uv_async_init(this->_loop, &this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
     uv_walk(this->_loop, BaseService::WalkCallback, NULL);
     uv_run(this->_loop, UV_RUN_DEFAULT);
