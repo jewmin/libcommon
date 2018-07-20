@@ -24,6 +24,29 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include",
+                "/usr/include/linux",
+                "/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include",
+                "/usr/include/c++/4.8.5",
+                "/home/jim/libcommon/3rd/libuv/include",
+                "/home/jim/libcommon/3rd/gtest/include",
+                "/home/jim/libuv/src/unix",
+                "/home/jim/libuv/src"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
         }
     ],
     "version": 4

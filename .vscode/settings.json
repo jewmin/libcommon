@@ -11,5 +11,6 @@
         "iosfwd": "cpp",
         "xutility": "cpp"
     },
-    "files.encoding": "gbk"
+    "files.encoding": "gbk",
+    "C_Cpp.intelliSenseEngineFallback": "Disabled"
 }
