@@ -2,8 +2,9 @@
 #define __LIB_COMMON_TCP_SERVICE_H__
 
 #include "service.h"
+#include "buffer.h"
 
-class TcpService : public BaseService
+class TcpService : public BaseService//, private Buffer::Allocator
 {
     typedef BaseService Super;
 
@@ -11,10 +12,7 @@ public:
     explicit TcpService(uint32_t max_in_buffer_size, ILog * logger = NULL);
     virtual ~TcpService();
 
-    inline const char * GetName() const
-    {
-        return this->_name;
-    }
+    inline const char * GetName() const { return this->_name; }
 
 protected:
     //已建立连接

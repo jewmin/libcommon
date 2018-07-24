@@ -137,12 +137,12 @@ void TcpService::ReadCallback(uv_stream_t * stream, ssize_t nread, const uv_buf_
     if (nread < 0)
     {
         if (nread != UV_EOF && service->_logger)
-            service->_logger->Error("%s Read Error: %s", service->GetName(), uv_strerror(nread));
+            service->_logger->Error("%s Read Error: %s", service->GetName(), uv_strerror((int)nread));
         
         service->Close();
     }
     else if (nread > 0)
-        service->OnRecv(buf->base, nread);
+        service->OnRecv(buf->base, (int)nread);
 
     free(buf->base);
 }

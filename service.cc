@@ -5,16 +5,13 @@ BaseService::BaseService(ILog * logger)
     this->_logger = logger;
 
     this->_loop = uv_loop_new();
-    uv_async_init(this->_loop, &this->_stop_handle, BaseService::AsyncCallback);
-    uv_async_init(this->_loop, &this->_msg_handle, BaseService::MsgCallback);
+    uv_async_init(this->_loop, &this->_stop_handle, BaseService::StopCallback);
+    uv_prepare_init(this->_loop, &this->_msg_handle);
     this->_msg_handle.data = this;
 }
 
 BaseService::~BaseService()
 {
-    this->_msg_queue.Flush();
-    this->_msg_queue.clear();
-
     uv_walk(this->_loop, BaseService::WalkCallback, NULL);
     uv_run(this->_loop, UV_RUN_DEFAULT);
     uv_loop_delete(this->_loop);
@@ -22,8 +19,11 @@ BaseService::~BaseService()
 
 void BaseService::Stop()
 {
-    uv_async_send(&this->_stop_handle);
-    Super::Stop();
+    if (this->_tid != 0)
+    {
+        uv_async_send(&this->_stop_handle);
+        Super::Stop();
+    }
 }
 
 void BaseService::PostMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5)
@@ -36,11 +36,11 @@ void BaseService::PostMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uin
     msg.param4 = param4;
     msg.param5 = param5;
     this->_msg_queue.Push(msg);
-    uv_async_send(&this->_msg_handle);
 }
 
 void BaseService::Run()
 {
+    uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
     uv_walk(this->_loop, BaseService::WalkCallback, NULL);
     uv_run(this->_loop, UV_RUN_DEFAULT);
@@ -70,7 +70,7 @@ void BaseService::ProcessMsg()
     this->_msg_queue.clear();
 }
 
-void BaseService::AsyncCallback(uv_async_t * handle)
+void BaseService::StopCallback(uv_async_t * handle)
 {
     uv_stop(handle->loop);
 }
@@ -81,7 +81,7 @@ void BaseService::WalkCallback(uv_handle_t * handle, void * arg)
         uv_close(handle, NULL);
 }
 
-void BaseService::MsgCallback(uv_async_t * handle)
+void BaseService::MsgCallback(uv_prepare_t * handle)
 {
     BaseService * service = (BaseService *)handle->data;
     service->ProcessMsg();
