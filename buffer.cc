@@ -139,7 +139,7 @@ Buffer::Allocator::~Allocator()
 
 Buffer * Buffer::Allocator::Allocate()
 {
-    this->_lock.Lock();
+    Mutex::Owner lock(this->_lock);
 
     Buffer * buffer = NULL;
 
@@ -153,10 +153,7 @@ Buffer * Buffer::Allocator::Allocate()
     {
         buffer = new(this->_buffer_size)Buffer(*this, this->_buffer_size);
         if (!buffer)
-        {
-            this->_lock.Unlock();
             throw BaseException("Buffer::Allocator::Allocate()", "Out of memory");
-        }
         
         /*
          * Call to unqualified virtual function
@@ -171,14 +168,12 @@ Buffer * Buffer::Allocator::Allocate()
      */
     this->OnBufferAllocated();
 
-    this->_lock.Unlock();
-
     return buffer;
 }
 
 void Buffer::Allocator::Flush()
 {
-    this->_lock.Lock();
+    Mutex::Owner lock(this->_lock);
 
     while (!this->_active_list.empty())
     {
@@ -196,8 +191,6 @@ void Buffer::Allocator::Flush()
         this->DestroyBuffer(this->_free_list.front());
         this->_free_list.pop_front();
     }
-
-    this->_lock.Unlock();
 }
 
 void Buffer::Allocator::Release(Buffer * buffer)
@@ -205,7 +198,7 @@ void Buffer::Allocator::Release(Buffer * buffer)
     if (!buffer)
         throw BaseException("Buffer::Allocator::Release()", "buffer is null");
 
-    this->_lock.Lock();
+    Mutex::Owner lock(this->_lock);
     
     /*
      * Call to unqualified virtual function
@@ -230,8 +223,6 @@ void Buffer::Allocator::Release(Buffer * buffer)
     {
         this->DestroyBuffer(buffer);
     }
-
-    this->_lock.Unlock();
 }
 
 void Buffer::Allocator::DestroyBuffer(Buffer * buffer)

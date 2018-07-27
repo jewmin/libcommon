@@ -27,3 +27,14 @@ int Mutex::TryLock()
 {
     return uv_mutex_trylock(&_mutex);
 }
+
+Mutex::Owner::Owner(Mutex & mutex)
+    : _mutex(mutex)
+{
+    this->_mutex.Lock();
+}
+
+Mutex::Owner::~Owner()
+{
+    this->_mutex.Unlock();
+}

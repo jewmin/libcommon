@@ -52,7 +52,9 @@
         "xloctime": "cpp",
         "xmemory": "cpp",
         "xstddef": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "xhash": "cpp"
     },
-    "files.encoding": "gbk"
+    "files.encoding": "gbk",
+    "cmake.configureOnOpen": false
 }
