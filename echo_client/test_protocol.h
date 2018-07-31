@@ -19,7 +19,7 @@ typedef struct tagPackHeader
 #define PACK_END_FLAG   0xEF
 
 #define _private_make_crc_data(x, y, z) ((x << 8 | y) | z)
-#define MAKE_CRC_DATE (x, y, z) _private_make_crc_data(x, y, z)
+#define MAKE_CRC_DATE(x, y, z) _private_make_crc_data(x, y, z)
 
 #define PACK_HEADER_LEN sizeof(PACK_HEADER)
 

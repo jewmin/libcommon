@@ -101,6 +101,16 @@ void SocketClient::Write(const char * data, size_t data_length)
     this->_msg_queue.Push(msg);
 }
 
+void SocketClient::Read(Buffer * buffer)
+{
+    if (!buffer)
+        buffer = this->Allocate();
+    else
+        buffer->AddRef();
+
+    this->_connect_socket.data = buffer;
+}
+
 void SocketClient::ReleaseBuffers()
 {
     this->Flush();
@@ -115,16 +125,12 @@ void SocketClient::Run()
     catch (const BaseException & ex)
     {
         if (this->_logger)
-        {
             this->_logger->Error("SocketClient::Run() - Exception: %s - %s", ex.Where(), ex.Message());
-        }
     }
     catch (...)
     {
         if (this->_logger)
-        {
             this->_logger->Error("SocketClient::Run() - Unexpected exception");
-        }
     }
 
     this->OnShutdownComplete();
@@ -137,22 +143,22 @@ void SocketClient::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, 
         SocketClient * socket = (SocketClient *)param1;
         Buffer * buffer = (Buffer *)param2;
 
-        buffer->SetupWrite();
+        if (uv_is_writable((uv_stream_t *)&socket->_connect_socket))
+        {
+            buffer->SetupWrite();
 
-        uv_write_t * req = (uv_write_t *)jc_malloc(sizeof(uv_write_t));
-        req->data = buffer;
-        uv_write(req, (uv_stream_t *)&socket->_connect_socket, buffer->GetUVBuffer(), 1, SocketClient::WriteCompletedCb);
+            uv_write_t * req = (uv_write_t *)jc_malloc(sizeof(uv_write_t));
+            req->data = buffer;
+            uv_write(req, (uv_stream_t *)&socket->_connect_socket, buffer->GetUVBuffer(), 1, SocketClient::WriteCompletedCb);
+        }
+        else
+        {
+            if (socket->_logger)
+                socket->_logger->Error("SocketClient::OnRecvMsg() - IO_Write_Request - socket handle is not writable");
+
+            buffer->Release();
+        }
     }
-}
-
-void SocketClient::Read(Buffer * buffer)
-{
-    if (!buffer)
-        buffer = this->Allocate();
-    else
-        buffer->AddRef();
-
-    this->_connect_socket.data = buffer;
 }
 
 void SocketClient::ConnectionsCb(uv_async_t * handle)
@@ -236,7 +242,7 @@ void SocketClient::AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv
 
     buffer->SetupRead();
 
-    buf = buffer->GetUVBuffer();
+    *buf = *(buffer->GetUVBuffer());
 }
 
 void SocketClient::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
@@ -283,9 +289,7 @@ void SocketClient::WriteCompletedCb(uv_write_t * req, int status)
     if (status < 0)
     {
         if (client->_logger)
-        {
             client->_logger->Error("SocketClient::WriteCompletedCb() - %s", uv_strerror(status));
-        }
     }
     
     /*

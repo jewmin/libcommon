@@ -1,19 +1,18 @@
-#include "echo_server.h"
-#include "test_protocol.h"
+#include "echo_client.h"
 #include "exception.h"
+#include "test_protocol.h"
 #include "test_log.h"
 
-EchoServer::EchoServer(const std::string & welcome_message, size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size, ILog * logger)
-    : SocketServer(max_free_sockets, max_free_buffers, buffer_size, logger), _welcome_message(welcome_message)
+EchoClient::EchoClient(size_t max_free_buffers, size_t buffer_size, ILog * logger)
+    : SocketClient(max_free_buffers, buffer_size, logger)
 {
 
 }
 
-EchoServer::~EchoServer()
+EchoClient::~EchoClient()
 {
     try
     {
-        this->ReleaseSockets();
         this->ReleaseBuffers();
     }
     catch (...)
@@ -22,57 +21,85 @@ EchoServer::~EchoServer()
     }
 }
 
-void EchoServer::OnStartAcceptingConnections()
+void EchoClient::OnStartConnections()
 {
     if (this->_logger)
-        this->_logger->Info("OnStartAcceptingConnections");
+        this->_logger->Info("OnStartConnections");
 }
 
-void EchoServer::OnStopAcceptingConnections()
+void EchoClient::OnStopConnections()
 {
     if (this->_logger)
-        this->_logger->Info("OnStopAcceptingConnections");
+        this->_logger->Info("OnStopConnections");
 }
 
-void EchoServer::OnShutdownInitiated()
+void EchoClient::OnShutdownInitiated()
 {
     if (this->_logger)
         this->_logger->Info("OnShutdownInitiated");
 }
 
-void EchoServer::OnShutdownComplete()
+void EchoClient::OnShutdownComplete()
 {
     if (this->_logger)
         this->_logger->Info("OnShutdownComplete");
 }
 
-void EchoServer::OnConnectionCreated()
+void EchoClient::OnConnect()
 {
     if (this->_logger)
-        this->_logger->Info("OnConnectionCreated");
+        this->_logger->Info("OnConnect");
+
+    char message[1000] = { 0 };
+    memset(message, '.', 1000);
+    memcpy(message, "BEGIN", strlen("BEGIN"));
+    memcpy(message + 1000 - strlen("END"), "END", 3);
+    this->Write(message, 1000);
 }
 
-void EchoServer::OnConnectionEstablished(SocketServer::Socket * socket, Buffer * address)
+void EchoClient::OnConnectFail()
 {
     if (this->_logger)
-        this->_logger->Info("OnConnectionEstablished");
-
-    socket->Write(this->_welcome_message.c_str(), this->_welcome_message.length());
+        this->_logger->Info("OnConnectFail");
 }
 
-void EchoServer::OnConnectionClosed(SocketServer::Socket * socket)
+void EchoClient::OnClose()
 {
     if (this->_logger)
-        this->_logger->Info("OnConnectionClosed");
+        this->_logger->Info("OnClose");
 }
 
-void EchoServer::OnConnectionDestroyed()
+void EchoClient::ReadCompleted(Buffer * buffer)
+{
+    try
+    {
+        buffer = ProcessDataStream(buffer);
+        
+        this->Read(buffer);
+    }
+    catch (const BaseException & ex)
+    {
+        if (this->_logger)
+            this->_logger->Error("EchoClient::ReadCompleted() - Exception: %s - %s", ex.Where().c_str(), ex.Message().c_str());
+
+        this->StopConnections();
+    }
+    catch (...)
+    {
+        if (this->_logger)
+            this->_logger->Error("EchoClient::ReadCompleted() - Unexpected exception");
+
+        this->StopConnections();
+    }
+}
+
+void EchoClient::WriteCompleted(Buffer * buffer)
 {
     if (this->_logger)
-        this->_logger->Info("OnConnectionDestroyed");
+        this->_logger->Info("WriteCompleted");
 }
 
-void EchoServer::PreWrite(SocketServer::Socket * socket, Buffer * buffer, const char * data, size_t data_length)
+void EchoClient::PreWrite(Buffer * buffer, const char * data, size_t data_length)
 {
     if (buffer && data_length > 0)
     {
@@ -88,42 +115,12 @@ void EchoServer::PreWrite(SocketServer::Socket * socket, Buffer * buffer, const 
     }
 }
 
-void EchoServer::ReadCompleted(SocketServer::Socket * socket, Buffer * buffer)
-{
-    try
-    {
-        buffer = ProcessDataStream(socket, buffer);
-        
-        socket->Read(buffer);
-    }
-    catch (const BaseException & ex)
-    {
-        if (this->_logger)
-            this->_logger->Error("EchoServer::ReadCompleted() - Exception: %s - %s", ex.Where().c_str(), ex.Message().c_str());
-
-        socket->Shutdown();
-    }
-    catch (...)
-    {
-        if (this->_logger)
-            this->_logger->Error("EchoServer::ReadCompleted() - Unexpected exception");
-
-        socket->Shutdown();
-    }
-}
-
-void EchoServer::WriteCompleted(SocketServer::Socket * socket, Buffer * buffer)
-{
-    if (this->_logger)
-        this->_logger->Info("WriteCompleted");
-}
-
-size_t EchoServer::GetMinimumMessageSize() const
+size_t EchoClient::GetMinimumMessageSize() const
 {
     return PACK_HEADER_LEN;
 }
 
-size_t EchoServer::GetMessageSize(const Buffer * buffer) const
+size_t EchoClient::GetMessageSize(const Buffer * buffer) const
 {
     const uint8_t * data = buffer->GetBuffer();
     const size_t used = buffer->GetUsed();
@@ -151,7 +148,7 @@ size_t EchoServer::GetMessageSize(const Buffer * buffer) const
     return 0;
 }
 
-Buffer * EchoServer::ProcessDataStream(SocketServer::Socket * socket, Buffer * buffer) const
+Buffer * EchoClient::ProcessDataStream(Buffer * buffer)
 {
     bool done;
 
@@ -184,7 +181,7 @@ Buffer * EchoServer::ProcessDataStream(SocketServer::Socket * socket, Buffer * b
                     if (this->_logger)
                         this->_logger->Error("found error and close this socket!");
 
-                    socket->Close();
+                    this->StopConnections();
 
                     /*
                      * throw the rubbish away
@@ -204,7 +201,7 @@ Buffer * EchoServer::ProcessDataStream(SocketServer::Socket * socket, Buffer * b
                  */
                 buffer->AddData(0);
 
-                this->ProcessCommand(socket, buffer);
+                this->ProcessCommand(buffer);
 
                 buffer->Empty();
 
@@ -225,7 +222,7 @@ Buffer * EchoServer::ProcessDataStream(SocketServer::Socket * socket, Buffer * b
 
                 message->AddData(0);
 
-                this->ProcessCommand(socket, message);
+                this->ProcessCommand(message);
 
                 message->Release();
 
@@ -244,7 +241,7 @@ Buffer * EchoServer::ProcessDataStream(SocketServer::Socket * socket, Buffer * b
     return buffer;
 }
 
-void EchoServer::ProcessCommand(SocketServer::Socket * socket, Buffer * buffer) const
+void EchoClient::ProcessCommand(Buffer * buffer)
 {
     const uint8_t * pack_data = buffer->GetBuffer();
     const size_t used = buffer->GetUsed();
@@ -279,6 +276,6 @@ void EchoServer::ProcessCommand(SocketServer::Socket * socket, Buffer * buffer) 
         if (this->_logger)
             this->_logger->Error("found error and close this socket!");
 
-        socket->Close();
+        this->StopConnections();
     }
 }

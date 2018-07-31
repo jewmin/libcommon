@@ -24,6 +24,8 @@ protected:
     SocketClient(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
 
     virtual void PreWrite(Buffer * buffer, const char * data, size_t data_length) {}
+    
+    void Read(Buffer * buffer = NULL);
 
     void ReleaseBuffers();
 
@@ -40,7 +42,6 @@ private:
     virtual void OnConnectFail() {}
     virtual void OnClose() {}
 
-    void Read(Buffer * buffer = NULL);
     virtual void ReadCompleted(Buffer * buffer) = 0;
     virtual void WriteCompleted(Buffer * buffer) = 0;
 

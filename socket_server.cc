@@ -154,7 +154,7 @@ void SocketServer::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, 
         Socket * socket = (Socket *)param1;
         Buffer * buffer = (Buffer *)param2;
 
-        if (socket->_socket)
+        if (socket->_socket && uv_is_writable((uv_stream_t *)socket->_socket))
         {
             buffer->SetupWrite();
 
@@ -173,7 +173,7 @@ void SocketServer::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, 
         else
         {
             if (socket->_server._logger)
-                socket->_server._logger->Error("SocketServer::OnRecvMsg() - IO_Write_Request - socket handle is null");
+                socket->_server._logger->Error("SocketServer::OnRecvMsg() - IO_Write_Request - socket handle is null or not writable");
 
             socket->Release();
             buffer->Release();
