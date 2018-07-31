@@ -42,8 +42,6 @@ void BaseService::Run()
 {
     uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
-    uv_walk(this->_loop, BaseService::WalkCallback, NULL);
-    uv_run(this->_loop, UV_RUN_DEFAULT);
 }
 
 void BaseService::OnTerminated()

@@ -81,8 +81,8 @@ void EchoServer::PreWrite(SocketServer::Socket * socket, Buffer * buffer, const 
         ph.pack_begin_flag = PACK_BEGIN_FLAG;
         ph.pack_end_flag = PACK_END_FLAG;
 
-        ph.data_len = data_length;
-        ph.crc_data = MAKE_CRC_DATE(PACK_BEGIN_FLAG, PACK_END_FLAG, data_length);
+        ph.data_len = (uint16_t)data_length;
+        ph.crc_data = MAKE_CRC_DATE(PACK_BEGIN_FLAG, PACK_END_FLAG, (uint16_t)data_length);
 
         buffer->AddData((const char *)&ph, PACK_HEADER_LEN);
     }

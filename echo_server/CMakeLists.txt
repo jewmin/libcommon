@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.9.4)
 
 # 项目名
-project(libcommon VERSION 1.0.0)
+project(echo_server VERSION 1.0.0)
 
 # Include files
 FILE(GLOB all_headers "*.h*")
@@ -18,16 +18,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 set(CMAKE_SUPPRESS_REGENERATION true)
 
-if (MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
-
 # 第三方类库
-include_directories(3rd/libuv/include)
+include_directories(${libcommon_SOURCE_DIR} ${libcommon_SOURCE_DIR}/3rd/libuv/include)
+link_directories(${libcommon_SOURCE_DIR}/3rd/libuv/lib)
 
-# 生成静态库
-add_library(libcommon STATIC ${all_headers} ${all_srcs})
-
-# 添加单元测试项目
-add_subdirectory(test)
-add_subdirectory(echo_server)
+# 生成可执行文件
+add_executable(${PROJECT_NAME} ${all_headers} ${all_srcs})
+if (WIN32)
+    target_link_libraries(${PROJECT_NAME} libcommon libuv advapi32 iphlpapi psapi ws2_32 userenv)
+else()
+    target_link_libraries(${PROJECT_NAME} libcommon libuv)
+endif()

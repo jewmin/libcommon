@@ -136,16 +136,12 @@ void SocketServer::Run()
     catch (const BaseException & ex)
     {
         if (this->_logger)
-        {
             this->_logger->Error("SocketServer::Run() - Exception: %s - %s", ex.Where(), ex.Message());
-        }
     }
     catch (...)
     {
         if (this->_logger)
-        {
             this->_logger->Error("SocketServer::Run() - Unexpected exception");
-        }
     }
 
     this->OnShutdownComplete();
@@ -158,18 +154,29 @@ void SocketServer::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, 
         Socket * socket = (Socket *)param1;
         Buffer * buffer = (Buffer *)param2;
 
-        buffer->SetupWrite();
-
-        write_req_t * req = (write_req_t *)jc_malloc(sizeof(write_req_t));
-        req->buffer = buffer;
-        uv_write((uv_write_t *)req, (uv_stream_t *)socket->_socket, buffer->GetUVBuffer(), 1, SocketServer::WriteCompletedCb);
-
-        if (param3 == 1)
+        if (socket->_socket)
         {
-            /*
-             * final write, now shutdown send side of connection
-             */
-            socket->Shutdown();
+            buffer->SetupWrite();
+
+            write_req_t * req = (write_req_t *)jc_malloc(sizeof(write_req_t));
+            req->buffer = buffer;
+            uv_write((uv_write_t *)req, (uv_stream_t *)socket->_socket, buffer->GetUVBuffer(), 1, SocketServer::WriteCompletedCb);
+
+            if (param3 == 1)
+            {
+                /*
+                * final write, now shutdown send side of connection
+                */
+                socket->Shutdown();
+            }
+        }
+        else
+        {
+            if (socket->_server._logger)
+                socket->_server._logger->Error("SocketServer::OnRecvMsg() - IO_Write_Request - socket handle is null");
+
+            socket->Release();
+            buffer->Release();
         }
     }
     else if (msg_id == IO_Close)
@@ -365,6 +372,8 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
         r = uv_tcp_getpeername((uv_tcp_t *)accepted_socket, (sockaddr *)address->GetBuffer(), &address_size);
         if (r == 0)
         {
+            address->Use(address_size);
+
             Socket * socket = service->AllocateSocket((uv_tcp_t *)accepted_socket);
 
             /*
@@ -401,7 +410,7 @@ void SocketServer::AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv
 
     buffer->SetupRead();
 
-    buf = buffer->GetUVBuffer();
+    *buf = *(buffer->GetUVBuffer());
 }
 
 void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
@@ -456,9 +465,7 @@ void SocketServer::WriteCompletedCb(uv_write_t * req, int status)
     if (status < 0)
     {
         if (socket->_server._logger)
-        {
             socket->_server._logger->Error("SocketServer::WriteCompletedCb() - %s", uv_strerror(status));
-        }
     }
     
     /*

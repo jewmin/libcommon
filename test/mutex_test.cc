@@ -19,3 +19,13 @@ TEST(MutexTest, thread_mutex_recursive)
     mutex.Unlock();
     mutex.Unlock();
 }
+
+TEST(MutexTest, owner)
+{
+    Mutex mutex;
+    {
+        Mutex::Owner lock(mutex);
+    }
+    mutex.Lock();
+    mutex.Unlock();
+}
