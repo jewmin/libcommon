@@ -50,11 +50,11 @@ void EchoClient::OnConnect()
     if (this->_logger)
         this->_logger->Info("OnConnect");
 
-    char message[1000] = { 0 };
+    /*static char message[1000] = { 0 };
     memset(message, '.', 1000);
     memcpy(message, "BEGIN", strlen("BEGIN"));
     memcpy(message + 1000 - strlen("END"), "END", 3);
-    this->Write(message, 1000);
+    this->Write(message, 1000);*/
 }
 
 void EchoClient::OnConnectFail()
@@ -93,10 +93,16 @@ void EchoClient::ReadCompleted(Buffer * buffer)
     }
 }
 
-void EchoClient::WriteCompleted(Buffer * buffer)
+void EchoClient::WriteCompleted(Buffer * buffer, int status)
 {
     if (this->_logger)
-        this->_logger->Info("WriteCompleted");
+        this->_logger->Info("WriteCompleted %s", uv_strerror(status));
+
+    /*static char message[1000] = { 0 };
+    memset(message, '.', 1000);
+    memcpy(message, "BEGIN", strlen("BEGIN"));
+    memcpy(message + 1000 - strlen("END"), "END", 3);
+    this->Write(message, 1000);*/
 }
 
 void EchoClient::PreWrite(Buffer * buffer, const char * data, size_t data_length)
@@ -270,6 +276,8 @@ void EchoClient::ProcessCommand(Buffer * buffer)
          */
         if (this->_logger)
             this->_logger->Info("Package[length:%u]\n%s", data_len, DumpData(data, data_length, 40).c_str());
+
+        this->Write((const char *)data, data_length);
     }
     else
     {

@@ -20,7 +20,7 @@ private:
     virtual void OnClose();
 
     virtual void ReadCompleted(Buffer * buffer);
-    virtual void WriteCompleted(Buffer * buffer);
+    virtual void WriteCompleted(Buffer * buffer, int status);
 
     virtual void PreWrite(Buffer * buffer, const char * data, size_t data_length);
 

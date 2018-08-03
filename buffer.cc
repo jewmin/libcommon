@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include <assert.h>
 #include "exception.h"
 
 Buffer::Buffer(Allocator & allocator, size_t size)
@@ -41,12 +42,11 @@ void Buffer::SetupRead()
     }
 }
 
-void Buffer::SetupWrite()
+void Buffer::SetupWrite(size_t offset)
 {
-    this->_uv_buf.base = (char *)this->_buffer;
-    this->_uv_buf.len = (ULONG)this->_used;
-
-    this->_used = 0;
+    assert(this->_used > offset);
+    this->_uv_buf.base = (char *)this->_buffer + offset;
+    this->_uv_buf.len = (ULONG)(this->_used - offset);
 }
 
 void Buffer::AddData(const char * const data, size_t data_length)

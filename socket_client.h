@@ -2,10 +2,12 @@
 #define __LIB_COMMON_SOCKET_CLIENT_H__
 
 #include "uv.h"
-#include "service.h"
 #include "buffer.h"
+#include "service.h"
+#include "network.h"
+#include "double_buffer.h"
 
-class SocketClient : protected BaseService, private Buffer::Allocator
+class SocketClient : protected BaseService, private Buffer::Allocator, public SocketOpt
 {
 public:
     virtual ~SocketClient();
@@ -27,10 +29,17 @@ protected:
     
     void Read(Buffer * buffer = NULL);
 
+    void TryWrite();
+
+    void Shutdown();
+
+    void Close();
+
+    void Connect();
+
     void ReleaseBuffers();
 
     virtual void Run();
-    virtual void OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5);
 
 private:
     virtual void OnStartConnections() {}
@@ -43,7 +52,7 @@ private:
     virtual void OnClose() {}
 
     virtual void ReadCompleted(Buffer * buffer) = 0;
-    virtual void WriteCompleted(Buffer * buffer) = 0;
+    virtual void WriteCompleted(Buffer * buffer, int status) = 0;
 
     /*
      * No copies do not implement
@@ -58,14 +67,14 @@ private:
     static void AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
     static void ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
     static void WriteCompletedCb(uv_write_t * req, int status);
+    static void WriteIdleCb(uv_idle_t * handle);
 
 private:
     uv_tcp_t _connect_socket;
     uv_connect_t _req;
     uv_async_t _connect_event;
-
-    bool _is_connected;
-    bool _is_connecting;
+    uv_idle_t _write_idle_event;
+    DoubleBuffer<Buffer *> _write_buffers;
 
     char _host[256];
     uint16_t _port;

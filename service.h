@@ -2,8 +2,8 @@
 #define __LIB_COMMON_SERVICE_H__
 
 #include "uv.h"
-#include "thread.h"
 #include "log.h"
+#include "thread.h"
 #include "app_msg.h"
 #include "lock_queue.h"
 

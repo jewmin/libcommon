@@ -2,10 +2,10 @@
 #define __LIB_COMMON_SOCKET_SERVER_H__
 
 #include "uv.h"
-#include "service.h"
-#include "buffer.h"
-#include "mutex.h"
 #include <list>
+#include "mutex.h"
+#include "buffer.h"
+#include "service.h"
 
 class SocketServer : protected BaseService, private Buffer::Allocator
 {

@@ -24,11 +24,24 @@ int main(int argc, const char * * argv)
     {
         uv_loop_t * loop = uv_default_loop();
 
-        EchoClient client(10, 1024, &log);
+        EchoClient client(10, 1500, &log);
+
+        client.SetNoDelay(true);
+        client.SetKeepAlive(60);
         
         client.ConnectTo("127.0.0.1", 6789);
 
         client.StartConnections();
+
+        /*static char message[1000] = { 0 };
+        memset(message, '.', 1000);
+        memcpy(message, "BEGIN", strlen("BEGIN"));
+        memcpy(message + 1000 - strlen("END"), "END", 3);
+        int count = 100;
+        while (--count > 0)
+        {
+            client.Write(message, 1000);
+        }*/
 
         uv_signal_t sig;
         uv_signal_init(loop, &sig);

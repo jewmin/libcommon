@@ -1,10 +1,10 @@
 #ifndef __LIB_COMMON_BUFFER_H__
 #define __LIB_COMMON_BUFFER_H__
 
-#include "common.h"
 #include "uv.h"
-#include "mutex.h"
 #include <list>
+#include "mutex.h"
+#include "common.h"
 
 class Buffer
 {
@@ -18,7 +18,7 @@ public:
     size_t GetSize() const;
 
     void SetupRead();
-    void SetupWrite();
+    void SetupWrite(size_t offset = 0);
 
     void AddData(const char * const data, size_t data_length);
     void AddData(const uint8_t * const data, size_t data_length);
