@@ -53,8 +53,11 @@
         "xmemory": "cpp",
         "xstddef": "cpp",
         "xtr1common": "cpp",
-        "xhash": "cpp"
+        "xhash": "cpp",
+        "array": "cpp"
     },
     "files.encoding": "gbk",
-    "cmake.configureOnOpen": false
+    "editor.renderWhitespace": "all",
+    "editor.renderControlCharacters": true,
+    "editor.fontSize": 18
 }

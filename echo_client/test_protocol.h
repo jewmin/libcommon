@@ -1,7 +1,7 @@
 #ifndef __TEST_PROTOCOL_H__
 #define __TEST_PROTOCOL_H__
 
-#include "stdint.h"
+#include <stdint.h>
 
 #pragma pack(1)
 

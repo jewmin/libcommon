@@ -1,7 +1,7 @@
+#include <signal.h>
 #include "echo_client.h"
 #include "test_log.h"
 #include "exception.h"
-#include "signal.h"
 
 void close_cb(uv_handle_t * handle, void * arg)
 {

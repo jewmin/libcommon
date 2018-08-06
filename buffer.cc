@@ -1,5 +1,4 @@
 #include "buffer.h"
-#include <assert.h>
 #include "exception.h"
 
 Buffer::Buffer(Allocator & allocator, size_t size)
@@ -33,12 +32,12 @@ void Buffer::SetupRead()
     if (this->_used == 0)
     {
         this->_uv_buf.base = (char *)this->_buffer;
-        this->_uv_buf.len = (ULONG)this->_size;
+        this->_uv_buf.len = this->_size;
     }
     else
     {
         this->_uv_buf.base = (char *)(this->_buffer + this->_used);
-        this->_uv_buf.len = (ULONG)(this->_size - this->_used);
+        this->_uv_buf.len = this->_size - this->_used;
     }
 }
 
@@ -46,7 +45,7 @@ void Buffer::SetupWrite(size_t offset)
 {
     assert(this->_used > offset);
     this->_uv_buf.base = (char *)this->_buffer + offset;
-    this->_uv_buf.len = (ULONG)(this->_used - offset);
+    this->_uv_buf.len = this->_used - offset;
 }
 
 void Buffer::AddData(const char * const data, size_t data_length)
@@ -90,7 +89,7 @@ Buffer * Buffer::SplitBuffer(size_t bytes_to_remove)
 void Buffer::Empty()
 {
     this->_uv_buf.base = (char *)this->_buffer;
-    this->_uv_buf.len = (ULONG)this->_size;
+    this->_uv_buf.len = this->_size;
 
     this->_used = 0;
 }

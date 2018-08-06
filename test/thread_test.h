@@ -3,6 +3,7 @@
 
 #include "gmock/gmock.h"
 #include "thread.h"
+#include "common.h"
 
 class MockThread : public BaseThread
 {
@@ -34,7 +35,7 @@ protected:
         while (!IsTerminated())
         {
             ThreadCalled++;
-            Sleep(1);
+            jc_sleep(1);
         }
     }
 
@@ -58,7 +59,7 @@ protected:
     {
         while (!IsTerminated())
         {
-            Sleep(10);
+            jc_sleep(10);
         }
     }
 

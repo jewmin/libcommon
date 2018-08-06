@@ -32,7 +32,7 @@ public:
         this->_mutex.Lock();
         if (!this->_append_vector.empty())
         {
-            insert(end(), this->_append_vector.begin(), this->_append_vector.end());
+            this->insert(this->end(), this->_append_vector.begin(), this->_append_vector.end());
             this->_append_vector.clear();
         }
         this->_mutex.Unlock();

@@ -1,5 +1,6 @@
 #include "thread_test.h"
 #include "gtest/gtest.h"
+#include "common.h"
 
 int MockThread::ThreadCalled = 0;
 int MockThread::ThreadTerminated = 0;
@@ -19,7 +20,7 @@ TEST(ThreadTest, thread_loop)
 {
     MockLoopThread thread;
     thread.Start();
-    Sleep(10);
+    jc_sleep(10);
     thread.Stop();
     EXPECT_GT(MockLoopThread::ThreadCalled, 1);
     EXPECT_EQ(MockLoopThread::ThreadTerminated, 1);

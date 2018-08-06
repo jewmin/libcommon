@@ -136,7 +136,7 @@ void SocketServer::Run()
     catch (const BaseException & ex)
     {
         if (this->_logger)
-            this->_logger->Error("SocketServer::Run() - Exception: %s - %s", ex.Where(), ex.Message());
+            this->_logger->Error("SocketServer::Run() - Exception: %s - %s", ex.Where().c_str(), ex.Message().c_str());
     }
     catch (...)
     {

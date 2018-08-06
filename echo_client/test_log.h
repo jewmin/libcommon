@@ -1,13 +1,14 @@
 #ifndef __TEST_LOG_H__
 #define __TEST_LOG_H__
 
+#include <string>
+#include <stdint.h>
+#include <fstream>
 #include "log.h"
 #include "lock_queue.h"
 #include "buffer.h"
 #include "thread.h"
-#include <string>
-#include "stdint.h"
-#include <fstream>
+#include "common.h"
 
 class TestLog : public ILog, protected BaseThread, private Buffer::Allocator
 {
@@ -116,7 +117,7 @@ public:
                 this->_log_queue[i]->Release();
             }
             this->_log_queue.clear();
-            Sleep(1);
+            jc_sleep(1);
         }
     }
 

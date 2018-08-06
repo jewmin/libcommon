@@ -1,7 +1,7 @@
 #ifndef __LIB_COMMON_APP_MSG_H__
 #define __LIB_COMMON_APP_MSG_H__
 
-#include "stdint.h"
+#include <stdint.h>
 
 typedef struct {
     uint32_t msg_id; //ÏûÏ¢ºÅ

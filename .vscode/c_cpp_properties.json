@@ -38,15 +38,8 @@
                 "/home/jim/libuv/src/unix",
                 "/home/jim/libuv/src"
             ],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
-            ],
-            "compilerPath": "/usr/bin/g++",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "defines": [],
+            "compilerPath": "/usr/bin/g++"
         }
     ],
     "version": 4
