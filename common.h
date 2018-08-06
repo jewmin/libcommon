@@ -7,6 +7,8 @@
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdarg.h>
+#include <stddef.h>
 
 /* 定义内存分配 */
 #define jc_malloc malloc
