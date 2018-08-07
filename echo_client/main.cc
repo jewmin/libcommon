@@ -46,6 +46,7 @@ int main(int argc, const char * * argv)
         uv_signal_t sig;
         uv_signal_init(loop, &sig);
         uv_signal_start(&sig, signal_handler, SIGINT);
+        uv_signal_start(&sig, signal_handler, SIGTERM);
 
         uv_run(loop, UV_RUN_DEFAULT);
 
