@@ -6,7 +6,8 @@ SocketClient::SocketClient(size_t max_free_buffers, size_t buffer_size, ILog * l
 {
     this->_loop->data = this;
     uv_async_init(this->_loop, &this->_connect_event, SocketClient::ConnectionsCb);
-    uv_idle_init(this->_loop, &this->_write_idle_event);
+    uv_async_init(this->_loop, &this->_write_notify_event, NULL);
+    uv_prepare_init(this->_loop, &this->_write_event);
 
     memset(this->_host, 0, sizeof(this->_host));
     this->_port = 0;
@@ -92,6 +93,7 @@ void SocketClient::Write(const char * data, size_t data_length)
     buffer->AddData(data, data_length);
 
     this->_write_buffers.Push(buffer);
+    uv_async_send(&this->_write_notify_event);
 }
 
 void SocketClient::Read(Buffer * buffer)
@@ -202,7 +204,7 @@ void SocketClient::ReleaseBuffers()
 
 void SocketClient::Run()
 {
-    uv_idle_start(&this->_write_idle_event, SocketClient::WriteIdleCb);
+    uv_prepare_start(&this->_write_event, SocketClient::TryWriteCb);
     uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
     this->OnShutdownComplete();
@@ -335,7 +337,7 @@ void SocketClient::WriteCompletedCb(uv_write_t * req, int status)
     }
 }
 
-void SocketClient::WriteIdleCb(uv_idle_t * handle)
+void SocketClient::TryWriteCb(uv_prepare_t * handle)
 {
     SocketClient * client = (SocketClient *)handle->loop->data;
 

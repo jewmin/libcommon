@@ -27,7 +27,7 @@ private:
     virtual void PreWrite(SocketServer::Socket * socket, Buffer * buffer, const char * data, size_t data_length);
 
     virtual void ReadCompleted(SocketServer::Socket * socket, Buffer * buffer);
-    virtual void WriteCompleted(SocketServer::Socket * socket, Buffer * buffer);
+    virtual void WriteCompleted(SocketServer::Socket * socket, Buffer * buffer, int status);
 
     size_t GetMinimumMessageSize() const;
     size_t GetMessageSize(const Buffer * buffer) const;

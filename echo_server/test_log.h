@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include <fstream>
 #include "log.h"
-#include "lock_queue.h"
 #include "buffer.h"
 #include "thread.h"
 #include "common.h"
+#include "container.h"
 
 class TestLog : public ILog, protected BaseThread, private Buffer::Allocator
 {

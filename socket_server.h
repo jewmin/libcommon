@@ -2,12 +2,14 @@
 #define __LIB_COMMON_SOCKET_SERVER_H__
 
 #include "uv.h"
-#include <list>
 #include "mutex.h"
 #include "buffer.h"
 #include "service.h"
+#include "network.h"
+#include "app_msg.h"
+#include "container.h"
 
-class SocketServer : protected BaseService, private Buffer::Allocator
+class SocketServer : public SocketOpt, protected BaseService, private Buffer::Allocator
 {
 public:
     class Socket;
@@ -26,11 +28,13 @@ public:
 protected:
     SocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
 
+    void Close();
+    void Listen();
+
     void ReleaseSockets();
     void ReleaseBuffers();
 
     virtual void Run();
-    virtual void OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5);
 
 private:
     virtual void OnStartAcceptingConnections() {}
@@ -64,7 +68,7 @@ private:
     virtual void PreWrite(Socket * socket, Buffer * buffer, const char * data, size_t data_length) {}
 
     virtual void ReadCompleted(Socket * socket, Buffer * buffer) = 0;
-    virtual void WriteCompleted(Socket * socket, Buffer * buffer) = 0;
+    virtual void WriteCompleted(Socket * socket, Buffer * buffer, int status) = 0;
 
     /*
      * No copies do not implement
@@ -74,14 +78,19 @@ private:
 
 private:
     static void AcceptConnectionsCb(uv_async_t * handle);
+    static void OnCloseCb(uv_handle_t * handle);
     static void OnAcceptCb(uv_stream_t * server, int status);
+    static void OnConnectionCloseCb(uv_handle_t * handle);
     static void AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
     static void ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
     static void WriteCompletedCb(uv_write_t * req, int status);
+    static void ConnectionsCb(uv_prepare_t * handle);
 
 private:
     uv_tcp_t _listening_socket;
     uv_async_t _accept_connections_event;
+    uv_async_t _connections_notify_event;
+    uv_prepare_t _connections_event;
     
     Mutex _socket_lock;
 
@@ -90,8 +99,7 @@ private:
 
     SocketList _active_list;
     SocketList _free_list;
-
-    bool _is_listening;
+    DoubleQueue<AppMessage> _req_list;
 
     char _host[256];
     uint16_t _port;
@@ -99,7 +107,7 @@ private:
     const size_t _max_free_sockets;
 };
 
-class SocketServer::Socket
+class SocketServer::Socket : public SocketOpt
 {
 public:
     friend class SocketServer;
@@ -107,13 +115,16 @@ public:
     void Read(Buffer * buffer = NULL);
     void Write(const char * data, size_t data_length, bool then_shutdown = false);
     void Write(Buffer * buffer, bool then_shutdown = false);
+    void Shutdown();
 
     void AddRef();
     void Release();
 
-    void Shutdown();
-    void Close();
     void AbortiveClose();
+
+protected:
+    void TryWrite();
+    void Close();
 
 private:
     Socket(SocketServer & server, uv_tcp_t * socket);
@@ -121,6 +132,7 @@ private:
 
     void Attach(uv_tcp_t * socket);
     void Detatch();
+    void SetupRead(Buffer * buffer);
 
     /*
      * No copies do not implement
@@ -129,11 +141,9 @@ private:
     Socket & operator =(const Socket & rhs);
 
 private:
-    static void ShutdownCb(uv_shutdown_t * req, int status);
-
-private:
     SocketServer & _server;
     uv_tcp_t * _socket;
+    DoubleBuffer<Buffer *> _write_buffers;
 
     int _ref;
     Mutex _lock;

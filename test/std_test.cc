@@ -3,8 +3,7 @@
 #include <queue>
 #include <vector>
 #include "time.h"
-#include "lock_queue.h"
-#include "double_buffer.h"
+#include "container.h"
 
 TEST(StdTest, deque)
 {
@@ -57,17 +56,17 @@ TEST(LockQueueTest, mutex)
     LockQueue<int> lq;
     lq.Push(100);
     lq.Push(200);
-    EXPECT_EQ(lq.GetAppendSize(), 2);
+    EXPECT_EQ(lq.GetAppendedSize(), 2);
     EXPECT_EQ(lq.size(), 0);
     lq.Flush();
-    EXPECT_EQ(lq.GetAppendSize(), 0);
+    EXPECT_EQ(lq.GetAppendedSize(), 0);
     EXPECT_EQ(lq.size(), 2);
 
     std::vector<int> vec;
     vec.push_back(300);
     vec.push_back(400);
     lq.Push(vec);
-    EXPECT_EQ(lq.GetAppendSize(), 2);
+    EXPECT_EQ(lq.GetAppendedSize(), 2);
     lq.Flush();
     EXPECT_EQ(lq[2], 300);
 }

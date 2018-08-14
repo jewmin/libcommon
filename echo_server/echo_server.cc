@@ -112,10 +112,10 @@ void EchoServer::ReadCompleted(SocketServer::Socket * socket, Buffer * buffer)
     }
 }
 
-void EchoServer::WriteCompleted(SocketServer::Socket * socket, Buffer * buffer)
+void EchoServer::WriteCompleted(SocketServer::Socket * socket, Buffer * buffer, int status)
 {
     if (this->_logger)
-        this->_logger->Info("WriteCompleted");
+        this->_logger->Info("WriteCompleted status: %d", status);
 }
 
 size_t EchoServer::GetMinimumMessageSize() const
@@ -184,7 +184,7 @@ Buffer * EchoServer::ProcessDataStream(SocketServer::Socket * socket, Buffer * b
                     if (this->_logger)
                         this->_logger->Error("found error and close this socket!");
 
-                    socket->Close();
+                    socket->Shutdown();
 
                     /*
                      * throw the rubbish away
@@ -279,6 +279,6 @@ void EchoServer::ProcessCommand(SocketServer::Socket * socket, Buffer * buffer) 
         if (this->_logger)
             this->_logger->Error("found error and close this socket!");
 
-        socket->Close();
+        socket->Shutdown();
     }
 }

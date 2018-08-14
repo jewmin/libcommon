@@ -1,33 +1,26 @@
 #include "socket_server.h"
 #include "exception.h"
-#include "common.h"
 
-enum IO_Operation
+enum Request_Type
 {
-    IO_Read_Request,
-    IO_Read_Completed,
     IO_Write_Request,
-    IO_Write_Completed,
     IO_Close
 };
 
 typedef struct
 {
-    uv_write_t req;
+    uv_tcp_t handle;
+    SocketServer::Socket * socket;
     Buffer * buffer;
-} write_req_t;
-
-typedef struct
-{
-    uv_tcp_t socket;
-    Buffer * buffer;
-} read_tcp_t;
+} connection_t;
 
 SocketServer::SocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size, ILog * logger)
-    : BaseService(logger), Buffer::Allocator(buffer_size, max_free_buffers), _max_free_sockets(max_free_sockets), _is_listening(false)
+    : BaseService(logger), Buffer::Allocator(buffer_size, max_free_buffers), _max_free_sockets(max_free_sockets)
 {
     this->_loop->data = this;
     uv_async_init(this->_loop, &this->_accept_connections_event, SocketServer::AcceptConnectionsCb);
+    uv_async_init(this->_loop, &this->_connections_notify_event, NULL);
+    uv_prepare_init(this->_loop, &this->_connections_event);
 
     memset(this->_host, 0, sizeof(this->_host));
     this->_port = 0;
@@ -35,14 +28,7 @@ SocketServer::SocketServer(size_t max_free_sockets, size_t max_free_buffers, siz
 
 SocketServer::~SocketServer()
 {
-    try
-    {
-        this->ReleaseSockets();
-    }
-    catch (...)
-    {
-
-    }
+    this->ReleaseSockets();
 }
 
 void SocketServer::Open(const char * host, uint16_t port)
@@ -55,7 +41,7 @@ void SocketServer::Open(const char * host, uint16_t port)
 
 void SocketServer::StartAcceptingConnections()
 {
-    if (!this->_is_listening)
+    if (this->GetStatus() == SocketOpt::S_DISCONNECTED)
     {
         /*
          * Call to unqualified virtual function
@@ -68,7 +54,7 @@ void SocketServer::StartAcceptingConnections()
 
 void SocketServer::StopAcceptingConnections()
 {
-    if (this->_is_listening)
+    if (this->GetStatus() == SocketOpt::S_CONNECTED)
     {
         uv_async_send(&this->_accept_connections_event);
 
@@ -96,13 +82,62 @@ void SocketServer::WaitForShutdownToComplete()
     this->Stop();
 }
 
+void SocketServer::Close()
+{
+    if (this->GetStatus() != SocketOpt::S_CONNECTED) return;
+
+    this->SetStatus(SocketOpt::S_DISCONNECTING);
+
+    if (this->HasFlag(SocketOpt::F_CLOSING)) return;
+
+    this->AddFlag(SocketOpt::F_CLOSING);
+
+    uv_close((uv_handle_t *)&this->_listening_socket, SocketServer::OnCloseCb);
+}
+
+void SocketServer::Listen()
+{
+    union {
+        struct sockaddr addr;
+        struct sockaddr_in addr4;
+        struct sockaddr_in6 addr6;
+    } s;
+
+    int r;
+    r = uv_ip4_addr(this->_host, this->_port, &s.addr4);
+    if (r != 0)
+        r = uv_ip6_addr(this->_host, this->_port, &s.addr6);
+
+    if (r == 0)
+        r = uv_tcp_init(this->_loop, &this->_listening_socket);
+
+    if (r == 0)
+        r = uv_tcp_bind(&this->_listening_socket, &s.addr, 0);
+
+    if (r == 0)
+        r = uv_listen((uv_stream_t *)&this->_listening_socket, 128, SocketServer::OnAcceptCb);
+
+    this->ClearFlag();
+
+    if (r == 0)
+    {
+        this->SetStatus(SocketOpt::S_CONNECTED);
+
+        this->AddFlag(SocketOpt::F_LISTEN);
+    }
+    else if (this->_logger)
+    {
+        this->_logger->Error("SocketServer::AcceptConnectionsCb() - %s", uv_strerror(r));
+    }
+}
+
 void SocketServer::ReleaseSockets()
 {
     Mutex::Owner lock(this->_socket_lock);
 
-    for (auto & it: this->_active_list)
+    for (auto & it : this->_active_list)
     {
-        it->Close();
+        it->Shutdown();
     }
 
     while (!this->_active_list.empty())
@@ -129,64 +164,10 @@ void SocketServer::ReleaseBuffers()
 
 void SocketServer::Run()
 {
-    try
-    {
-        BaseService::Run();
-    }
-    catch (const BaseException & ex)
-    {
-        if (this->_logger)
-            this->_logger->Error("SocketServer::Run() - Exception: %s - %s", ex.Where().c_str(), ex.Message().c_str());
-    }
-    catch (...)
-    {
-        if (this->_logger)
-            this->_logger->Error("SocketServer::Run() - Unexpected exception");
-    }
-
+    uv_prepare_start(&this->_connections_event, SocketServer::ConnectionsCb);
+    uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
+    uv_run(this->_loop, UV_RUN_DEFAULT);
     this->OnShutdownComplete();
-}
-
-void SocketServer::OnRecvMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5)
-{
-    if (msg_id == IO_Write_Request)
-    {
-        Socket * socket = (Socket *)param1;
-        Buffer * buffer = (Buffer *)param2;
-
-        if (socket->_socket && uv_is_writable((uv_stream_t *)socket->_socket))
-        {
-            buffer->SetupWrite();
-
-            write_req_t * req = (write_req_t *)jc_malloc(sizeof(write_req_t));
-            req->buffer = buffer;
-            uv_write((uv_write_t *)req, (uv_stream_t *)socket->_socket, buffer->GetUVBuffer(), 1, SocketServer::WriteCompletedCb);
-
-            if (param3 == 1)
-            {
-                /*
-                * final write, now shutdown send side of connection
-                */
-                socket->Shutdown();
-            }
-        }
-        else
-        {
-            if (socket->_server._logger)
-                socket->_server._logger->Error("SocketServer::OnRecvMsg() - IO_Write_Request - socket handle is null or not writable");
-
-            socket->Release();
-            buffer->Release();
-        }
-    }
-    else if (msg_id == IO_Close)
-    {
-        Socket * socket = (Socket *)param1;
-
-        socket->Close();
-        
-        socket->Release();
-    }
 }
 
 SocketServer::Socket * SocketServer::AllocateSocket(uv_tcp_t * the_socket)
@@ -215,7 +196,12 @@ SocketServer::Socket * SocketServer::AllocateSocket(uv_tcp_t * the_socket)
 
     this->_active_list.push_back(socket);
 
+    socket->SetStatus(SocketOpt::S_CONNECTED);
+
+    socket->AddFlag(SocketOpt::F_ACCEPT);
+
     socket->Read();
+
     uv_read_start((uv_stream_t *)the_socket, SocketServer::AllocBufferCb, SocketServer::ReadCompletedCb);
 
     return socket;
@@ -252,12 +238,15 @@ void SocketServer::DestroySocket(Socket * socket)
 
 void SocketServer::PostAbortiveClose(Socket * socket)
 {
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED) return;
+
     socket->AddRef();
 
-    AppMessage msg;
-    msg.msg_id = IO_Close;
-    msg.param1 = (uint64_t)socket;
-    this->_msg_queue.Push(msg);
+    AppMessage req;
+    req.msg_id = IO_Close;
+    req.param1 = (uint64_t)socket;
+    this->_req_list.Push(req);
+    uv_async_send(&this->_connections_notify_event);
 }
 
 void SocketServer::Read(Socket * socket, Buffer * buffer)
@@ -269,82 +258,81 @@ void SocketServer::Read(Socket * socket, Buffer * buffer)
         
     socket->AddRef();
 
-    ((read_tcp_t *)socket->_socket)->buffer = buffer;
+    socket->SetupRead(buffer);
 }
 
 void SocketServer::Write(Socket * socket, const char * data, size_t data_length, bool then_shutdown)
 {
     if (!socket || !data || data_length == 0) return;
 
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED) return;
+
     Buffer * buffer = this->Allocate();
 
+    buffer->Use(sizeof(uv_write_t));
+
     this->PreWrite(socket, buffer, data, data_length);
+
+    if (buffer->GetSize() - buffer->GetUsed() < data_length)
+    {
+        if (this->_logger)
+            this->_logger->Error("SocketServer::Write() - %s", uv_strerror(UV_ENOBUFS));
+
+        buffer->Release();
+        return;
+    }
 
     buffer->AddData(data, data_length);
 
     socket->AddRef();
 
-    AppMessage msg;
-    msg.msg_id = IO_Write_Request;
-    msg.param1 = (uint64_t)socket;
-    msg.param2 = (uint64_t)buffer;
-    msg.param3 = then_shutdown ? 1 : 0;
-    this->_msg_queue.Push(msg);
+    AppMessage req;
+    req.msg_id = IO_Write_Request;
+    req.param1 = (uint64_t)socket;
+    req.param2 = (uint64_t)buffer;
+    req.param3 = then_shutdown ? 1 : 0;
+    this->_req_list.Push(req);
+    uv_async_send(&this->_connections_notify_event);
 }
 
 void SocketServer::Write(Socket * socket, Buffer * buffer, bool then_shutdown)
 {
     if (!socket || !buffer) return;
 
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED) return;
+
     buffer->AddRef();
     
     socket->AddRef();
 
-    AppMessage msg;
-    msg.msg_id = IO_Write_Request;
-    msg.param1 = (uint64_t)socket;
-    msg.param2 = (uint64_t)buffer;
-    msg.param3 = then_shutdown ? 1 : 0;
-    this->_msg_queue.Push(msg);
+    AppMessage req;
+    req.msg_id = IO_Write_Request;
+    req.param1 = (uint64_t)socket;
+    req.param2 = (uint64_t)buffer;
+    req.param3 = then_shutdown ? 1 : 0;
+    this->_req_list.Push(req);
+    uv_async_send(&this->_connections_notify_event);
 }
 
 void SocketServer::AcceptConnectionsCb(uv_async_t * handle)
 {
     SocketServer * service = (SocketServer *)handle->loop->data;
 
-    if (service->_is_listening)
+    if (service->GetStatus() == SocketOpt::S_CONNECTED)
     {
-        uv_close((uv_handle_t *)&service->_listening_socket, NULL);
-
-        service->_is_listening = false;
+        service->Close();
     }
     else
     {
-        union {
-            struct sockaddr addr;
-            struct sockaddr_in addr4;
-            struct sockaddr_in6 addr6;
-        } s;
-
-        int r;
-        r = uv_ip4_addr(service->_host, service->_port, &s.addr4);
-        if (r != 0)
-            r = uv_ip6_addr(service->_host, service->_port, &s.addr6);
-        
-        if (r == 0)
-            r = uv_tcp_init(service->_loop, &service->_listening_socket);
-
-        if (r == 0)
-            r = uv_tcp_bind(&service->_listening_socket, &s.addr, 0);
-
-        if (r == 0)
-            r = uv_listen((uv_stream_t *)&service->_listening_socket, 128, SocketServer::OnAcceptCb);
-
-        if (r != 0)
-            throw BaseException("SocketServer::AcceptConnectionsCb()", uv_strerror(r));
-
-        service->_is_listening = true;
+        service->Listen();
     }
+}
+
+void SocketServer::OnCloseCb(uv_handle_t * handle)
+{
+    SocketServer * service = (SocketServer *)handle->loop->data;
+
+    service->SetStatus(SocketOpt::S_DISCONNECTED);
 }
 
 void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
@@ -358,8 +346,15 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
         
         return;
     }
+    else if (service->GetStatus() != SocketOpt::S_CONNECTED)
+    {
+        if (service->_logger)
+            service->_logger->Error("SocketServer::OnAcceptCb() - service is not connected");
 
-    read_tcp_t * accepted_socket = (read_tcp_t *)jc_malloc(sizeof(read_tcp_t));
+        return;
+    }
+
+    connection_t * accepted_socket = (connection_t *)jc_malloc(sizeof(connection_t));
     uv_tcp_init(service->_loop, (uv_tcp_t *)accepted_socket);
 
     int r;
@@ -400,13 +395,36 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
     }
 }
 
+void SocketServer::OnConnectionCloseCb(uv_handle_t * handle)
+{
+    connection_t * connection = (connection_t *)handle;
+
+    Socket * socket = connection->socket;
+
+    socket->SetStatus(SocketOpt::S_DISCONNECTED);
+
+    socket->_server.OnConnectionClosed(socket);
+
+    socket->Detatch();
+
+    socket->Release();
+
+    jc_free(handle);
+}
+
 void SocketServer::AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf)
 {
-    Socket * socket = (Socket *)handle->data;
+    connection_t * connection = (connection_t *)handle;
 
-    if (!socket) return;
+    Socket * socket = connection->socket;
 
-    Buffer * buffer = ((read_tcp_t *)socket->_socket)->buffer;
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED)
+    {
+        uv_read_stop((uv_stream_t *)handle);
+        return;
+    }
+
+    Buffer * buffer = connection->buffer;
 
     buffer->SetupRead();
 
@@ -415,13 +433,18 @@ void SocketServer::AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv
 
 void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
 {
-    Socket * socket = (Socket *)stream->data;
+    connection_t * connection = (connection_t *)stream;
 
-    if (!socket) return;
+    Socket * socket = connection->socket;
 
-    bool close_socket = false;
+    Buffer * buffer = connection->buffer;
 
-    Buffer * buffer = ((read_tcp_t *)socket->_socket)->buffer;
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED)
+    {
+        buffer->Release();
+        socket->Release();
+        return;
+    }
 
     if (nread >= 0)
     {
@@ -435,32 +458,22 @@ void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
     else
     {
         if (socket->_server._logger)
-        {
-            if (nread == UV_EOF)
-                socket->_server._logger->Info("SocketServer::ReadCompletedCb() - UV_EOF - client connection dropped");
-            else
-                socket->_server._logger->Error("SocketServer::ReadCompletedCb() - %s", uv_strerror((int)nread));
-        }
+            socket->_server._logger->Error("SocketServer::ReadCompletedCb() - %s", uv_strerror((int)nread));
 
-        close_socket = true;
+        socket->Shutdown();
     }
 
-    socket->Release();
     buffer->Release();
-
-    if (close_socket)
-    {
-        socket->Close();
-    }
+    socket->Release();
 }
 
 void SocketServer::WriteCompletedCb(uv_write_t * req, int status)
 {
-    Socket * socket = (Socket *)req->handle->data;
+    connection_t * connection = (connection_t *)req->handle;
 
-    if (!socket) return;
+    Socket * socket = connection->socket;
 
-    Buffer * buffer = ((write_req_t *)req)->buffer;
+    Buffer * buffer = socket->_write_buffers.Pop();
 
     if (status < 0)
     {
@@ -471,10 +484,64 @@ void SocketServer::WriteCompletedCb(uv_write_t * req, int status)
     /*
      * Call to unqualified virtual function
      */
-    socket->_server.WriteCompleted(socket, buffer);
+    socket->_server.WriteCompleted(socket, buffer, status);
+
+    buffer->Release();
+
+    socket->RemoveFlag(SocketOpt::F_WRITING);
+
+    socket->TryWrite();
+
+    if (socket->GetStatus() == SocketOpt::S_DISCONNECTING && !socket->HasFlag(SocketOpt::F_WRITING))
+    {
+        socket->Close();
+    }
 
     socket->Release();
-    buffer->Release();
+}
+
+void SocketServer::ConnectionsCb(uv_prepare_t * handle)
+{
+    SocketServer * service = (SocketServer *)handle->loop->data;
+
+    service->_req_list.Flush();
+
+    size_t count = service->_req_list.size();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        AppMessage & msg = service->_req_list[i];
+
+        if (msg.msg_id == IO_Write_Request)
+        {
+            Socket * socket = (Socket *)msg.param1;
+            Buffer * buffer = (Buffer *)msg.param2;
+
+            socket->_write_buffers.Push(buffer);
+
+            socket->TryWrite();
+
+            if (msg.param3 == 1)
+            {
+                /*
+                * final write, now shutdown send side of connection
+                */
+                socket->Shutdown();
+            }
+
+            socket->Release();
+        }
+        else if (msg.msg_id == IO_Close)
+        {
+            Socket * socket = (Socket *)msg.param1;
+
+            socket->Shutdown();
+
+            socket->Release();
+        }
+    }
+
+    service->_req_list.clear();
 }
 
 /*
@@ -488,7 +555,8 @@ SocketServer::Socket::Socket(SocketServer & server, uv_tcp_t * socket)
         throw BaseException("SocketServer::Socket::Socket()", "socket is null");
 
     this->_socket = socket;
-    this->_socket->data = this;
+    ((connection_t *)socket)->socket = this;
+    ((connection_t *)socket)->buffer = NULL;
 }
 
 SocketServer::Socket::~Socket()
@@ -502,7 +570,10 @@ void SocketServer::Socket::Attach(uv_tcp_t * socket)
         throw BaseException("SocketServer::Socket::Attach()", "socket already attached");
 
     this->_socket = socket;
-    this->_socket->data = this;
+    ((connection_t *)socket)->socket = this;
+    ((connection_t *)socket)->buffer = NULL;
+
+    this->Reset();
 }
 
 void SocketServer::Socket::Detatch()
@@ -510,7 +581,6 @@ void SocketServer::Socket::Detatch()
     if (!this->_socket)
         throw BaseException("SocketServer::Socket::Detatch()", "socket is null");
 
-    this->_socket->data = NULL;
     this->_socket = NULL;
 }
 
@@ -527,6 +597,17 @@ void SocketServer::Socket::Write(const char * data, size_t data_length, bool the
 void SocketServer::Socket::Write(Buffer * buffer, bool then_shutdown)
 {
     this->_server.Write(this, buffer, then_shutdown);
+}
+
+void SocketServer::Socket::Shutdown()
+{
+    if (this->GetStatus() != SocketOpt::S_CONNECTED) return;
+
+    this->SetStatus(SocketOpt::S_DISCONNECTING);
+
+    if (this->HasFlag(SocketOpt::F_WRITING)) return;
+
+    this->Close();
 }
 
 void SocketServer::Socket::AddRef()
@@ -546,40 +627,61 @@ void SocketServer::Socket::Release()
         this->_server.ReleaseSocket(this);
 }
 
-void SocketServer::Socket::Shutdown()
-{
-    uv_shutdown_t * req = (uv_shutdown_t *)jc_malloc(sizeof(uv_shutdown_t));
-    uv_shutdown(req, (uv_stream_t *)this->_socket, SocketServer::Socket::ShutdownCb);
-}
-
-void SocketServer::Socket::Close()
-{
-    Mutex::Owner lock(this->_server._socket_lock);
-
-    if (this->_socket)
-    {
-        uv_close((uv_handle_t *)this->_socket, (uv_close_cb)jc_free);
-
-        this->Detatch();
-
-        this->_server.OnConnectionClosed(this);
-
-        this->Release();
-    }
-}
-
 void SocketServer::Socket::AbortiveClose()
 {
     this->_server.PostAbortiveClose(this);
 }
 
-void SocketServer::Socket::ShutdownCb(uv_shutdown_t * req, int status)
+void SocketServer::Socket::TryWrite()
 {
-    Socket * socket = (Socket *)req->handle->data;
+    if (this->HasFlag(SocketOpt::F_WRITING)) return;
 
-    if (!socket) return;
+    if (this->_write_buffers.Empty()) return;
 
-    socket->Close();
+    if (this->HasFlag(SocketOpt::F_CLOSING))
+    {
+        while (!this->_write_buffers.Empty())
+        {
+            Buffer * buffer = this->_write_buffers.Pop();
+            this->_server.WriteCompleted(this, buffer, UV_ECANCELED);
+            buffer->Release();
+        }
+        return;
+    }
 
-    jc_free(req);
+    Buffer * buffer = this->_write_buffers.Front();
+
+    if (buffer->GetUsed() < sizeof(uv_write_t))
+    {
+        this->_write_buffers.PopFront();
+        buffer->Release();
+        this->TryWrite();
+        return;
+    }
+
+    buffer->SetupWrite(sizeof(uv_write_t));
+
+    this->AddRef();
+    this->AddFlag(SocketOpt::F_WRITING);
+    uv_write_t * req = (uv_write_t *)buffer->GetBuffer();
+    int r = uv_write(req, (uv_stream_t *)&this->_socket, buffer->GetUVBuffer(), 1, SocketServer::WriteCompletedCb);
+    if (r != 0)
+    {
+        this->RemoveFlag(SocketOpt::F_WRITING);
+        this->Release();
+    }
+}
+
+void SocketServer::Socket::Close()
+{
+    if (this->HasFlag(SocketOpt::F_CLOSING)) return;
+
+    this->AddFlag(SocketOpt::F_CLOSING);
+
+    uv_close((uv_handle_t *)&this->_socket, SocketServer::OnConnectionCloseCb);
+}
+
+void SocketServer::Socket::SetupRead(Buffer * buffer)
+{
+    ((connection_t *)this->_socket)->buffer = buffer;
 }

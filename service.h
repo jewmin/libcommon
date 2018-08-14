@@ -5,7 +5,7 @@
 #include "log.h"
 #include "thread.h"
 #include "app_msg.h"
-#include "lock_queue.h"
+#include "container.h"
 
 class BaseService : public BaseThread
 {
@@ -31,6 +31,7 @@ protected:
     uv_loop_t * _loop;
     uv_async_t _stop_handle;
     uv_prepare_t _msg_handle;
+    uv_async_t _msg_notify_handle;
     
     ILog * _logger;
     LockQueue<AppMessage> _msg_queue;

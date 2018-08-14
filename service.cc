@@ -6,6 +6,7 @@ BaseService::BaseService(ILog * logger)
     this->_loop = uv_loop_new();
     uv_async_init(this->_loop, &this->_stop_handle, BaseService::StopCallback);
     uv_prepare_init(this->_loop, &this->_msg_handle);
+    uv_async_init(this->_loop, &this->_msg_notify_handle, NULL);
     this->_msg_handle.data = this;
 }
 
@@ -35,6 +36,7 @@ void BaseService::PostMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uin
     msg.param4 = param4;
     msg.param5 = param5;
     this->_msg_queue.Push(msg);
+    uv_async_send(&this->_msg_notify_handle);
 }
 
 void BaseService::Run()

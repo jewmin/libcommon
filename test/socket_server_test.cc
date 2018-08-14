@@ -13,11 +13,11 @@
 //    server.WaitForShutdownToComplete();
 //}
 
-TEST(SocketServerTest, listen_error)
-{
-    MockSocketServer server(0, 0);
-    server.Open("haha", 6789);
-    server.StartAcceptingConnections();
-    jc_sleep(10);
-    server.WaitForShutdownToComplete();
-}
+//TEST(SocketServerTest, listen_error)
+//{
+//    MockSocketServer server(0, 0);
+//    server.Open("haha", 6789);
+//    server.StartAcceptingConnections();
+//    jc_sleep(10);
+//    server.WaitForShutdownToComplete();
+//}

@@ -5,9 +5,9 @@
 #include "buffer.h"
 #include "service.h"
 #include "network.h"
-#include "double_buffer.h"
+#include "container.h"
 
-class SocketClient : protected BaseService, private Buffer::Allocator, public SocketOpt
+class SocketClient : public SocketOpt, protected BaseService, private Buffer::Allocator
 {
 public:
     virtual ~SocketClient();
@@ -67,13 +67,14 @@ private:
     static void AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
     static void ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
     static void WriteCompletedCb(uv_write_t * req, int status);
-    static void WriteIdleCb(uv_idle_t * handle);
+    static void TryWriteCb(uv_prepare_t * handle);
 
 private:
     uv_tcp_t _connect_socket;
     uv_connect_t _req;
     uv_async_t _connect_event;
-    uv_idle_t _write_idle_event;
+    uv_async_t _write_notify_event;
+    uv_prepare_t _write_event;
     DoubleBuffer<Buffer *> _write_buffers;
 
     char _host[256];

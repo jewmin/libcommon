@@ -6,9 +6,12 @@
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdarg.h>
 #include <stddef.h>
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
 
 /* 定义内存分配 */
 #define jc_malloc malloc
