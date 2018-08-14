@@ -79,7 +79,7 @@ public:
 
     inline size_t size() { return this->_proc_vector->size(); }
 
-    inline T & operator [] (int32_t index) { return this->_proc_vector->operator[](index); }
+    inline T & operator [] (size_t index) { return this->_proc_vector->operator[](index); }
 
 protected:
     inline void Swap()
