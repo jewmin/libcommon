@@ -142,6 +142,11 @@ void SocketServer::ReleaseSockets()
 
     while (!this->_active_list.empty())
     {
+        uv_run(this->_loop, UV_RUN_ONCE);
+    }
+
+    while (!this->_active_list.empty())
+    {
         this->ReleaseSocket(this->_active_list.front());
     }
 
