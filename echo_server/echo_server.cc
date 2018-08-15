@@ -57,7 +57,7 @@ void EchoServer::OnConnectionEstablished(SocketServer::Socket * socket, Buffer *
     if (this->_logger)
         this->_logger->Info("OnConnectionEstablished");
 
-    socket->Write(this->_welcome_message.c_str(), this->_welcome_message.length());
+    //socket->Write(this->_welcome_message.c_str(), this->_welcome_message.length());
 }
 
 void EchoServer::OnConnectionClosed(SocketServer::Socket * socket)
@@ -273,6 +273,8 @@ void EchoServer::ProcessCommand(SocketServer::Socket * socket, Buffer * buffer) 
          */
         if (this->_logger)
             this->_logger->Info("Package[length:%u]\n%s", data_len, DumpData(data, data_length, 40).c_str());
+
+        socket->Write((const char *)data, data_length);
     }
     else
     {

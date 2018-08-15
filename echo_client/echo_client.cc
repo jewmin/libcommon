@@ -50,11 +50,11 @@ void EchoClient::OnConnect()
     if (this->_logger)
         this->_logger->Info("OnConnect");
 
-    /*static char message[1000] = { 0 };
+    static char message[1000] = { 0 };
     memset(message, '.', 1000);
     memcpy(message, "BEGIN", strlen("BEGIN"));
     memcpy(message + 1000 - strlen("END"), "END", 3);
-    this->Write(message, 1000);*/
+    this->Write(message, 1000);
 }
 
 void EchoClient::OnConnectFail()

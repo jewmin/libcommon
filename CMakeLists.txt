@@ -15,6 +15,7 @@ source_group("src" FILES ${all_srcs})
 # 设置
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_SUPPRESS_REGENERATION true)
+add_definitions(-DUSE_JEMALLOC)
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
@@ -22,12 +23,16 @@ if (MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if (CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-std=c++11)
 endif()
 
 # 第三方类库
 include_directories(3rd/libuv/include)
+include_directories(3rd/jemalloc/include)
+if (MSVC)
+    include_directories(3rd/jemalloc/include/msvc_compat)
+endif()
 
 # 生成静态库
 if (MSVC)
