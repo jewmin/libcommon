@@ -669,7 +669,7 @@ void SocketServer::Socket::TryWrite()
     this->AddRef();
     this->AddFlag(SocketOpt::F_WRITING);
     uv_write_t * req = (uv_write_t *)buffer->GetBuffer();
-    int r = uv_write(req, (uv_stream_t *)&this->_socket, buffer->GetUVBuffer(), 1, SocketServer::WriteCompletedCb);
+    int r = uv_write(req, (uv_stream_t *)this->_socket, buffer->GetUVBuffer(), 1, SocketServer::WriteCompletedCb);
     if (r != 0)
     {
         this->RemoveFlag(SocketOpt::F_WRITING);
@@ -683,7 +683,7 @@ void SocketServer::Socket::Close()
 
     this->AddFlag(SocketOpt::F_CLOSING);
 
-    uv_close((uv_handle_t *)&this->_socket, SocketServer::OnConnectionCloseCb);
+    uv_close((uv_handle_t *)this->_socket, SocketServer::OnConnectionCloseCb);
 }
 
 void SocketServer::Socket::SetupRead(Buffer * buffer)

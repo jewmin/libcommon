@@ -21,6 +21,8 @@ if (MSVC)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DJEMALLOC_EXPORT=)
+    add_definitions(-DJEMALLOC_DEBUG)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)

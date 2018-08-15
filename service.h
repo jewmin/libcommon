@@ -3,7 +3,6 @@
 
 #include "uv.h"
 #include "log.h"
-#include "common.h"
 #include "thread.h"
 #include "app_msg.h"
 #include "container.h"

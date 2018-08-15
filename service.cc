@@ -3,8 +3,6 @@
 BaseService::BaseService(ILog * logger)
     : _logger(logger)
 {
-    uv_replace_allocator(jc_malloc, jc_realloc, jc_calloc, jc_free);
-
     this->_loop = uv_loop_new();
     uv_async_init(this->_loop, &this->_stop_handle, BaseService::StopCallback);
     uv_prepare_init(this->_loop, &this->_msg_handle);

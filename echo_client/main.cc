@@ -1,7 +1,8 @@
 #include <signal.h>
-#include "echo_client.h"
+#include "common.h"
 #include "test_log.h"
 #include "exception.h"
+#include "echo_client.h"
 
 void close_cb(uv_handle_t * handle, void * arg)
 {
@@ -17,6 +18,8 @@ void signal_handler(uv_signal_t * handle, int signum)
 
 int main(int argc, const char * * argv)
 {
+    uv_replace_allocator(jc_malloc, jc_realloc, jc_calloc, jc_free);
+
     TestLog log("echo_client.log");
     log.Start();
 

@@ -1,7 +1,8 @@
 #include <signal.h>
-#include "echo_server.h"
+#include "common.h"
 #include "test_log.h"
 #include "exception.h"
+#include "echo_server.h"
 
 void close_cb(uv_handle_t * handle, void * arg)
 {
@@ -17,6 +18,8 @@ void signal_handler(uv_signal_t * handle, int signum)
 
 int main(int argc, const char * * argv)
 {
+    uv_replace_allocator(jc_malloc, jc_realloc, jc_calloc, jc_free);
+
     TestLog log("echo_server.log");
     log.Start();
 
@@ -24,7 +27,7 @@ int main(int argc, const char * * argv)
     {
         uv_loop_t * loop = uv_default_loop();
 
-        EchoServer server("Welcome to echo server! What are you doing now?", 1, 10, 1024, &log);
+        EchoServer server("Welcome to echo server! What are you doing now?", 10, 10, 1500, &log);
         
         server.Open("::", 6789);
 
