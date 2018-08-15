@@ -145,11 +145,6 @@ void SocketServer::ReleaseSockets()
         uv_run(this->_loop, UV_RUN_ONCE);
     }
 
-    while (!this->_active_list.empty())
-    {
-        this->ReleaseSocket(this->_active_list.front());
-    }
-
     while (!this->_free_list.empty())
     {
         this->DestroySocket(this->_free_list.front());
@@ -256,12 +251,16 @@ void SocketServer::PostAbortiveClose(Socket * socket)
 
 void SocketServer::Read(Socket * socket, Buffer * buffer)
 {
+    if (socket->HasFlag(SocketOpt::F_READING)) return;
+
     if (!buffer)
         buffer = this->Allocate();
     else
         buffer->AddRef();
         
     socket->AddRef();
+
+    socket->AddFlag(SocketOpt::F_READING);
 
     socket->SetupRead(buffer);
 }
@@ -363,7 +362,20 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
     uv_tcp_init(service->_loop, (uv_tcp_t *)accepted_socket);
 
     int r;
-    if ((r = uv_accept(server, (uv_stream_t *)accepted_socket)) == 0)
+    r = uv_accept(server, (uv_stream_t *)accepted_socket);
+    
+    if (r == 0)
+        r = uv_tcp_nodelay((uv_tcp_t *)accepted_socket, service->GetNoDelay() ? 1 : 0);
+
+    if (r == 0)
+    {
+        if (service->GetKeepAlive() > 0)
+            r = uv_tcp_keepalive((uv_tcp_t *)accepted_socket, 1, service->GetKeepAlive());
+        else
+            r = uv_tcp_keepalive((uv_tcp_t *)accepted_socket, 0, 0);
+    }
+
+    if (r == 0)
     {
         Buffer * address = service->Allocate();
 
@@ -377,26 +389,20 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
             Socket * socket = service->AllocateSocket((uv_tcp_t *)accepted_socket);
 
             /*
-             * Call to unqualified virtual function
-             */
+            * Call to unqualified virtual function
+            */
             service->OnConnectionEstablished(socket, address);
-        }
-        else
-        {
-            uv_close((uv_handle_t *)accepted_socket, (uv_close_cb)jc_free);
-
-            if (service->_logger)
-                service->_logger->Error("SocketServer::OnAcceptCb() - uv_tcp_getpeername: %s", uv_strerror(r));
         }
 
         address->Release();
     }
-    else
+
+    if (r != 0)
     {
         uv_close((uv_handle_t *)accepted_socket, (uv_close_cb)jc_free);
 
         if (service->_logger)
-            service->_logger->Error("SocketServer::OnAcceptCb() - uv_accept: %s", uv_strerror(r));
+            service->_logger->Error("SocketServer::OnAcceptCb() - %s", uv_strerror(r));
     }
 }
 
@@ -409,6 +415,14 @@ void SocketServer::OnConnectionCloseCb(uv_handle_t * handle)
     socket->SetStatus(SocketOpt::S_DISCONNECTED);
 
     socket->_server.OnConnectionClosed(socket);
+
+    if (socket->HasFlag(SocketOpt::F_READING))
+    {
+        socket->RemoveFlag(SocketOpt::F_READING);
+
+        connection->buffer->Release();
+        socket->Release();
+    }
 
     socket->Detatch();
 
@@ -423,7 +437,7 @@ void SocketServer::AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv
 
     Socket * socket = connection->socket;
 
-    if (socket->GetStatus() != SocketOpt::S_CONNECTED)
+    if (!socket->HasFlag(SocketOpt::F_READING))
     {
         uv_read_stop((uv_stream_t *)handle);
         return;
@@ -444,12 +458,7 @@ void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
 
     Buffer * buffer = connection->buffer;
 
-    if (socket->GetStatus() != SocketOpt::S_CONNECTED)
-    {
-        buffer->Release();
-        socket->Release();
-        return;
-    }
+    if (!socket->HasFlag(SocketOpt::F_READING)) return;
 
     if (nread >= 0)
     {
@@ -467,6 +476,8 @@ void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
 
         socket->Shutdown();
     }
+
+    socket->RemoveFlag(SocketOpt::F_READING);
 
     buffer->Release();
     socket->Release();

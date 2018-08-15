@@ -28,6 +28,9 @@ int main(int argc, const char * * argv)
         uv_loop_t * loop = uv_default_loop();
 
         EchoServer server("Welcome to echo server! What are you doing now?", 10, 10, 1500, &log);
+
+        server.SetNoDelay(true);
+        server.SetKeepAlive(60);
         
         server.Open("::", 6789);
 
