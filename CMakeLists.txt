@@ -31,8 +31,8 @@ endif()
 
 # 第三方类库
 include_directories(3rd/libuv/include)
-include_directories(3rd/jemalloc/include)
 if (MSVC)
+    include_directories(3rd/jemalloc/include)
     include_directories(3rd/jemalloc/include/msvc_compat)
 endif()
 

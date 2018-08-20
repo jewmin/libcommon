@@ -1,6 +1,23 @@
 {
     "configurations": [
         {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include",
+                "/usr/include/linux",
+                "/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include",
+                "/usr/include/c++/4.8.5",
+                "/home/jim/libcommon/3rd/libuv/include",
+                "/home/jim/libcommon/3rd/gtest/include",
+                "/home/jim/libuv/src/unix",
+                "/home/jim/libuv/src"
+            ],
+            "defines": [
+                "USE_JEMALLOC"
+            ]
+        },
+        {
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
@@ -24,22 +41,6 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"
-        },
-        {
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/include",
-                "/usr/include/linux",
-                "/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include",
-                "/usr/include/c++/4.8.5",
-                "/home/jim/libcommon/3rd/libuv/include",
-                "/home/jim/libcommon/3rd/gtest/include",
-                "/home/jim/libuv/src/unix",
-                "/home/jim/libuv/src"
-            ],
-            "defines": [],
-            "compilerPath": "/usr/bin/g++"
         }
     ],
     "version": 4
