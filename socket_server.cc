@@ -28,7 +28,15 @@ SocketServer::SocketServer(size_t max_free_sockets, size_t max_free_buffers, siz
 
 SocketServer::~SocketServer()
 {
-    this->ReleaseSockets();
+    try
+    {
+        this->ReleaseSockets();
+        this->ReleaseBuffers();
+    }
+    catch (...)
+    {
+
+    }
 }
 
 void SocketServer::Open(const char * host, uint16_t port)

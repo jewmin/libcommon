@@ -15,11 +15,13 @@ SocketClient::SocketClient(size_t max_free_buffers, size_t buffer_size, ILog * l
 
 SocketClient::~SocketClient()
 {
-    this->Shutdown();
-
-    while (this->GetStatus() != SocketOpt::S_DISCONNECTED)
+    try
     {
-        uv_run(this->_loop, UV_RUN_ONCE);
+        this->ReleaseBuffers();
+    }
+    catch (...)
+    {
+
     }
 }
 
@@ -212,6 +214,10 @@ void SocketClient::Run()
     uv_prepare_start(&this->_write_event, SocketClient::TryWriteCb);
     uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
+    while (this->GetStatus() != SocketOpt::S_DISCONNECTED)
+    {
+        uv_run(this->_loop, UV_RUN_ONCE);
+    }
     this->OnShutdownComplete();
 }
 
