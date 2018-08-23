@@ -175,6 +175,7 @@ void SocketServer::Run()
     uv_prepare_start(&this->_connections_event, SocketServer::ConnectionsCb);
     uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
+    this->ReleaseSockets();
     this->OnShutdownComplete();
 }
 

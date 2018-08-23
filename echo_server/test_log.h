@@ -28,6 +28,14 @@ public:
         size_t count = this->_log_queue.size();
         for (size_t i = 0; i < count; i++)
         {
+            const char * msg = (const char *)this->_log_queue[i]->GetBuffer();
+            printf("%s\n", msg);
+            if (!this->_log_stream.is_open())
+            {
+                this->_log_stream.open(this->_log_filename, std::ios_base::out | std::ios_base::app);
+                this->_log_stream << "*********** newest log ***********" << '\n';
+            }
+            this->_log_stream << msg << '\n';
             this->_log_queue[i]->Release();
         }
         this->_log_queue.clear();

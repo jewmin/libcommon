@@ -115,7 +115,7 @@ void EchoServer::ReadCompleted(SocketServer::Socket * socket, Buffer * buffer)
 void EchoServer::WriteCompleted(SocketServer::Socket * socket, Buffer * buffer, int status)
 {
     if (this->_logger)
-        this->_logger->Info("WriteCompleted status: %d", status);
+        this->_logger->Info("WriteCompleted %s", uv_strerror(status));
 }
 
 size_t EchoServer::GetMinimumMessageSize() const
