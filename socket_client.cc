@@ -16,6 +16,11 @@ SocketClient::SocketClient(size_t max_free_buffers, size_t buffer_size, ILog * l
 SocketClient::~SocketClient()
 {
     this->Shutdown();
+
+    while (this->GetStatus() != SocketOpt::S_DISCONNECTED)
+    {
+        uv_run(this->_loop, UV_RUN_ONCE);
+    }
 }
 
 void SocketClient::ConnectTo(const char * host, uint16_t port)
