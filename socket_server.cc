@@ -260,8 +260,6 @@ void SocketServer::Read(Socket * socket, Buffer * buffer)
         
     socket->AddRef();
 
-    socket->AddFlag(SocketOpt::F_READING);
-
     socket->SetupRead(buffer);
 }
 
@@ -437,11 +435,7 @@ void SocketServer::AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv
 
     Socket * socket = connection->socket;
 
-    if (!socket->HasFlag(SocketOpt::F_READING))
-    {
-        uv_read_stop((uv_stream_t *)handle);
-        return;
-    }
+    if (!socket->HasFlag(SocketOpt::F_READING)) return;
 
     Buffer * buffer = connection->buffer;
 
@@ -456,9 +450,15 @@ void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
 
     Socket * socket = connection->socket;
 
-    Buffer * buffer = connection->buffer;
+    if (!socket->HasFlag(SocketOpt::F_READING))
+    {
+        uv_read_stop(stream);
+        return;
+    }
 
-    if (!socket->HasFlag(SocketOpt::F_READING)) return;
+    socket->RemoveFlag(SocketOpt::F_READING);
+
+    Buffer * buffer = connection->buffer;
 
     if (nread >= 0)
     {
@@ -476,8 +476,6 @@ void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
 
         socket->Shutdown();
     }
-
-    socket->RemoveFlag(SocketOpt::F_READING);
 
     buffer->Release();
     socket->Release();
@@ -699,5 +697,7 @@ void SocketServer::Socket::Close()
 
 void SocketServer::Socket::SetupRead(Buffer * buffer)
 {
+    this->AddFlag(SocketOpt::F_READING);
+
     ((connection_t *)this->_socket)->buffer = buffer;
 }
