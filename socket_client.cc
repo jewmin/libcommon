@@ -15,22 +15,15 @@ SocketClient::SocketClient(size_t max_free_buffers, size_t buffer_size, ILog * l
 
 SocketClient::~SocketClient()
 {
-    try
-    {
-        this->ReleaseBuffers();
-    }
-    catch (...)
-    {
-
-    }
+    
 }
 
-void SocketClient::ConnectTo(const char * host, uint16_t port)
+int SocketClient::ConnectTo(const char * host, uint16_t port)
 {
     strncpy(this->_host, host, sizeof(this->_host));
     this->_port = port;
 
-    this->Start();
+    return this->Start();
 }
 
 void SocketClient::StartConnections()
@@ -88,7 +81,7 @@ void SocketClient::Write(const char * data, size_t data_length)
 
     this->PreWrite(buffer, data, data_length);
 
-    if (buffer->GetSize() - buffer->GetUsed() < data_length)
+    if (buffer->GetSize() < buffer->GetUsed() || buffer->GetSize() - buffer->GetUsed() < data_length)
     {
         if (this->_logger)
             this->_logger->Error("SocketClient::Write() - %s", uv_strerror(UV_ENOBUFS));
@@ -214,10 +207,8 @@ void SocketClient::Run()
     uv_prepare_start(&this->_write_event, SocketClient::TryWriteCb);
     uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
-    while (this->GetStatus() != SocketOpt::S_DISCONNECTED)
-    {
-        uv_run(this->_loop, UV_RUN_ONCE);
-    }
+    while (this->GetStatus() != SocketOpt::S_DISCONNECTED) uv_run(this->_loop, UV_RUN_ONCE);
+    this->ReleaseBuffers();
     this->OnShutdownComplete();
 }
 

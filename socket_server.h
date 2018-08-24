@@ -17,7 +17,7 @@ public:
 
     virtual ~SocketServer();
 
-    void Open(const char * host, uint16_t port);
+    int Open(const char * host, uint16_t port);
 
     void StartAcceptingConnections();
     void StopAcceptingConnections();

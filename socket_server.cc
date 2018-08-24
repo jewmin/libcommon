@@ -28,23 +28,15 @@ SocketServer::SocketServer(size_t max_free_sockets, size_t max_free_buffers, siz
 
 SocketServer::~SocketServer()
 {
-    try
-    {
-        this->ReleaseSockets();
-        this->ReleaseBuffers();
-    }
-    catch (...)
-    {
-
-    }
+    
 }
 
-void SocketServer::Open(const char * host, uint16_t port)
+int SocketServer::Open(const char * host, uint16_t port)
 {
     strncpy(this->_host, host, sizeof(this->_host));
     this->_port = port;
 
-    this->Start();
+    return this->Start();
 }
 
 void SocketServer::StartAcceptingConnections()
@@ -178,6 +170,7 @@ void SocketServer::Run()
     uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
     this->ReleaseSockets();
+    this->ReleaseBuffers();
     this->OnShutdownComplete();
 }
 
@@ -286,7 +279,7 @@ void SocketServer::Write(Socket * socket, const char * data, size_t data_length,
 
     this->PreWrite(socket, buffer, data, data_length);
 
-    if (buffer->GetSize() - buffer->GetUsed() < data_length)
+    if (buffer->GetSize() < buffer->GetUsed() || buffer->GetSize() - buffer->GetUsed() < data_length)
     {
         if (this->_logger)
             this->_logger->Error("SocketServer::Write() - %s", uv_strerror(UV_ENOBUFS));

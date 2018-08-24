@@ -12,7 +12,7 @@ class SocketClient : public SocketOpt, protected BaseService, private Buffer::Al
 public:
     virtual ~SocketClient();
 
-    void ConnectTo(const char * host, uint16_t port);
+    int ConnectTo(const char * host, uint16_t port);
 
     void StartConnections();
     void StopConnections();
