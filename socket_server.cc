@@ -141,17 +141,19 @@ void SocketServer::Listen()
 
 void SocketServer::ReleaseSockets()
 {
-    Mutex::Owner lock(this->_socket_lock);
-
+    this->_socket_lock.Lock();
     for (auto & it : this->_active_list)
     {
         it->Shutdown();
     }
+    this->_socket_lock.Unlock();
 
     while (!this->_active_list.empty())
     {
         uv_run(this->_loop, UV_RUN_ONCE);
     }
+
+    Mutex::Owner lock(this->_socket_lock);
 
     while (!this->_free_list.empty())
     {
