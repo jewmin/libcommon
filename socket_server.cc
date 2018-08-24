@@ -446,7 +446,7 @@ void SocketServer::AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv
 
     Socket * socket = connection->socket;
 
-    if (!socket->HasFlag(SocketOpt::F_READING)) return;
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED || !socket->HasFlag(SocketOpt::F_READING)) return;
 
     Buffer * buffer = connection->buffer;
 
@@ -461,7 +461,7 @@ void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
 
     Socket * socket = connection->socket;
 
-    if (!socket->HasFlag(SocketOpt::F_READING))
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED || !socket->HasFlag(SocketOpt::F_READING))
     {
         uv_read_stop(stream);
         return;

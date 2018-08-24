@@ -277,14 +277,9 @@ void SocketClient::AllocBufferCb(uv_handle_t * handle, size_t suggested_size, uv
 {
     SocketClient * client = (SocketClient *)handle->loop->data;
 
-    Buffer * buffer = (Buffer *)handle->data;
+    if (client->GetStatus() != SocketOpt::S_CONNECTED) return;
 
-    if (client->GetStatus() != SocketOpt::S_CONNECTED)
-    {
-        buffer->Release();
-        uv_read_stop((uv_stream_t *)handle);
-        return;
-    }
+    Buffer * buffer = (Buffer *)handle->data;
 
     buffer->SetupRead();
 
@@ -295,9 +290,14 @@ void SocketClient::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
 {
     SocketClient * client = (SocketClient *)stream->loop->data;
 
-    if (client->GetStatus() != SocketOpt::S_CONNECTED) return;
-
     Buffer * buffer = (Buffer *)stream->data;
+
+    if (client->GetStatus() != SocketOpt::S_CONNECTED)
+    {
+        buffer->Release();
+        uv_read_stop(stream);
+        return;
+    }
 
     if (nread >= 0)
     {

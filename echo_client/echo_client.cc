@@ -275,7 +275,7 @@ void EchoClient::ProcessCommand(Buffer * buffer)
          * TODO : Process data receive from client
          */
         if (this->_logger)
-            this->_logger->Info("Package[length:%u]\n%s", data_len, DumpData(data, data_length, 40).c_str());
+            this->_logger->Info("Package[length:%u]\n%s", data_len, DumpData(data, data_length, 49).c_str());
 
         this->Write((const char *)data, data_length);
     }

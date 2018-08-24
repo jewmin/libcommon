@@ -46,10 +46,11 @@ int main(int argc, const char * * argv)
             client.Write(message, 1000);
         }*/
 
-        uv_signal_t sig;
-        uv_signal_init(loop, &sig);
-        uv_signal_start(&sig, signal_handler, SIGINT);
-        uv_signal_start(&sig, signal_handler, SIGTERM);
+        uv_signal_t sig1, sig2;
+        uv_signal_init(loop, &sig1);
+        uv_signal_init(loop, &sig2);
+        uv_signal_start(&sig1, signal_handler, SIGINT);
+        uv_signal_start(&sig2, signal_handler, SIGTERM);
 
         uv_run(loop, UV_RUN_DEFAULT);
 
