@@ -115,4 +115,29 @@ private:
     MockSocketClient & operator =(const MockSocketClient & rhs);
 };
 
+class MockSocketClient2 : public SocketClient
+{
+public:
+    MockSocketClient2(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+
+    virtual ~MockSocketClient2();
+
+    virtual void OnConnect() override;
+
+    virtual void OnClose() override;
+
+    virtual void ReadCompleted(Buffer * buffer) override;
+
+    virtual void WriteCompleted(Buffer * buffer, int status) override;
+
+    virtual void PreWrite(Buffer * buffer, const char * data, size_t data_length) override;
+
+private:
+    /*
+    * No copies do not implement
+    */
+    MockSocketClient2(const MockSocketClient2 & rhs);
+    MockSocketClient2 & operator =(const MockSocketClient2 & rhs);
+};
+
 #endif
