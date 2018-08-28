@@ -386,14 +386,21 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
         r = uv_tcp_getpeername((uv_tcp_t *)accepted_socket, (sockaddr *)address->GetBuffer(), &address_size);
         if (r == 0)
         {
-            address->Use(address_size);
+            if (address_size > address->GetSize())
+            {
+                r = UV_EFAULT;
+            }
+            else
+            {
+                address->Use(address_size);
 
-            Socket * socket = service->AllocateSocket((uv_tcp_t *)accepted_socket);
+                Socket * socket = service->AllocateSocket((uv_tcp_t *)accepted_socket);
 
-            /*
-            * Call to unqualified virtual function
-            */
-            service->OnConnectionEstablished(socket, address);
+                /*
+                * Call to unqualified virtual function
+                */
+                service->OnConnectionEstablished(socket, address);
+            }
         }
 
         address->Release();
