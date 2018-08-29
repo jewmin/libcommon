@@ -77,6 +77,7 @@ MockSocketServer::MockSocketServer(size_t max_free_sockets, size_t max_free_buff
 {
     Listen_done = false;
     Set_Status = false;
+    Accept_Count = 0;
 }
 
 MockSocketServer::~MockSocketServer()
@@ -129,6 +130,8 @@ void MockSocketServer::OnConnectionCreated()
 void MockSocketServer::OnConnectionEstablished(Socket * socket, Buffer * address)
 {
     OnConnectionEstablishedCallCount++;
+
+    Accept_Count++;
 
     Mutex::Owner lock(SocketLock);
     ActiveSocketList.push_back(socket);
@@ -427,7 +430,7 @@ TEST(SocketTest, init_client_ipv4)
     client.StartConnections();
 
     while (!server.Listen_done) jc_sleep(1);
-    while (!client.Connect_done) jc_sleep(1);
+    while (server.Accept_Count < 1) jc_sleep(1);
 
     client.WaitForShutdownToComplete();
     server.WaitForShutdownToComplete();
@@ -461,7 +464,7 @@ TEST(SocketTest, init_client_ipv6)
     client.StartConnections();
 
     while (!server.Listen_done) jc_sleep(1);
-    while (!client.Connect_done) jc_sleep(1);
+    while (server.Accept_Count < 1) jc_sleep(1);
 
     client.WaitForShutdownToComplete();
     server.WaitForShutdownToComplete();
@@ -546,7 +549,7 @@ TEST(SocketTest, write_data)
     client.StartConnections();
 
     while (!server.Listen_done) jc_sleep(1);
-    while (!client.Connect_done) jc_sleep(1);
+    while (server.Accept_Count < 1) jc_sleep(1);
 
     server.WaitForShutdownToComplete();
     client.WaitForShutdownToComplete();
@@ -578,16 +581,14 @@ TEST(SocketTest, close_socket)
     client1.StartConnections();
 
     while (!server.Listen_done) jc_sleep(1);
-    while (!client.Connect_done) jc_sleep(1);
-    while (!client1.Connect_done) jc_sleep(1);
-    jc_sleep(500);
+    while (server.Accept_Count < 2) jc_sleep(1);
 
     EXPECT_GE(server.ActiveSocketList.size(), 1);
     SocketServer::Socket * socket = server.ActiveSocketList.front();
     socket->AbortiveClose();
     client2.StartConnections();
 
-    while (!client2.Connect_done) jc_sleep(1);
+    while (server.Accept_Count < 3) jc_sleep(1);
 
     client.WaitForShutdownToComplete();
     client1.WaitForShutdownToComplete();
@@ -613,7 +614,7 @@ TEST(SocketTest, buf_error)
     MockSocketClient * client[3];
     client[0] = new MockSocketClient(3, 100, &log);
     client[1] = new MockSocketClient(3, 180, &log);
-    client[2] = new MockSocketClient(3, 200, &log);
+    client[2] = new MockSocketClient(3, 1024, &log);
 
     for (int i = 0; i < 3; i++)
     {
@@ -622,8 +623,7 @@ TEST(SocketTest, buf_error)
     }
 
     while (!server.Listen_done) jc_sleep(1);
-    for (int i = 0; i < 3; i++)
-        while (!client[i]->Connect_done) jc_sleep(1);
+    while (server.Accept_Count < 3) jc_sleep(1);
 
     server.WaitForShutdownToComplete();
     for (int i = 0; i < 3; i++)
@@ -699,8 +699,7 @@ TEST(SokcetTest, error_test)
     client2.StartConnections();
 
     while (!server.Listen_done) jc_sleep(1);
-    while (!client.Connect_done) jc_sleep(1);
-    while (!client2.Connect_done) jc_sleep(1);
+    while (server.Accept_Count < 2) jc_sleep(1);
 
     server.WaitForShutdownToComplete();
     client.WaitForShutdownToComplete();
@@ -720,7 +719,7 @@ TEST(SokcetTest, read_error)
     client.StartConnections();
 
     while (!server.Listen_done) jc_sleep(1);
-    while (!client.Connect_done) jc_sleep(1);
+    while (server.Accept_Count < 1) jc_sleep(1);
 
     server.WaitForShutdownToComplete();
     client.WaitForShutdownToComplete();

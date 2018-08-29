@@ -12,6 +12,7 @@ public:
     Mutex SocketLock;
     std::list<SocketServer::Socket *> ActiveSocketList;
     bool Listen_done;
+    int Accept_Count;
     bool Set_Status;
 
     static int OnStartAcceptingConnectionsCallCount;
