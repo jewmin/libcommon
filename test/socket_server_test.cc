@@ -2,77 +2,81 @@
 #include "socket_server_test.h"
 #include "log_test.h"
 
-int OnStartAcceptingConnectionsCallCount = 0;
-int OnStopAcceptingConnectionsCallCount = 0;
-int OnShutdownInitiatedCallCount = 0;
-int OnShutdownCompleteCallCount = 0;
-int OnConnectionCreatedCallCount = 0;
-int OnConnectionEstablishedCallCount = 0;
-int OnConnectionClosedCallCount = 0;
-int OnConnectionDestroyedCallCount = 0;
-int OnBufferCreatedCallCount = 0;
-int OnBufferAllocatedCallCount = 0;
-int OnBufferReleasedCallCount = 0;
-int OnBufferDestroyedCallCount = 0;
-int PreWriteCallCount = 0;
-int ReadCompletedCallCount = 0;
-int WriteCompletedCallCount = 0;
-bool bShutdown = true;
-
 const char * host_ipv4 = "127.0.0.1";
 const char * host_ipv6 = "::1";
 const char * host_any = "::";
 const int port = 6789;
 const char content[] = { 'h', 'e', 'l', 'l' , 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!', 0 };
 
-int C_OnStartConnectionsCallCount = 0;
-int C_OnStopConnectionsCallCount = 0;
-int C_OnShutdownInitiatedCallCount = 0;
-int C_OnShutdownCompleteCallCount = 0;
-int C_OnConnectCallCount = 0;
-int C_OnConnectFailCallCount = 0;
-int C_OnCloseCallCount = 0;
-int C_ReadCompletedCallCount = 0;
-int C_WriteCompletedCallCount = 0;
-int C_PreWriteCallCount = 0;
+int MockSocketServer::OnStartAcceptingConnectionsCallCount = 0;
+int MockSocketServer::OnStopAcceptingConnectionsCallCount = 0;
+int MockSocketServer::OnShutdownInitiatedCallCount = 0;
+int MockSocketServer::OnShutdownCompleteCallCount = 0;
+int MockSocketServer::OnConnectionCreatedCallCount = 0;
+int MockSocketServer::OnConnectionEstablishedCallCount = 0;
+int MockSocketServer::OnConnectionClosedCallCount = 0;
+int MockSocketServer::OnConnectionDestroyedCallCount = 0;
+int MockSocketServer::OnBufferCreatedCallCount = 0;
+int MockSocketServer::OnBufferAllocatedCallCount = 0;
+int MockSocketServer::OnBufferReleasedCallCount = 0;
+int MockSocketServer::OnBufferDestroyedCallCount = 0;
+int MockSocketServer::PreWriteCallCount = 0;
+int MockSocketServer::ReadCompletedCallCount = 0;
+int MockSocketServer::WriteCompletedCallCount = 0;
+int MockSocketServer::OnListenFailCallCount = 0;
+
+int MockSocketClient::C_OnStartConnectionsCallCount = 0;
+int MockSocketClient::C_OnStopConnectionsCallCount = 0;
+int MockSocketClient::C_OnShutdownInitiatedCallCount = 0;
+int MockSocketClient::C_OnShutdownCompleteCallCount = 0;
+int MockSocketClient::C_OnConnectCallCount = 0;
+int MockSocketClient::C_OnConnectFailCallCount = 0;
+int MockSocketClient::C_OnCloseCallCount = 0;
+int MockSocketClient::C_ReadCompletedCallCount = 0;
+int MockSocketClient::C_WriteCompletedCallCount = 0;
+int MockSocketClient::C_PreWriteCallCount = 0;
+
+bool MockSocketClient2::bShutdown = true;
 
 void Reset()
 {
-    OnStartAcceptingConnectionsCallCount = 0;
-    OnStopAcceptingConnectionsCallCount = 0;
-    OnShutdownInitiatedCallCount = 0;
-    OnShutdownCompleteCallCount = 0;
-    OnConnectionCreatedCallCount = 0;
-    OnConnectionEstablishedCallCount = 0;
-    OnConnectionClosedCallCount = 0;
-    OnConnectionDestroyedCallCount = 0;
-    OnBufferCreatedCallCount = 0;
-    OnBufferAllocatedCallCount = 0;
-    OnBufferReleasedCallCount = 0;
-    OnBufferDestroyedCallCount = 0;
-    PreWriteCallCount = 0;
-    ReadCompletedCallCount = 0;
-    WriteCompletedCallCount = 0;
+    MockSocketServer::OnStartAcceptingConnectionsCallCount = 0;
+    MockSocketServer::OnStopAcceptingConnectionsCallCount = 0;
+    MockSocketServer::OnShutdownInitiatedCallCount = 0;
+    MockSocketServer::OnShutdownCompleteCallCount = 0;
+    MockSocketServer::OnConnectionCreatedCallCount = 0;
+    MockSocketServer::OnConnectionEstablishedCallCount = 0;
+    MockSocketServer::OnConnectionClosedCallCount = 0;
+    MockSocketServer::OnConnectionDestroyedCallCount = 0;
+    MockSocketServer::OnBufferCreatedCallCount = 0;
+    MockSocketServer::OnBufferAllocatedCallCount = 0;
+    MockSocketServer::OnBufferReleasedCallCount = 0;
+    MockSocketServer::OnBufferDestroyedCallCount = 0;
+    MockSocketServer::PreWriteCallCount = 0;
+    MockSocketServer::ReadCompletedCallCount = 0;
+    MockSocketServer::WriteCompletedCallCount = 0;
+    MockSocketServer::OnListenFailCallCount = 0;
 }
 
 void C_Reset()
 {
-    C_OnStartConnectionsCallCount = 0;
-    C_OnStopConnectionsCallCount = 0;
-    C_OnShutdownInitiatedCallCount = 0;
-    C_OnShutdownCompleteCallCount = 0;
-    C_OnConnectCallCount = 0;
-    C_OnConnectFailCallCount = 0;
-    C_OnCloseCallCount = 0;
-    C_ReadCompletedCallCount = 0;
-    C_WriteCompletedCallCount = 0;
-    C_PreWriteCallCount = 0;
+    MockSocketClient::C_OnStartConnectionsCallCount = 0;
+    MockSocketClient::C_OnStopConnectionsCallCount = 0;
+    MockSocketClient::C_OnShutdownInitiatedCallCount = 0;
+    MockSocketClient::C_OnShutdownCompleteCallCount = 0;
+    MockSocketClient::C_OnConnectCallCount = 0;
+    MockSocketClient::C_OnConnectFailCallCount = 0;
+    MockSocketClient::C_OnCloseCallCount = 0;
+    MockSocketClient::C_ReadCompletedCallCount = 0;
+    MockSocketClient::C_WriteCompletedCallCount = 0;
+    MockSocketClient::C_PreWriteCallCount = 0;
 }
 
 MockSocketServer::MockSocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size /*= 1024*/, ILog * logger /*= NULL*/)
     : SocketServer(max_free_sockets, max_free_buffers, buffer_size, logger)
 {
-
+    Listen_done = false;
+    Set_Status = false;
 }
 
 MockSocketServer::~MockSocketServer()
@@ -101,6 +105,22 @@ void MockSocketServer::OnShutdownComplete()
     OnShutdownCompleteCallCount++;
 }
 
+void MockSocketServer::OnListen()
+{
+    Listen_done = true;
+}
+
+void MockSocketServer::OnListenFail()
+{
+    OnListenFailCallCount++;
+    Listen_done = true;
+}
+
+void MockSocketServer::OnClose()
+{
+    
+}
+
 void MockSocketServer::OnConnectionCreated()
 {
     OnConnectionCreatedCallCount++;
@@ -112,6 +132,9 @@ void MockSocketServer::OnConnectionEstablished(Socket * socket, Buffer * address
 
     Mutex::Owner lock(SocketLock);
     ActiveSocketList.push_back(socket);
+
+    if (this->Set_Status)
+        socket->Shutdown();
 }
 
 void MockSocketServer::OnConnectionClosed(Socket * socket)
@@ -170,7 +193,7 @@ void MockSocketServer::WriteCompleted(Socket * socket, Buffer * buffer, int stat
 MockSocketClient::MockSocketClient(size_t max_free_buffers, size_t buffer_size /*= 1024*/, ILog * logger /*= NULL*/)
     : SocketClient(max_free_buffers, buffer_size, logger)
 {
-
+    Connect_done = false;
 }
 
 MockSocketClient::~MockSocketClient()
@@ -201,12 +224,14 @@ void MockSocketClient::OnShutdownComplete()
 void MockSocketClient::OnConnect()
 {
     C_OnConnectCallCount++;
+    Connect_done = true;
     this->Write(content, sizeof(content));
 }
 
 void MockSocketClient::OnConnectFail()
 {
     C_OnConnectFailCallCount++;
+    Connect_done = true;
 }
 
 void MockSocketClient::OnClose()
@@ -234,7 +259,7 @@ void MockSocketClient::PreWrite(Buffer * buffer, const char * data, size_t data_
 MockSocketClient2::MockSocketClient2(size_t max_free_buffers, size_t buffer_size /*= 1024*/, ILog * logger /*= NULL*/)
     : SocketClient(max_free_buffers, buffer_size, logger)
 {
-
+    Connect_done = false;
 }
 
 MockSocketClient2::~MockSocketClient2()
@@ -244,6 +269,7 @@ MockSocketClient2::~MockSocketClient2()
 
 void MockSocketClient2::OnConnect()
 {
+    Connect_done = true;
     this->Write(content, sizeof(content));
     if (bShutdown) this->Shutdown();
     bShutdown = !bShutdown;
@@ -269,6 +295,33 @@ void MockSocketClient2::PreWrite(Buffer * buffer, const char * data, size_t data
 
 }
 
+MockSocketClient3::MockSocketClient3(size_t max_free_buffers, size_t buffer_size /*= 1024*/, ILog * logger /*= NULL*/)
+    : SocketClient(max_free_buffers, buffer_size, logger)
+{
+    Connect_done = false;
+}
+
+MockSocketClient3::~MockSocketClient3()
+{
+
+}
+
+void MockSocketClient3::OnConnect()
+{
+    Connect_done = true;
+    this->SetStatus(SocketOpt::S_DISCONNECTED);
+}
+
+void MockSocketClient3::ReadCompleted(Buffer * buffer)
+{
+
+}
+
+void MockSocketClient3::WriteCompleted(Buffer * buffer, int status)
+{
+
+}
+
 TEST(SocketTest, init_server)
 {
     Reset();
@@ -278,10 +331,10 @@ TEST(SocketTest, init_server)
     ASSERT_EQ(server.Open(host_ipv4, port), 0);
     server.WaitForShutdownToComplete();
 
-    EXPECT_EQ(OnStartAcceptingConnectionsCallCount, 0);
-    EXPECT_EQ(OnStopAcceptingConnectionsCallCount, 0);
-    EXPECT_EQ(OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnStartAcceptingConnectionsCallCount, 0);
+    EXPECT_EQ(MockSocketServer::OnStopAcceptingConnectionsCallCount, 0);
+    EXPECT_EQ(MockSocketServer::OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnShutdownCompleteCallCount, 1);
 }
 
 TEST(SocketTest, init_server_ipv4)
@@ -294,13 +347,13 @@ TEST(SocketTest, init_server_ipv4)
     server.SetNoDelay(true);
     server.SetKeepAlive(60);
     server.StartAcceptingConnections();
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
     server.WaitForShutdownToComplete();
 
-    EXPECT_EQ(OnStartAcceptingConnectionsCallCount, 1);
-    EXPECT_EQ(OnStopAcceptingConnectionsCallCount, 1);
-    EXPECT_EQ(OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnStartAcceptingConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnStopAcceptingConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnShutdownCompleteCallCount, 1);
 }
 
 TEST(SocketTest, init_server_ipv6)
@@ -313,13 +366,13 @@ TEST(SocketTest, init_server_ipv6)
     server.SetNoDelay(false);
     server.SetKeepAlive(0);
     server.StartAcceptingConnections();
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
     server.WaitForShutdownToComplete();
 
-    EXPECT_EQ(OnStartAcceptingConnectionsCallCount, 1);
-    EXPECT_EQ(OnStopAcceptingConnectionsCallCount, 1);
-    EXPECT_EQ(OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnStartAcceptingConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnStopAcceptingConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnShutdownCompleteCallCount, 1);
 }
 
 TEST(SocketTest, init_server_error)
@@ -330,13 +383,14 @@ TEST(SocketTest, init_server_error)
     MockSocketServer server(3, 3, 1024, &log);
     ASSERT_EQ(server.Open("haha", port), 0);
     server.StartAcceptingConnections();
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
     server.WaitForShutdownToComplete();
 
-    EXPECT_EQ(OnStartAcceptingConnectionsCallCount, 1);
-    EXPECT_EQ(OnStopAcceptingConnectionsCallCount, 0);
-    EXPECT_EQ(OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnStartAcceptingConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnStopAcceptingConnectionsCallCount, 0);
+    EXPECT_EQ(MockSocketServer::OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnListenFailCallCount, 1);
 }
 
 TEST(SocketTest, init_client)
@@ -348,10 +402,10 @@ TEST(SocketTest, init_client)
     ASSERT_EQ(client.ConnectTo(host_ipv4, port), 0);
     client.WaitForShutdownToComplete();
 
-    EXPECT_EQ(C_OnStartConnectionsCallCount, 0);
-    EXPECT_EQ(C_OnStopConnectionsCallCount, 0);
-    EXPECT_EQ(C_OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(C_OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStartConnectionsCallCount, 0);
+    EXPECT_EQ(MockSocketClient::C_OnStopConnectionsCallCount, 0);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownCompleteCallCount, 1);
 }
 
 TEST(SocketTest, init_client_ipv4)
@@ -372,21 +426,22 @@ TEST(SocketTest, init_client_ipv4)
     client.SetKeepAlive(60);
     client.StartConnections();
 
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
+    while (!client.Connect_done) jc_sleep(1);
 
     client.WaitForShutdownToComplete();
     server.WaitForShutdownToComplete();
 
-    EXPECT_EQ(C_OnStartConnectionsCallCount, 1);
-    EXPECT_EQ(C_OnStopConnectionsCallCount, 1);
-    EXPECT_EQ(C_OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(C_OnShutdownCompleteCallCount, 1);
-    EXPECT_EQ(C_OnConnectCallCount, 1);
-    EXPECT_EQ(C_OnCloseCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStartConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStopConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnConnectCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnCloseCallCount, 1);
 
-    EXPECT_EQ(OnConnectionCreatedCallCount, 1);
-    EXPECT_EQ(OnConnectionEstablishedCallCount, 1);
-    EXPECT_EQ(OnConnectionClosedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnConnectionCreatedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnConnectionEstablishedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnConnectionClosedCallCount, 1);
 }
 
 TEST(SocketTest, init_client_ipv6)
@@ -405,21 +460,22 @@ TEST(SocketTest, init_client_ipv6)
     client.SetKeepAlive(0);
     client.StartConnections();
 
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
+    while (!client.Connect_done) jc_sleep(1);
 
     client.WaitForShutdownToComplete();
     server.WaitForShutdownToComplete();
 
-    EXPECT_EQ(C_OnStartConnectionsCallCount, 1);
-    EXPECT_EQ(C_OnStopConnectionsCallCount, 1);
-    EXPECT_EQ(C_OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(C_OnShutdownCompleteCallCount, 1);
-    EXPECT_EQ(C_OnConnectCallCount, 1);
-    EXPECT_EQ(C_OnCloseCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStartConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStopConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnConnectCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnCloseCallCount, 1);
 
-    EXPECT_EQ(OnConnectionCreatedCallCount, 1);
-    EXPECT_EQ(OnConnectionEstablishedCallCount, 1);
-    EXPECT_EQ(OnConnectionClosedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnConnectionCreatedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnConnectionEstablishedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::OnConnectionClosedCallCount, 1);
 }
 
 TEST(SocketTest, init_client_error)
@@ -431,16 +487,16 @@ TEST(SocketTest, init_client_error)
     ASSERT_EQ(client.ConnectTo("haha", port), 0);
     client.StartConnections();
 
-    jc_sleep(2000);
+    while (!client.Connect_done) jc_sleep(1);
 
     client.WaitForShutdownToComplete();
 
-    EXPECT_EQ(C_OnStartConnectionsCallCount, 1);
-    EXPECT_EQ(C_OnStopConnectionsCallCount, 0);
-    EXPECT_EQ(C_OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(C_OnShutdownCompleteCallCount, 1);
-    EXPECT_EQ(C_OnConnectFailCallCount, 0);
-    EXPECT_EQ(C_OnCloseCallCount, 0);
+    EXPECT_EQ(MockSocketClient::C_OnStartConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStopConnectionsCallCount, 0);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnConnectFailCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnCloseCallCount, 0);
 }
 
 TEST(SocketTest, init_client_fail)
@@ -457,21 +513,22 @@ TEST(SocketTest, init_client_fail)
     ASSERT_EQ(client.ConnectTo(host_ipv6, port), 0);
     client.StartConnections();
 
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
+    while (!client.Connect_done) jc_sleep(1);
 
     client.WaitForShutdownToComplete();
     server.WaitForShutdownToComplete();
 
-    EXPECT_EQ(C_OnStartConnectionsCallCount, 1);
-    EXPECT_EQ(C_OnStopConnectionsCallCount, 0);
-    EXPECT_EQ(C_OnShutdownInitiatedCallCount, 1);
-    EXPECT_EQ(C_OnShutdownCompleteCallCount, 1);
-    EXPECT_EQ(C_OnConnectFailCallCount, 1);
-    EXPECT_EQ(C_OnCloseCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStartConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStopConnectionsCallCount, 0);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnConnectFailCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnCloseCallCount, 1);
 
-    EXPECT_EQ(OnConnectionCreatedCallCount, 0);
-    EXPECT_EQ(OnConnectionEstablishedCallCount, 0);
-    EXPECT_EQ(OnConnectionClosedCallCount, 0);
+    EXPECT_EQ(MockSocketServer::OnConnectionCreatedCallCount, 0);
+    EXPECT_EQ(MockSocketServer::OnConnectionEstablishedCallCount, 0);
+    EXPECT_EQ(MockSocketServer::OnConnectionClosedCallCount, 0);
 }
 
 TEST(SocketTest, write_data)
@@ -488,18 +545,19 @@ TEST(SocketTest, write_data)
     ASSERT_EQ(client.ConnectTo(host_ipv4, port), 0);
     client.StartConnections();
 
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
+    while (!client.Connect_done) jc_sleep(1);
 
-    client.WaitForShutdownToComplete();
     server.WaitForShutdownToComplete();
+    client.WaitForShutdownToComplete();
 
-    EXPECT_EQ(C_PreWriteCallCount, 1);
-    EXPECT_EQ(C_WriteCompletedCallCount, 1);
-    EXPECT_EQ(C_ReadCompletedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_PreWriteCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_WriteCompletedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_ReadCompletedCallCount, 1);
 
-    EXPECT_EQ(PreWriteCallCount, 1);
-    EXPECT_EQ(WriteCompletedCallCount, 1);
-    EXPECT_EQ(ReadCompletedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::PreWriteCallCount, 1);
+    EXPECT_EQ(MockSocketServer::WriteCompletedCallCount, 1);
+    EXPECT_EQ(MockSocketServer::ReadCompletedCallCount, 1);
 }
 
 TEST(SocketTest, close_socket)
@@ -519,28 +577,33 @@ TEST(SocketTest, close_socket)
     client.StartConnections();
     client1.StartConnections();
 
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
+    while (!client.Connect_done) jc_sleep(1);
+    while (!client1.Connect_done) jc_sleep(1);
+    jc_sleep(500);
 
     EXPECT_GE(server.ActiveSocketList.size(), 1);
     SocketServer::Socket * socket = server.ActiveSocketList.front();
     socket->AbortiveClose();
     client2.StartConnections();
 
-    jc_sleep(2000);
+    while (!client2.Connect_done) jc_sleep(1);
 
     client.WaitForShutdownToComplete();
     client1.WaitForShutdownToComplete();
     client2.WaitForShutdownToComplete();
     server.WaitForShutdownToComplete();
 
-    EXPECT_EQ(OnConnectionCreatedCallCount, 2);
-    EXPECT_EQ(OnConnectionEstablishedCallCount, 3);
-    EXPECT_EQ(OnConnectionClosedCallCount, 3);
-    EXPECT_EQ(OnConnectionDestroyedCallCount, 2);
+    EXPECT_EQ(MockSocketServer::OnConnectionCreatedCallCount, 2);
+    EXPECT_EQ(MockSocketServer::OnConnectionEstablishedCallCount, 3);
+    EXPECT_EQ(MockSocketServer::OnConnectionClosedCallCount, 3);
+    EXPECT_EQ(MockSocketServer::OnConnectionDestroyedCallCount, 2);
 }
 
 TEST(SocketTest, buf_error)
 {
+    Reset();
+    C_Reset();
     MockLog log;
 
     MockSocketServer server(1, 3, 100, &log);
@@ -558,7 +621,9 @@ TEST(SocketTest, buf_error)
         client[i]->StartConnections();
     }
 
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
+    for (int i = 0; i < 3; i++)
+        while (!client[i]->Connect_done) jc_sleep(1);
 
     server.WaitForShutdownToComplete();
     for (int i = 0; i < 3; i++)
@@ -566,10 +631,20 @@ TEST(SocketTest, buf_error)
 
     for (int i = 0; i < 3; i++)
         delete client[i];
+
+    EXPECT_EQ(MockSocketClient::C_PreWriteCallCount, 3);
+    EXPECT_EQ(MockSocketClient::C_WriteCompletedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_ReadCompletedCallCount, 0);
+
+    EXPECT_EQ(MockSocketServer::PreWriteCallCount, 1);
+    EXPECT_EQ(MockSocketServer::WriteCompletedCallCount, 0);
+    EXPECT_EQ(MockSocketServer::ReadCompletedCallCount, 1);
 }
 
 TEST(SocketTest, accept_error)
 {
+    Reset();
+    C_Reset();
     MockLog log;
 
     MockSocketServer server(1, 3, 10, &log);
@@ -579,8 +654,6 @@ TEST(SocketTest, accept_error)
     const int count = 1;
     MockSocketClient * client[count];
     client[0] = new MockSocketClient(3, 100, &log);
-    /*client[1] = new MockSocketClient(3, 180, &log);
-    client[2] = new MockSocketClient(3, 200, &log);*/
 
     for (int i = 0; i < count; i++)
     {
@@ -588,7 +661,9 @@ TEST(SocketTest, accept_error)
         client[i]->StartConnections();
     }
 
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
+    for (int i = 0; i < count; i++)
+        while (!client[i]->Connect_done) jc_sleep(1);
 
     server.WaitForShutdownToComplete();
     for (int i = 0; i < count; i++)
@@ -596,6 +671,17 @@ TEST(SocketTest, accept_error)
 
     for (int i = 0; i < count; i++)
         delete client[i];
+
+    EXPECT_EQ(MockSocketClient::C_OnStartConnectionsCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnStopConnectionsCallCount, 0);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownInitiatedCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnShutdownCompleteCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnConnectCallCount, 1);
+    EXPECT_EQ(MockSocketClient::C_OnCloseCallCount, 1);
+
+    EXPECT_EQ(MockSocketServer::OnConnectionCreatedCallCount, 0);
+    EXPECT_EQ(MockSocketServer::OnConnectionEstablishedCallCount, 0);
+    EXPECT_EQ(MockSocketServer::OnConnectionClosedCallCount, 0);
 }
 
 TEST(SokcetTest, error_test)
@@ -612,9 +698,30 @@ TEST(SokcetTest, error_test)
     client.StartConnections();
     client2.StartConnections();
 
-    jc_sleep(2000);
+    while (!server.Listen_done) jc_sleep(1);
+    while (!client.Connect_done) jc_sleep(1);
+    while (!client2.Connect_done) jc_sleep(1);
 
     server.WaitForShutdownToComplete();
     client.WaitForShutdownToComplete();
     client2.WaitForShutdownToComplete();
+}
+
+TEST(SokcetTest, read_error)
+{
+    MockLog log;
+
+    MockSocketServer server(1, 3, 1024, &log);
+    ASSERT_EQ(server.Open(host_any, port), 0);
+    server.StartAcceptingConnections();
+
+    MockSocketClient3 client(3, 1024, &log);
+    ASSERT_EQ(client.ConnectTo(host_ipv4, port), 0);
+    client.StartConnections();
+
+    while (!server.Listen_done) jc_sleep(1);
+    while (!client.Connect_done) jc_sleep(1);
+
+    server.WaitForShutdownToComplete();
+    client.WaitForShutdownToComplete();
 }

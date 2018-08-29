@@ -117,7 +117,12 @@ void SocketClient::TryWrite()
         while (!this->_write_buffers.Empty())
         {
             Buffer * buffer = this->_write_buffers.Pop();
+
+            /*
+            * Call to unqualified virtual function
+            */
             this->WriteCompleted(buffer, UV_ECANCELED);
+
             buffer->Release();
         }
         return;
@@ -192,9 +197,19 @@ void SocketClient::Connect()
         r = uv_tcp_connect(&this->_req, &this->_connect_socket, &s.addr, SocketClient::OnConnectCb);
 
     if (r == 0)
+    {
         this->SetStatus(SocketOpt::S_CONNECTING);
-    else if (this->_logger)
-        this->_logger->Error("SocketClient::Connect() - %s", uv_strerror(r));
+    }
+    else
+    {
+        if (this->_logger)
+            this->_logger->Error("SocketClient::Connect() - %s", uv_strerror(r));
+        
+        /*
+        * Call to unqualified virtual function
+        */
+        this->OnConnectFail();
+    }
 }
 
 void SocketClient::ReleaseBuffers()
@@ -209,6 +224,10 @@ void SocketClient::Run()
     uv_run(this->_loop, UV_RUN_DEFAULT);
     while (this->GetStatus() != SocketOpt::S_DISCONNECTED) uv_run(this->_loop, UV_RUN_ONCE);
     this->ReleaseBuffers();
+
+    /*
+    * Call to unqualified virtual function
+    */
     this->OnShutdownComplete();
 }
 
@@ -237,6 +256,9 @@ void SocketClient::OnConnectCb(uv_connect_t * req, int status)
         if (client->_logger)
             client->_logger->Error("SocketClient::OnConnectCb() - %s", uv_strerror(status));
         
+        /*
+        * Call to unqualified virtual function
+        */
         client->OnConnectFail();
 
         client->Close();
@@ -247,6 +269,9 @@ void SocketClient::OnConnectCb(uv_connect_t * req, int status)
 
         client->AddFlag(SocketOpt::F_CONNECT);
 
+        /*
+        * Call to unqualified virtual function
+        */
         client->OnConnect();
         
         client->Read();
@@ -261,6 +286,9 @@ void SocketClient::OnCloseCb(uv_handle_t * handle)
 
     client->SetStatus(SocketOpt::S_DISCONNECTED);
 
+    /*
+    * Call to unqualified virtual function
+    */
     client->OnClose();
 }
 

@@ -11,6 +11,25 @@ class MockSocketServer : public SocketServer
 public:
     Mutex SocketLock;
     std::list<SocketServer::Socket *> ActiveSocketList;
+    bool Listen_done;
+    bool Set_Status;
+
+    static int OnStartAcceptingConnectionsCallCount;
+    static int OnStopAcceptingConnectionsCallCount;
+    static int OnShutdownInitiatedCallCount;
+    static int OnShutdownCompleteCallCount;
+    static int OnConnectionCreatedCallCount;
+    static int OnConnectionEstablishedCallCount;
+    static int OnConnectionClosedCallCount;
+    static int OnConnectionDestroyedCallCount;
+    static int OnBufferCreatedCallCount;
+    static int OnBufferAllocatedCallCount;
+    static int OnBufferReleasedCallCount;
+    static int OnBufferDestroyedCallCount;
+    static int PreWriteCallCount;
+    static int ReadCompletedCallCount;
+    static int WriteCompletedCallCount;
+    static int OnListenFailCallCount;
 
 public:
     MockSocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
@@ -27,6 +46,15 @@ public:
 
 
     virtual void OnShutdownComplete() override;
+
+    
+    virtual void OnListen() override;
+
+
+    virtual void OnListenFail() override;
+
+
+    virtual void OnClose() override;
 
 
     virtual void OnConnectionCreated() override;
@@ -72,11 +100,23 @@ private:
 class MockSocketClient : public SocketClient
 {
 public:
+    bool Connect_done;
+
+    static int C_OnStartConnectionsCallCount;
+    static int C_OnStopConnectionsCallCount;
+    static int C_OnShutdownInitiatedCallCount;
+    static int C_OnShutdownCompleteCallCount;
+    static int C_OnConnectCallCount;
+    static int C_OnConnectFailCallCount;
+    static int C_OnCloseCallCount;
+    static int C_ReadCompletedCallCount;
+    static int C_WriteCompletedCallCount;
+    static int C_PreWriteCallCount;
+
+public:
     MockSocketClient(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
 
     virtual ~MockSocketClient();
-
-    bool IsConnected() { return this->GetStatus() == SocketOpt::S_CONNECTED; }
 
     virtual void OnStartConnections() override;
 
@@ -118,6 +158,11 @@ private:
 class MockSocketClient2 : public SocketClient
 {
 public:
+    bool Connect_done;
+
+    static bool bShutdown;
+
+public:
     MockSocketClient2(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
 
     virtual ~MockSocketClient2();
@@ -138,6 +183,30 @@ private:
     */
     MockSocketClient2(const MockSocketClient2 & rhs);
     MockSocketClient2 & operator =(const MockSocketClient2 & rhs);
+};
+
+class MockSocketClient3 : public SocketClient
+{
+public:
+    bool Connect_done;
+
+public:
+    MockSocketClient3(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+
+    virtual ~MockSocketClient3();
+
+    virtual void OnConnect() override;
+
+    virtual void ReadCompleted(Buffer * buffer) override;
+
+    virtual void WriteCompleted(Buffer * buffer, int status) override;
+
+private:
+    /*
+    * No copies do not implement
+    */
+    MockSocketClient3(const MockSocketClient3 & rhs);
+    MockSocketClient3 & operator =(const MockSocketClient3 & rhs);
 };
 
 #endif

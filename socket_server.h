@@ -42,6 +42,10 @@ private:
     virtual void OnShutdownInitiated() {}
     virtual void OnShutdownComplete() {}
 
+    virtual void OnListen() {}
+    virtual void OnListenFail() {}
+    virtual void OnClose() {}
+
     virtual void OnConnectionCreated() {}
 
     virtual void OnConnectionEstablished(Socket * socket, Buffer * address) = 0;

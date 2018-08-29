@@ -124,20 +124,33 @@ void SocketServer::Listen()
         this->SetStatus(SocketOpt::S_CONNECTED);
 
         this->AddFlag(SocketOpt::F_LISTEN);
+
+        /*
+        * Call to unqualified virtual function
+        */
+        this->OnListen();
     }
-    else if (this->_logger)
+    else
     {
-        this->_logger->Error("SocketServer::AcceptConnectionsCb() - %s", uv_strerror(r));
+        if (this->_logger)
+            this->_logger->Error("SocketServer::AcceptConnectionsCb() - %s", uv_strerror(r));
+
+        /*
+        * Call to unqualified virtual function
+        */
+        this->OnListenFail();
     }
 }
 
 void SocketServer::ReleaseSockets()
 {
     this->_socket_lock.Lock();
+
     for (auto & it : this->_active_list)
     {
         it->Shutdown();
     }
+    
     this->_socket_lock.Unlock();
 
     while (!this->_active_list.empty())
@@ -152,11 +165,6 @@ void SocketServer::ReleaseSockets()
         this->DestroySocket(this->_free_list.front());
         this->_free_list.pop_front();
     }
-
-    if (this->_active_list.size() + this->_free_list.size() != 0 && this->_logger)
-    {
-        this->_logger->Error("SocketServer::ReleaseSockets() - Leaked sockets");
-    }
 }
 
 void SocketServer::ReleaseBuffers()
@@ -169,8 +177,13 @@ void SocketServer::Run()
     uv_prepare_start(&this->_connections_event, SocketServer::ConnectionsCb);
     uv_prepare_start(&this->_msg_handle, BaseService::MsgCallback);
     uv_run(this->_loop, UV_RUN_DEFAULT);
+    while (this->GetStatus() != SocketOpt::S_DISCONNECTED) uv_run(this->_loop, UV_RUN_ONCE);
     this->ReleaseSockets();
     this->ReleaseBuffers();
+
+    /*
+    * Call to unqualified virtual function
+    */
     this->OnShutdownComplete();
 }
 
@@ -339,6 +352,11 @@ void SocketServer::OnCloseCb(uv_handle_t * handle)
     SocketServer * service = (SocketServer *)handle->loop->data;
 
     service->SetStatus(SocketOpt::S_DISCONNECTED);
+
+    /*
+    * Call to unqualified virtual function
+    */
+    service->OnClose();
 }
 
 void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
@@ -423,6 +441,9 @@ void SocketServer::OnConnectionCloseCb(uv_handle_t * handle)
 
     socket->SetStatus(SocketOpt::S_DISCONNECTED);
 
+    /*
+    * Call to unqualified virtual function
+    */
     socket->_server.OnConnectionClosed(socket);
 
     if (socket->HasFlag(SocketOpt::F_READING))
@@ -668,7 +689,12 @@ void SocketServer::Socket::TryWrite()
         while (!this->_write_buffers.Empty())
         {
             Buffer * buffer = this->_write_buffers.Pop();
+
+            /*
+            * Call to unqualified virtual function
+            */
             this->_server.WriteCompleted(this, buffer, UV_ECANCELED);
+
             buffer->Release();
         }
         return;
