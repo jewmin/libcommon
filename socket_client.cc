@@ -119,8 +119,8 @@ void SocketClient::TryWrite()
             Buffer * buffer = this->_write_buffers.Pop();
 
             /*
-            * Call to unqualified virtual function
-            */
+             * Call to unqualified virtual function
+             */
             this->WriteCompleted(buffer, UV_ECANCELED);
 
             buffer->Release();
@@ -206,8 +206,8 @@ void SocketClient::Connect()
             this->_logger->Error("SocketClient::Connect() - %s", uv_strerror(r));
         
         /*
-        * Call to unqualified virtual function
-        */
+         * Call to unqualified virtual function
+         */
         this->OnConnectFail();
     }
 }
@@ -226,8 +226,8 @@ void SocketClient::Run()
     this->ReleaseBuffers();
 
     /*
-    * Call to unqualified virtual function
-    */
+     * Call to unqualified virtual function
+     */
     this->OnShutdownComplete();
 }
 
@@ -257,8 +257,8 @@ void SocketClient::OnConnectCb(uv_connect_t * req, int status)
             client->_logger->Error("SocketClient::OnConnectCb() - %s", uv_strerror(status));
         
         /*
-        * Call to unqualified virtual function
-        */
+         * Call to unqualified virtual function
+         */
         client->OnConnectFail();
 
         client->Close();
@@ -270,8 +270,8 @@ void SocketClient::OnConnectCb(uv_connect_t * req, int status)
         client->AddFlag(SocketOpt::F_CONNECT);
 
         /*
-        * Call to unqualified virtual function
-        */
+         * Call to unqualified virtual function
+         */
         client->OnConnect();
         
         client->Read();
@@ -287,8 +287,8 @@ void SocketClient::OnCloseCb(uv_handle_t * handle)
     client->SetStatus(SocketOpt::S_DISCONNECTED);
 
     /*
-    * Call to unqualified virtual function
-    */
+     * Call to unqualified virtual function
+     */
     client->OnClose();
 }
 

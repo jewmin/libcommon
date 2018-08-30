@@ -126,8 +126,8 @@ void SocketServer::Listen()
         this->AddFlag(SocketOpt::F_LISTEN);
 
         /*
-        * Call to unqualified virtual function
-        */
+         * Call to unqualified virtual function
+         */
         this->OnListen();
     }
     else
@@ -136,8 +136,8 @@ void SocketServer::Listen()
             this->_logger->Error("SocketServer::AcceptConnectionsCb() - %s", uv_strerror(r));
 
         /*
-        * Call to unqualified virtual function
-        */
+         * Call to unqualified virtual function
+         */
         this->OnListenFail();
     }
 }
@@ -182,8 +182,8 @@ void SocketServer::Run()
     this->ReleaseBuffers();
 
     /*
-    * Call to unqualified virtual function
-    */
+     * Call to unqualified virtual function
+     */
     this->OnShutdownComplete();
 }
 
@@ -354,8 +354,8 @@ void SocketServer::OnCloseCb(uv_handle_t * handle)
     service->SetStatus(SocketOpt::S_DISCONNECTED);
 
     /*
-    * Call to unqualified virtual function
-    */
+     * Call to unqualified virtual function
+     */
     service->OnClose();
 }
 
@@ -415,8 +415,8 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
                 Socket * socket = service->AllocateSocket((uv_tcp_t *)accepted_socket);
 
                 /*
-                * Call to unqualified virtual function
-                */
+                 * Call to unqualified virtual function
+                 */
                 service->OnConnectionEstablished(socket, address);
             }
         }
@@ -442,8 +442,8 @@ void SocketServer::OnConnectionCloseCb(uv_handle_t * handle)
     socket->SetStatus(SocketOpt::S_DISCONNECTED);
 
     /*
-    * Call to unqualified virtual function
-    */
+     * Call to unqualified virtual function
+     */
     socket->_server.OnConnectionClosed(socket);
 
     if (socket->HasFlag(SocketOpt::F_READING))
@@ -570,8 +570,8 @@ void SocketServer::ConnectionsCb(uv_prepare_t * handle)
             if (msg.param3 == 1)
             {
                 /*
-                * final write, now shutdown send side of connection
-                */
+                 * final write, now shutdown send side of connection
+                 */
                 socket->Shutdown();
             }
 
@@ -691,8 +691,8 @@ void SocketServer::Socket::TryWrite()
             Buffer * buffer = this->_write_buffers.Pop();
 
             /*
-            * Call to unqualified virtual function
-            */
+             * Call to unqualified virtual function
+             */
             this->_server.WriteCompleted(this, buffer, UV_ECANCELED);
 
             buffer->Release();
