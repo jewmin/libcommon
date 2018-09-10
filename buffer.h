@@ -1,12 +1,15 @@
-#ifndef __LIB_COMMON_BUFFER_H__
-#define __LIB_COMMON_BUFFER_H__
+#ifndef __LIBCOMMON_BUFFER_H__
+#define __LIBCOMMON_BUFFER_H__
+
+#include <atomic>
 
 #include "uv.h"
-#include <list>
 #include "mutex.h"
 #include "common.h"
+#include "list.hpp"
+#include "non_copy_able.hpp"
 
-class Buffer
+class Buffer : public NonCopyAble, public BaseList::BaseNode
 {
 public:
     class Allocator;
@@ -37,31 +40,24 @@ private:
 
     Buffer(Allocator & allocator, size_t size);
 
-    /*
-     * No copies do not implement
-     */
-    Buffer(const Buffer & rhs);
-    Buffer & operator =(const Buffer & rhs);
-
 private:
-    uv_buf_t _uv_buf;
-    Allocator & _allocator;
-    Mutex _lock;
+    uv_buf_t uv_buf_;
+    Allocator & allocator_;
 
-    long _ref;
-    const size_t _size;
-    size_t _used;
+    std::atomic_long ref_;
+    const size_t size_;
+    size_t used_;
 
     /*
      * Start of the actual buffer, must remain the last
      */
-    uint8_t _buffer[1];
+    uint8_t buffer_[1];
 };
 
-class Buffer::Allocator
+class Buffer::Allocator : public NonCopyAble
 {
     friend class Buffer;
-    typedef std::list<Buffer *> BufferList;
+    typedef TNodeList<Buffer> BufferList;
 
 public:
     explicit Allocator(size_t buffer_size, size_t max_free_buffers);
@@ -81,20 +77,12 @@ private:
     virtual void OnBufferReleased() {}
     virtual void OnBufferDestroyed() {}
 
-    /*
-     * No copies do not implement
-     */
-    Allocator(const Allocator & rhs);
-    Allocator & operator =(const Allocator & rhs);
-
 private:
-    const size_t _buffer_size;
-    const size_t _max_free_buffers;
+    const size_t buffer_size_;
+    const size_t max_free_buffers_;
 
-    BufferList _free_list;
-    BufferList _active_list;
-
-    Mutex _lock;
+    BufferList free_list_;
+    BufferList active_list_;
 };
 
 #endif

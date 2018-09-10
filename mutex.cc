@@ -3,38 +3,38 @@
 Mutex::Mutex(bool recursive)
 {
     if (recursive)
-        uv_mutex_init_recursive(&_mutex);
+        uv_mutex_init_recursive(&lock_);
     else
-        uv_mutex_init(&_mutex);
+        uv_mutex_init(&lock_);
 }
 
 Mutex::~Mutex()
 {
-    uv_mutex_destroy(&_mutex);
+    uv_mutex_destroy(&lock_);
 }
 
 void Mutex::Lock()
 {
-    uv_mutex_lock(&_mutex);
+    uv_mutex_lock(&lock_);
 }
 
 void Mutex::Unlock()
 {
-    uv_mutex_unlock(&_mutex);
+    uv_mutex_unlock(&lock_);
 }
 
 int Mutex::TryLock()
 {
-    return uv_mutex_trylock(&_mutex);
+    return uv_mutex_trylock(&lock_);
 }
 
-Mutex::Owner::Owner(Mutex & mutex)
-    : _mutex(mutex)
+Mutex::Guard::Guard(Mutex & lock)
+    : lock_(lock)
 {
-    this->_mutex.Lock();
+    lock_.Lock();
 }
 
-Mutex::Owner::~Owner()
+Mutex::Guard::~Guard()
 {
-    this->_mutex.Unlock();
+    lock_.Unlock();
 }

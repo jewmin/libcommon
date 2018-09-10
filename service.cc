@@ -19,7 +19,7 @@ BaseService::~BaseService()
 
 void BaseService::Stop()
 {
-    if (this->_tid != 0)
+    if (this->thread_ != 0)
     {
         uv_async_send(&this->_stop_handle);
         Super::Stop();
@@ -59,14 +59,14 @@ void BaseService::ProcessMsg()
 {
     this->_msg_queue.Flush();
 
-    size_t count = this->_msg_queue.size();
+    size_t count = this->_msg_queue.Count();
     for (size_t i = 0; i < count; i++)
     {
         AppMessage & msg = this->_msg_queue[i];
         this->OnRecvMsg(msg.msg_id, msg.param1, msg.param2, msg.param3, msg.param4, msg.param5);
     }
     
-    this->_msg_queue.clear();
+    this->_msg_queue.Clear();
 }
 
 void BaseService::StopCallback(uv_async_t * handle)

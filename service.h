@@ -1,11 +1,11 @@
-#ifndef __LIB_COMMON_SERVICE_H__
-#define __LIB_COMMON_SERVICE_H__
+#ifndef __LIBCOMMON_SERVICE_H__
+#define __LIBCOMMON_SERVICE_H__
 
 #include "uv.h"
 #include "log.h"
 #include "thread.h"
 #include "app_msg.h"
-#include "container.h"
+#include "queue.hpp"
 
 class BaseService : public BaseThread
 {

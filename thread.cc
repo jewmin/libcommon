@@ -2,8 +2,8 @@
 
 BaseThread::BaseThread()
 {
-    _tid = 0;
-    _terminated = false;
+    thread_ = 0;
+    terminated_ = false;
 }
 
 BaseThread::~BaseThread()
@@ -13,15 +13,15 @@ BaseThread::~BaseThread()
 
 int BaseThread::Start()
 {
-    return uv_thread_create(&_tid, BaseThread::Callback, this);
+    return uv_thread_create(&thread_, BaseThread::Callback, this);
 }
 
 void BaseThread::Stop()
 {
-    if (_tid != 0)
+    if (thread_ != 0)
     {
-        this->Terminate();
-        uv_thread_join(&_tid);
+        Terminate();
+        uv_thread_join(&thread_);
     }
 }
 
@@ -35,5 +35,5 @@ void BaseThread::Callback(void * arg)
     BaseThread * thread = (BaseThread *)arg;
     thread->Run();
     thread->OnTerminated();
-    thread->_tid = 0;
+    thread->thread_ = 0;
 }

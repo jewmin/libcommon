@@ -1,37 +1,36 @@
-#ifndef __LIB_COMMON_THREAD_H__
-#define __LIB_COMMON_THREAD_H__
+#ifndef __LIBCOMMON_THREAD_H__
+#define __LIBCOMMON_THREAD_H__
 
 #include "uv.h"
+#include "non_copy_able.hpp"
 
-class BaseThread
+class BaseThread : public NonCopyAble
 {
 public:
     BaseThread();
     virtual ~BaseThread();
-    int Start();
-    virtual void Stop();
 
-    inline void Terminate() { this->_terminated = true; }
-    inline bool IsTerminated() { return this->_terminated; }
+    // 启动线程成功则返回0
+    int Start();
+    // 必须显示调用停止线程
+    virtual void Stop();
+    // 终止线程运行
+    inline void Terminate() { terminated_ = true; }
+    // 线程已终止则返回true
+    inline bool IsTerminated() { return terminated_; }
 
 protected:
-    //线程处理函数，子类继承
+    // 线程处理函数，子类继承
     virtual void Run() = 0;
-    //线程终止后的通知函数
+    // 线程终止后的通知函数
     virtual void OnTerminated();
 
 private:
     static void Callback(void * arg);
 
-    /*
-     * No copies do not implement
-     */
-    BaseThread(const BaseThread & rhs);
-    BaseThread & operator =(const BaseThread & rhs);
-
 protected:
-    uv_thread_t _tid;
-    bool _terminated;
+    uv_thread_t thread_;
+    bool terminated_;
 };
 
 #endif

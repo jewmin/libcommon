@@ -1,96 +1,28 @@
 #include "gtest/gtest.h"
-#include <deque>
-#include <queue>
-#include <vector>
-#include "time.h"
-#include "container.h"
-
-TEST(StdTest, deque)
-{
-    std::deque<int> a;
-    std::deque<int> b;
-    a.push_back(10);
-    a.push_back(20);
-    a.push_back(30);
-    b.assign(a.begin(), a.end());
-    printf("a.count = %llu, b.count = %llu, a.max = %llu, b.max = %llu\n", a.size(), b.size(), a.max_size(), b.max_size());
-    b.pop_front();
-    printf("a.front = %d, b.front = %d\n", a.front(), b.front());
-}
-
-TEST(StdTest, queue)
-{
-    std::queue<int> a;
-    a.push(10);
-    a.push(20);
-    a.push(30);
-    a.front();
-    a.pop();
-    a.size();
-    a.back();
-    a.empty();
-}
-
-TEST(StdTest, vector)
-{
-    int count = 10000;
-    std::vector<int> vec;
-    vec.reserve(count);
-    for (int i = 0; i < count; i++)
-        vec.push_back(i);
-
-    std::vector<int> dst_vec;
-    dst_vec.reserve(count);
-    for (int i = -1; i > -count; i--)
-        dst_vec.push_back(i);
-
-    clock_t start = clock();
-    dst_vec.reserve(dst_vec.size() + vec.size());
-    dst_vec.insert(dst_vec.end(), vec.begin(), vec.end());
-    clock_t end = clock();
-    printf("std::vector insert run time: %ld, count: %llu\n", end - start, dst_vec.size());
-}
+#include "std_test.h"
 
 TEST(LockQueueTest, mutex)
 {
     LockQueue<int> lq;
     lq.Push(100);
     lq.Push(200);
-    EXPECT_EQ(lq.GetAppendedSize(), 2);
-    EXPECT_EQ(lq.size(), 0);
+    EXPECT_EQ(lq.AppendCount(), 2);
+    EXPECT_EQ(lq.Count(), 0);
     lq.Flush();
-    EXPECT_EQ(lq.GetAppendedSize(), 0);
-    EXPECT_EQ(lq.size(), 2);
+    EXPECT_EQ(lq.AppendCount(), 0);
+    EXPECT_EQ(lq.Count(), 2);
 
-    std::vector<int> vec;
-    vec.push_back(300);
-    vec.push_back(400);
-    lq.Push(vec);
-    EXPECT_EQ(lq.GetAppendedSize(), 2);
+    BaseVector<int> vec;
+    BaseVector<int, 20> vec1;
+    vec.Add(300);
+    vec.Add(400);
+    vec1.Add(1);
+    vec1.Add(2);
+    lq.PushList(vec);
+    lq.PushArray(static_cast<int *>(vec1), vec1.Count());
+    EXPECT_EQ(lq.AppendCount(), 4);
     lq.Flush();
     EXPECT_EQ(lq[2], 300);
-}
-
-TEST(StdTest, set)
-{
-    std::set<int> s;
-    s.insert(1);
-    s.insert(2);
-    s.insert(3);
-    std::set<int>::iterator it = s.find(3);
-    if (it != s.end())
-        s.erase(it);
-
-    it = s.find(4);
-    if (it != s.end())
-        s.erase(it);
-
-    s.clear();
-    it = s.find(2);
-    if (it != s.end())
-        s.erase(it);
-
-    s.erase(4);
 }
 
 TEST(DoubleBufferTest, use)
@@ -141,4 +73,101 @@ TEST(DoubleQueueTest, use)
         EXPECT_EQ((i + 4) * 10, dq[i]);
     }
     dq.clear();
+}
+
+TEST(BaseVectorTest, use)
+{
+    BaseVector<int> a;
+    EXPECT_EQ(a.Count(), 0);
+    EXPECT_EQ(a.Capacity(), 0);
+    ASSERT_TRUE(static_cast<int *>(a) == nullptr);
+
+    int i;
+    for (i = 0; i < 11; ++i)
+        a.Add(i);
+
+    EXPECT_EQ(a.Count(), 11);
+    EXPECT_EQ(a.Capacity(), 20);
+    ASSERT_TRUE(static_cast<int *>(a) != nullptr);
+    
+    int * p = static_cast<int *>(a);
+    for (i = 0; i < 11; ++i)
+        EXPECT_EQ(*(p + i), a[i]);
+
+    BaseVector<int, 1024> b;
+    b.AddVector(a);
+    EXPECT_EQ(b.Count(), 11);
+    EXPECT_EQ(b.Capacity(), 11);
+
+    b.Trunc(5);
+    EXPECT_EQ(b.Count(), 5);
+    EXPECT_EQ(b.Capacity(), 11);
+
+    b.Clear();
+    EXPECT_EQ(b.Count(), 0);
+    EXPECT_EQ(b.Capacity(), 11);
+
+    b.Trunc(10);
+    EXPECT_EQ(b.Count(), 10);
+    EXPECT_EQ(b.Capacity(), 11);
+
+    EXPECT_EQ(a[5], 5);
+    a.Insert(5, 100);
+    EXPECT_EQ(a[5], 100);
+    EXPECT_EQ(a[6], 5);
+
+    a.Remove(0);
+    EXPECT_EQ(a[5], 5);
+    a.Remove(5, 6);
+    EXPECT_EQ(a.Count(), 5);
+
+    BaseVector<int, 1024> c;
+    c.Empty();
+    c.Insert(0, 10);
+    EXPECT_EQ(c.Capacity(), 1024);
+    EXPECT_EQ(c.Get(0), 10);
+    c.Set(0, 100);
+    EXPECT_EQ(c[0], 100);
+
+    EXPECT_EQ(a.Find(10), -1);
+    EXPECT_EQ(a.Find(2), 1);
+}
+
+TEST(BaseListTest, use)
+{
+    TNode * node;
+    TNodeList<TNode> a;
+    a.PushNode(new TNode(1));
+    a.PushNode(new TNode(2));
+    node = a.PopNode();
+    EXPECT_EQ(node->data_, 2);
+    delete node;
+
+    a.PushNode(new TNode(3));
+    a.PushNode(new TNode(4));
+    a.PushNode(new TNode(5));
+    a.PushNode(new TNode(6));
+    EXPECT_EQ(a.Count(), 5);
+    EXPECT_EQ(a.IsEmpty(), false);
+    node = a.Head();
+    EXPECT_EQ(node->data_, 6);
+    EXPECT_EQ(TNodeList<TNode>::Next(node)->data_, 5);
+
+    a.PushBackNode(new TNode(100));
+    a.PushBackNode(new TNode(101));
+    a.PushBackNode(new TNode(102));
+    EXPECT_EQ(a.Count(), 8);
+    node = a.Tail();
+    EXPECT_EQ(node->data_, 102);
+    EXPECT_EQ(TNodeList<TNode>::Prev(node)->data_, 101);
+    node = a.PopBackNode();
+    EXPECT_EQ(node->data_, 102);
+    EXPECT_EQ(a.Count(), 7);
+
+    while (node = a.Head())
+    {
+        node->RemoveFromList();
+        delete node;
+    }
+    EXPECT_EQ(a.IsEmpty(), true);
 }

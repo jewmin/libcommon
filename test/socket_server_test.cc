@@ -133,7 +133,7 @@ void MockSocketServer::OnConnectionEstablished(Socket * socket, Buffer * address
 
     Accept_Count++;
 
-    Mutex::Owner lock(SocketLock);
+    Mutex::Guard lock(SocketLock);
     ActiveSocketList.push_back(socket);
 
     if (this->Set_Status)
@@ -144,7 +144,7 @@ void MockSocketServer::OnConnectionClosed(Socket * socket)
 {
     OnConnectionClosedCallCount++;
 
-    Mutex::Owner lock(SocketLock);
+    Mutex::Guard lock(SocketLock);
     ActiveSocketList.remove(socket);
 }
 

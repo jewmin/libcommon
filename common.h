@@ -1,5 +1,5 @@
-#ifndef __LIB_COMMON_COMMON_H__
-#define __LIB_COMMON_COMMON_H__
+#ifndef __LIBCOMMON_COMMON_H__
+#define __LIBCOMMON_COMMON_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +13,7 @@
 #include <unistd.h>
 #endif
 
-/* 定义内存分配 */
+// 定义内存分配
 #ifdef USE_JEMALLOC
 #include "jemalloc/jemalloc.h"
 #define jc_malloc je_malloc
@@ -27,6 +27,7 @@
 #define jc_free free
 #endif
 
+// 定义毫秒级休眠
 #ifdef _MSC_VER
 #define jc_sleep(x) Sleep(x)
 #else

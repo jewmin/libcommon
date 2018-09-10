@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.9.4)
 
 # 项目名
-project(libcommon VERSION 1.0.0)
+project(libcommon VERSION 1.0.1)
 
 # Include files
 FILE(GLOB all_headers "*.h*")
@@ -45,5 +45,5 @@ endif()
 
 # 添加单元测试项目
 add_subdirectory(test)
-add_subdirectory(echo_server)
-add_subdirectory(echo_client)
+# add_subdirectory(echo_server)
+# add_subdirectory(echo_client)

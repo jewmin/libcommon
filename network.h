@@ -1,5 +1,5 @@
-#ifndef __LIB_COMMON_NETWORK_H__
-#define __LIB_COMMON_NETWORK_H__
+#ifndef __LIBCOMMON_NETWORK_H__
+#define __LIBCOMMON_NETWORK_H__
 
 #include "uv.h"
 
@@ -18,45 +18,37 @@ public:
 
     typedef enum { S_CONNECTING, S_CONNECTED, S_DISCONNECTING, S_DISCONNECTED } status_t;
 
-    inline void SetNoDelay(bool no_delay) { this->_no_delay = no_delay; }
-    inline bool GetNoDelay() { return this->_no_delay; }
+    inline void SetNoDelay(bool no_delay) { no_delay_ = no_delay; }
+    inline bool GetNoDelay() { return no_delay_; }
 
-    inline void SetKeepAlive(uint32_t keep_alive) { this->_keep_alive = keep_alive; }
-    inline uint32_t GetKeepAlive() { return this->_keep_alive; }
+    inline void SetKeepAlive(uint32_t keep_alive) { keep_alive_ = keep_alive; }
+    inline uint32_t GetKeepAlive() { return keep_alive_; }
 
 protected:
-    explicit SocketOpt() { this->Reset(); }
+    SocketOpt() { Reset(); }
     
-    inline void AddFlag(flag_t flag) { this->_flags |= flag; }
-    inline void RemoveFlag(flag_t flag) { this->_flags &= ~flag; }
-    inline bool HasFlag(flag_t flag) { return !!(this->_flags & flag); }
-    inline void ClearFlag() { this->_flags = 0; }
+    inline void AddFlag(flag_t flag) { flags_ |= flag; }
+    inline void RemoveFlag(flag_t flag) { flags_ &= ~flag; }
+    inline bool HasFlag(flag_t flag) { return !!(flags_ & flag); }
+    inline void ClearFlag() { flags_ = 0; }
 
-    inline void SetStatus(status_t status) { this->_status = status; }
-    inline status_t GetStatus() { return this->_status; }
+    inline void SetStatus(status_t status) { status_ = status; }
+    inline status_t GetStatus() { return status_; }
 
     inline void Reset()
     {
-        this->_flags = 0;
-        this->_status = S_DISCONNECTED;
-        this->_no_delay = false;
-        this->_keep_alive = 0;
+        flags_ = 0;
+        status_ = S_DISCONNECTED;
+        no_delay_ = false;
+        keep_alive_ = 0;
     }
 
 private:
-    /*
-     * No copies do not implement
-     */
-    SocketOpt(const SocketOpt & rhs);
-    SocketOpt & operator =(const SocketOpt & rhs);
+    uint16_t flags_;
+    status_t status_;
 
-
-private:
-    uint16_t _flags;
-    status_t _status;
-
-    uint32_t _keep_alive;
-    bool _no_delay;
+    uint32_t keep_alive_;
+    bool no_delay_;
 };
 
 #endif

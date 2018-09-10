@@ -1,43 +1,30 @@
-#ifndef __LIB_COMMON_MUTEX_H__
-#define __LIB_COMMON_MUTEX_H__
+#ifndef __LIBCOMMON_MUTEX_H__
+#define __LIBCOMMON_MUTEX_H__
 
 #include "uv.h"
+#include "non_copy_able.hpp"
 
-class Mutex
+class Mutex : public NonCopyAble
 {
 public:
-    class Owner
-    {
-    public:
-        explicit Owner(Mutex & mutex);
-        ~Owner();
-
-    private:
-        /*
-         * No copies do not implement
-         */
-        Owner(const Owner & rhs);
-        Owner & operator =(const Owner & rhs);
-
-    private:
-        Mutex & _mutex;
-    };
-
-    explicit Mutex(bool recursive = false);
+    explicit Mutex(bool recursive = true);
     virtual ~Mutex();
     void Lock();
     void Unlock();
     int TryLock();
 
-private:
-    /*
-     * No copies do not implement
-     */
-    Mutex(const Mutex & rhs);
-    Mutex & operator =(const Mutex & rhs);
+    class Guard : public NonCopyAble
+    {
+    public:
+        explicit Guard(Mutex & lock);
+        ~Guard();
+
+    private:
+        Mutex & lock_;
+    };
 
 private:
-    uv_mutex_t _mutex;
+    uv_mutex_t lock_;
 };
 
 #endif

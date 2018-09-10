@@ -1,7 +1,7 @@
 #include "exception.h"
 
 BaseException::BaseException(const std::string & where, const std::string & message)
-    : _where(where), _message(message)
+    : where_(where), message_(message)
 {
 
 }
@@ -13,10 +13,10 @@ BaseException::~BaseException()
 
 std::string BaseException::Where() const
 {
-    return this->_where;
+    return where_;
 }
 
 std::string BaseException::Message() const
 {
-    return this->_message;
+    return message_;
 }

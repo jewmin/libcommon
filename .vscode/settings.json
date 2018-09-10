@@ -54,7 +54,8 @@
         "xstddef": "cpp",
         "xtr1common": "cpp",
         "xhash": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "atomic": "cpp"
     },
     "files.encoding": "gbk",
     "editor.renderWhitespace": "all",

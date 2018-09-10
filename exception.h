@@ -1,5 +1,5 @@
-#ifndef __LIB_COMMON_EXCEPTION_H__
-#define __LIB_COMMON_EXCEPTION_H__
+#ifndef __LIBCOMMON_EXCEPTION_H__
+#define __LIBCOMMON_EXCEPTION_H__
 
 #include <string>
 
@@ -13,8 +13,8 @@ public:
     virtual std::string Message() const;
 
 protected:
-    const std::string _where;
-    const std::string _message;
+    const std::string where_;
+    const std::string message_;
 };
 
 #endif

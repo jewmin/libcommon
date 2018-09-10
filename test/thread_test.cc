@@ -31,7 +31,11 @@ TEST(ThreadTest, thread_stop)
     MockStopThread * pd = new MockStopThread();
     pd->Start();
     pd->Stop();
+
     BaseThread * pb = new MockStopThread();
     pb->Start();
     pb->Stop();
+
+    delete pd;
+    delete pb;
 }

@@ -158,7 +158,7 @@ void SocketServer::ReleaseSockets()
         uv_run(this->_loop, UV_RUN_ONCE);
     }
 
-    Mutex::Owner lock(this->_socket_lock);
+    Mutex::Guard lock(this->_socket_lock);
 
     while (!this->_free_list.empty())
     {
@@ -189,7 +189,7 @@ void SocketServer::Run()
 
 SocketServer::Socket * SocketServer::AllocateSocket(uv_tcp_t * the_socket)
 {
-    Mutex::Owner lock(this->_socket_lock);
+    Mutex::Guard lock(this->_socket_lock);
 
     Socket * socket = NULL;
 
@@ -229,7 +229,7 @@ void SocketServer::ReleaseSocket(Socket * socket)
     if (!socket)
         throw BaseException("SocketServer::ReleaseSocket()", "socket is null");
 
-    Mutex::Owner lock(this->_socket_lock);
+    Mutex::Guard lock(this->_socket_lock);
 
     this->_active_list.remove(socket);
 

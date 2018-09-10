@@ -3,14 +3,14 @@
 
 TEST(MutexTest, thread_mutex)
 {
-    Mutex mutex;
+    Mutex mutex(false);
     mutex.Lock();
     mutex.Unlock();
 }
 
 TEST(MutexTest, thread_mutex_recursive)
 {
-    Mutex mutex(true);
+    Mutex mutex;
     mutex.Lock();
     mutex.Lock();
     mutex.TryLock();
@@ -23,9 +23,5 @@ TEST(MutexTest, thread_mutex_recursive)
 TEST(MutexTest, owner)
 {
     Mutex mutex;
-    {
-        Mutex::Owner lock(mutex);
-    }
-    mutex.Lock();
-    mutex.Unlock();
+    Mutex::Guard lock(mutex);
 }
