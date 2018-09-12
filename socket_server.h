@@ -8,6 +8,7 @@
 #include "network.h"
 #include "app_msg.h"
 #include "container.h"
+#include "queue.hpp"
 
 class SocketServer : public SocketOpt, protected BaseService, private Buffer::Allocator
 {
@@ -103,7 +104,7 @@ private:
 
     SocketList _active_list;
     SocketList _free_list;
-    DoubleQueue<AppMessage> _req_list;
+    LockQueue<AppMessage> _req_list;
 
     char _host[256];
     uint16_t _port;

@@ -552,7 +552,7 @@ void SocketServer::ConnectionsCb(uv_prepare_t * handle)
 
     service->_req_list.Flush();
 
-    size_t count = service->_req_list.size();
+    size_t count = service->_req_list.Count();
 
     for (size_t i = 0; i < count; i++)
     {
@@ -587,7 +587,7 @@ void SocketServer::ConnectionsCb(uv_prepare_t * handle)
         }
     }
 
-    service->_req_list.clear();
+    service->_req_list.Clear();
 }
 
 /*

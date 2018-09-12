@@ -44,37 +44,6 @@ TEST(DoubleBufferTest, use)
     }
 }
 
-TEST(DoubleQueueTest, use)
-{
-    DoubleQueue<int> dq;
-    dq.Push(10);
-    dq.Push(20);
-    dq.Push(30);
-    std::vector<int> vec;
-    vec.push_back(40);
-    vec.push_back(50);
-    vec.push_back(60);
-    EXPECT_EQ(dq.size(), 0);
-    dq.Flush();
-    EXPECT_EQ(dq.size(), 3);
-    dq.Push(vec);
-    dq.Flush();
-    EXPECT_EQ(dq.size(), 3);
-    for (size_t i = 0; i < dq.size(); i++)
-    {
-        EXPECT_EQ((i + 1) * 10, dq[i]);
-    }
-    dq.clear();
-    EXPECT_EQ(dq.size(), 0);
-    dq.Flush();
-    EXPECT_EQ(dq.size(), 3);
-    for (size_t i = 0; i < dq.size(); i++)
-    {
-        EXPECT_EQ((i + 4) * 10, dq[i]);
-    }
-    dq.clear();
-}
-
 TEST(BaseVectorTest, use)
 {
     BaseVector<int> a;

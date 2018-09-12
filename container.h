@@ -5,63 +5,6 @@
 #include <vector>
 #include "mutex.h"
 
-
-
-template<typename T>
-class DoubleQueue
-{
-public:
-    DoubleQueue()
-    {
-        this->_proc_vector = &this->_vector1;
-        this->_recv_vector = &this->_vector2;
-    }
-
-    inline void Push(const T & data)
-    {
-        this->_mutex.Lock();
-        this->_recv_vector->push_back(data);
-        this->_mutex.Unlock();
-    }
-
-    inline void Push(std::vector<T> & vec)
-    {
-        this->_mutex.Lock();
-        this->_recv_vector->insert(this->_recv_vector->end(), vec.begin(), vec.end());
-        this->_mutex.Unlock();
-    }
-
-    inline void Flush()
-    {
-        if (this->_proc_vector->empty() && !this->_recv_vector->empty())
-            this->Swap();
-    }
-
-    inline void clear() { this->_proc_vector->clear(); }
-
-    inline size_t size() { return this->_proc_vector->size(); }
-
-    inline T & operator [] (size_t index) { return this->_proc_vector->operator[](index); }
-
-protected:
-    inline void Swap()
-    {
-        this->_mutex.Lock();
-        std::vector<T> * vec = this->_recv_vector;
-        this->_recv_vector = this->_proc_vector;
-        this->_proc_vector = vec;
-        this->_mutex.Unlock();
-    }
-
-private:
-    Mutex _mutex;
-    std::vector<T> _vector1;
-    std::vector<T> _vector2;
-    std::vector<T> * _proc_vector;
-    std::vector<T> * _recv_vector;
-};
-
-
 template<typename T>
 class DoubleBuffer
 {
