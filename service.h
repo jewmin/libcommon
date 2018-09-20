@@ -2,7 +2,7 @@
 #define __LIBCOMMON_SERVICE_H__
 
 #include "uv.h"
-#include "log.h"
+#include "logger.h"
 #include "thread.h"
 #include "app_msg.h"
 #include "queue.hpp"
@@ -12,7 +12,7 @@ class BaseService : public BaseThread
     typedef BaseThread Super;
 
 public:
-    explicit BaseService(ILog * logger = NULL);
+    explicit BaseService(Logger * logger = NULL);
     virtual ~BaseService();
     virtual void Stop();
     void PostMsg(uint32_t msg_id, uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5);
@@ -33,7 +33,7 @@ protected:
     uv_prepare_t _msg_handle;
     uv_async_t _msg_notify_handle;
     
-    ILog * _logger;
+    Logger * _logger;
     LockQueue<AppMessage> _msg_queue;
 };
 

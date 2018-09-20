@@ -1,7 +1,7 @@
 #include "socket_client.h"
 #include "exception.h"
 
-SocketClient::SocketClient(size_t max_free_buffers, size_t buffer_size, ILog * logger)
+SocketClient::SocketClient(size_t max_free_buffers, size_t buffer_size, Logger * logger)
     : BaseService(logger), Buffer::Allocator(buffer_size, max_free_buffers)
 {
     this->_loop->data = this;
@@ -84,7 +84,7 @@ void SocketClient::Write(const char * data, size_t data_length)
     if (buffer->GetSize() < buffer->GetUsed() || buffer->GetSize() - buffer->GetUsed() < data_length)
     {
         if (this->_logger)
-            this->_logger->Error("SocketClient::Write() - %s", uv_strerror(UV_ENOBUFS));
+            this->_logger->LogError("SocketClient::Write() - %s", uv_strerror(UV_ENOBUFS));
 
         buffer->Release();
         return;
@@ -203,7 +203,7 @@ void SocketClient::Connect()
     else
     {
         if (this->_logger)
-            this->_logger->Error("SocketClient::Connect() - %s", uv_strerror(r));
+            this->_logger->LogError("SocketClient::Connect() - %s", uv_strerror(r));
         
         /*
         * Call to unqualified virtual function
@@ -254,7 +254,7 @@ void SocketClient::OnConnectCb(uv_connect_t * req, int status)
     if (status < 0)
     {
         if (client->_logger)
-            client->_logger->Error("SocketClient::OnConnectCb() - %s", uv_strerror(status));
+            client->_logger->LogError("SocketClient::OnConnectCb() - %s", uv_strerror(status));
         
         /*
         * Call to unqualified virtual function
@@ -330,7 +330,7 @@ void SocketClient::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
     else
     {
         if (client->_logger)
-            client->_logger->Error("SocketClient::ReadCompletedCb() - %s", uv_strerror((int)nread));
+            client->_logger->LogError("SocketClient::ReadCompletedCb() - %s", uv_strerror((int)nread));
 
         client->Shutdown();
     }
@@ -347,7 +347,7 @@ void SocketClient::WriteCompletedCb(uv_write_t * req, int status)
     if (status < 0)
     {
         if (client->_logger)
-            client->_logger->Error("SocketClient::WriteCompletedCb() - %s", uv_strerror(status));
+            client->_logger->LogError("SocketClient::WriteCompletedCb() - %s", uv_strerror(status));
     }
     
     /*

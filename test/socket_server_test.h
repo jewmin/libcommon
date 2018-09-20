@@ -2,7 +2,7 @@
 #define __UNIT_TEST_SOCKET_SERVER_TEST_H__
 
 #include "gmock/gmock.h"
-#include "log.h"
+#include "logger.h"
 #include "socket_server.h"
 #include "socket_client.h"
 
@@ -33,7 +33,7 @@ public:
     static int OnListenFailCallCount;
 
 public:
-    MockSocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+    MockSocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size = 1024, Logger * logger = NULL);
 
     virtual ~MockSocketServer();
 
@@ -115,7 +115,7 @@ public:
     static int C_PreWriteCallCount;
 
 public:
-    MockSocketClient(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+    MockSocketClient(size_t max_free_buffers, size_t buffer_size = 1024, Logger * logger = NULL);
 
     virtual ~MockSocketClient();
 
@@ -164,7 +164,7 @@ public:
     static bool bShutdown;
 
 public:
-    MockSocketClient2(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+    MockSocketClient2(size_t max_free_buffers, size_t buffer_size = 1024, Logger * logger = NULL);
 
     virtual ~MockSocketClient2();
 
@@ -192,7 +192,7 @@ public:
     bool Connect_done;
 
 public:
-    MockSocketClient3(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+    MockSocketClient3(size_t max_free_buffers, size_t buffer_size = 1024, Logger * logger = NULL);
 
     virtual ~MockSocketClient3();
 

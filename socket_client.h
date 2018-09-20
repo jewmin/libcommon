@@ -23,7 +23,7 @@ public:
     void Write(const char * data, size_t data_length);
 
 protected:
-    SocketClient(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+    SocketClient(size_t max_free_buffers, size_t buffer_size = 1024, Logger * logger = NULL);
 
     virtual void PreWrite(Buffer * buffer, const char * data, size_t data_length) {}
     

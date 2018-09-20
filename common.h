@@ -34,4 +34,11 @@
 #define jc_sleep(x) usleep((x) * 1000)
 #endif
 
+// 定义字符串相关函数
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+#define strncasecmp _strnicmp
+#endif
+
 #endif

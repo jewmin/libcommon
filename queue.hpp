@@ -37,7 +37,7 @@ public:
         if (append_vec_.Count() > 0)
         {
             AddArray(static_cast<T *>(append_vec_), append_vec_.Count());
-            append_vec_.Trunc(0);
+            append_vec_.Clear();
         }
         lock_.Unlock();
     }

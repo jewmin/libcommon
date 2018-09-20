@@ -72,7 +72,7 @@ void C_Reset()
     MockSocketClient::C_PreWriteCallCount = 0;
 }
 
-MockSocketServer::MockSocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size /*= 1024*/, ILog * logger /*= NULL*/)
+MockSocketServer::MockSocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size /*= 1024*/, Logger * logger /*= NULL*/)
     : SocketServer(max_free_sockets, max_free_buffers, buffer_size, logger)
 {
     Listen_done = false;
@@ -193,7 +193,7 @@ void MockSocketServer::WriteCompleted(Socket * socket, Buffer * buffer, int stat
     WriteCompletedCallCount++;
 }
 
-MockSocketClient::MockSocketClient(size_t max_free_buffers, size_t buffer_size /*= 1024*/, ILog * logger /*= NULL*/)
+MockSocketClient::MockSocketClient(size_t max_free_buffers, size_t buffer_size /*= 1024*/, Logger * logger /*= NULL*/)
     : SocketClient(max_free_buffers, buffer_size, logger)
 {
     Connect_done = false;
@@ -259,7 +259,7 @@ void MockSocketClient::PreWrite(Buffer * buffer, const char * data, size_t data_
     C_PreWriteCallCount++;
 }
 
-MockSocketClient2::MockSocketClient2(size_t max_free_buffers, size_t buffer_size /*= 1024*/, ILog * logger /*= NULL*/)
+MockSocketClient2::MockSocketClient2(size_t max_free_buffers, size_t buffer_size /*= 1024*/, Logger * logger /*= NULL*/)
     : SocketClient(max_free_buffers, buffer_size, logger)
 {
     Connect_done = false;
@@ -298,7 +298,7 @@ void MockSocketClient2::PreWrite(Buffer * buffer, const char * data, size_t data
 
 }
 
-MockSocketClient3::MockSocketClient3(size_t max_free_buffers, size_t buffer_size /*= 1024*/, ILog * logger /*= NULL*/)
+MockSocketClient3::MockSocketClient3(size_t max_free_buffers, size_t buffer_size /*= 1024*/, Logger * logger /*= NULL*/)
     : SocketClient(max_free_buffers, buffer_size, logger)
 {
     Connect_done = false;

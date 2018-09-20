@@ -2,10 +2,11 @@
 #define __UNIT_TEST_LOG_TEST_H__
 
 #include "gmock/gmock.h"
-#include "log.h"
 #include "mutex.h"
+#include "logger.h"
+#include "file_logger.h"
 
-class MockLog : public ILog
+class MockLog : public Logger
 {
     Mutex _lock;
 public:

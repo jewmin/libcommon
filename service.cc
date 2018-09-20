@@ -1,6 +1,6 @@
 #include "service.h"
 
-BaseService::BaseService(ILog * logger)
+BaseService::BaseService(Logger * logger)
     : _logger(logger)
 {
     this->_loop = uv_loop_new();

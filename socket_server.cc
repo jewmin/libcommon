@@ -14,7 +14,7 @@ typedef struct
     Buffer * buffer;
 } connection_t;
 
-SocketServer::SocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size, ILog * logger)
+SocketServer::SocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size, Logger * logger)
     : BaseService(logger), Buffer::Allocator(buffer_size, max_free_buffers), _max_free_sockets(max_free_sockets)
 {
     this->_loop->data = this;
@@ -133,7 +133,7 @@ void SocketServer::Listen()
     else
     {
         if (this->_logger)
-            this->_logger->Error("SocketServer::AcceptConnectionsCb() - %s", uv_strerror(r));
+            this->_logger->LogError("SocketServer::AcceptConnectionsCb() - %s", uv_strerror(r));
 
         /*
         * Call to unqualified virtual function
@@ -295,7 +295,7 @@ void SocketServer::Write(Socket * socket, const char * data, size_t data_length,
     if (buffer->GetSize() < buffer->GetUsed() || buffer->GetSize() - buffer->GetUsed() < data_length)
     {
         if (this->_logger)
-            this->_logger->Error("SocketServer::Write() - %s", uv_strerror(UV_ENOBUFS));
+            this->_logger->LogError("SocketServer::Write() - %s", uv_strerror(UV_ENOBUFS));
 
         buffer->Release();
         return;
@@ -366,14 +366,14 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
     if (status < 0)
     {
         if (service->_logger)
-            service->_logger->Error("SocketServer::OnAcceptCb() - %s", uv_strerror(status));
+            service->_logger->LogError("SocketServer::OnAcceptCb() - %s", uv_strerror(status));
         
         return;
     }
     else if (service->GetStatus() != SocketOpt::S_CONNECTED)
     {
         if (service->_logger)
-            service->_logger->Error("SocketServer::OnAcceptCb() - service is not connected");
+            service->_logger->LogError("SocketServer::OnAcceptCb() - service is not connected");
 
         return;
     }
@@ -429,7 +429,7 @@ void SocketServer::OnAcceptCb(uv_stream_t * server, int status)
         uv_close((uv_handle_t *)accepted_socket, (uv_close_cb)jc_free);
 
         if (service->_logger)
-            service->_logger->Error("SocketServer::OnAcceptCb() - %s", uv_strerror(r));
+            service->_logger->LogError("SocketServer::OnAcceptCb() - %s", uv_strerror(r));
     }
 }
 
@@ -504,7 +504,7 @@ void SocketServer::ReadCompletedCb(uv_stream_t * stream, ssize_t nread, const uv
     else
     {
         if (socket->_server._logger)
-            socket->_server._logger->Error("SocketServer::ReadCompletedCb() - %s", uv_strerror((int)nread));
+            socket->_server._logger->LogError("SocketServer::ReadCompletedCb() - %s", uv_strerror((int)nread));
 
         socket->Shutdown();
     }
@@ -524,7 +524,7 @@ void SocketServer::WriteCompletedCb(uv_write_t * req, int status)
     if (status < 0)
     {
         if (socket->_server._logger)
-            socket->_server._logger->Error("SocketServer::WriteCompletedCb() - %s", uv_strerror(status));
+            socket->_server._logger->LogError("SocketServer::WriteCompletedCb() - %s", uv_strerror(status));
     }
     
     /*

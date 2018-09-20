@@ -27,7 +27,7 @@ public:
     void WaitForShutdownToComplete();
 
 protected:
-    SocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+    SocketServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size = 1024, Logger * logger = NULL);
 
     void Close();
     void Listen();
