@@ -103,7 +103,7 @@ public:
     inline Packet & operator << (const T & value)
     {
         if (sizeof(value) <= sizeof(int32_t)) WriteAtom<T>(value);
-        else WriteBinary(&value, sizeof(value));
+        else WriteBinary(reinterpret_cast<const uint8_t *>(&value), sizeof(value));
         return *this;
     }
 

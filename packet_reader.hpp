@@ -65,12 +65,16 @@ public:
     inline size_t ReadBinary(uint8_t * buf, size_t size)
     {
         size_t avaliable = GetAvaliableLength();
-        if (size > avaliable) size = avaliable;
-        if (size > 0)
+        if (avaliable >= size)
         {
             memcpy(buf, offset_, size);
-            offset_ += size;
         }
+        else
+        {
+            memset(buf, 0, size);
+            size = avaliable;
+        }
+        offset_ += size;
         return size;
     }
 
@@ -89,7 +93,7 @@ public:
     inline PacketReader & operator >> (T & value)
     {
         if (sizeof(value) <= sizeof(int32_t)) value = ReadAtom<T>();
-        else ReadBinary(&value, sizeof(value));
+        else ReadBinary(reinterpret_cast<uint8_t *>(&value), sizeof(value));
         return *this;
     }
 
