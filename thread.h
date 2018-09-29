@@ -18,6 +18,12 @@ public:
     inline void Terminate() { terminated_ = true; }
     // 线程已终止则返回true
     inline bool IsTerminated() { return terminated_; }
+    // 是当前线程则返回true
+    inline bool IsCurrentThread()
+    {
+        uv_thread_t current_thread = uv_thread_self();
+        return uv_thread_equal(&thread_, &current_thread);
+    }
 
 protected:
     // 线程处理函数，子类继承
