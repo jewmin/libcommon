@@ -39,3 +39,13 @@ TEST(ThreadTest, thread_stop)
     delete pd;
     delete pb;
 }
+
+TEST(ThreadTest, judgment)
+{
+    MockSelfThread thread;
+    thread.Start();
+    jc_sleep(50);
+    EXPECT_EQ(thread.IsCurrentThread(), false);
+    EXPECT_EQ(thread.bIsCurrentThread, true);
+    thread.Stop();
+}

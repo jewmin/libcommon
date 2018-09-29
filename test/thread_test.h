@@ -69,4 +69,20 @@ protected:
     }
 };
 
+class MockSelfThread : public BaseThread
+{
+public:
+    bool bIsCurrentThread;
+
+protected:
+    virtual void Run()
+    {
+        while (!IsTerminated())
+        {
+            bIsCurrentThread = IsCurrentThread();
+            jc_sleep(50);
+        }
+    }
+};
+
 #endif

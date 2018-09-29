@@ -22,7 +22,7 @@ public:
     inline bool IsCurrentThread()
     {
         uv_thread_t current_thread = uv_thread_self();
-        return uv_thread_equal(&thread_, &current_thread);
+        return !!uv_thread_equal(&thread_, &current_thread);
     }
 
 protected:
