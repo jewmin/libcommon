@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "std_test.h"
+#include <vector>
 
 TEST(LockQueueTest, mutex)
 {
@@ -139,4 +140,15 @@ TEST(BaseListTest, use)
         delete node;
     }
     EXPECT_EQ(a.IsEmpty(), true);
+}
+
+TEST(StdVectorTest, constructor)
+{
+    const char * hello_str = "hello world!";
+    std::vector<char> v1(hello_str, hello_str + 13);
+    for (auto & it : v1)
+    {
+        printf("%c", it);
+    }
+    printf("\n");
 }
