@@ -3,8 +3,7 @@
 
 #include <string>
 
-class BaseException
-{
+class BaseException {
 public:
     BaseException(const std::string & where, const std::string & message);
     virtual ~BaseException();

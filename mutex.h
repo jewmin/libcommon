@@ -4,17 +4,15 @@
 #include "uv.h"
 #include "non_copy_able.hpp"
 
-class Mutex : public NonCopyAble
-{
+class Mutex : public NonCopyAble {
 public:
     explicit Mutex(bool recursive = true);
-    virtual ~Mutex();
+    ~Mutex();
     void Lock();
-    void Unlock();
     int TryLock();
+    void Unlock();
 
-    class Guard : public NonCopyAble
-    {
+    class Guard : public NonCopyAble {
     public:
         explicit Guard(Mutex & lock);
         ~Guard();

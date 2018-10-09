@@ -1,77 +1,61 @@
 #include "buffer.h"
 #include "exception.h"
 
-Buffer::Buffer(Allocator & allocator, size_t size)
-    : allocator_(allocator), ref_(1), size_(size), used_(0)
-{
+Buffer::Buffer(Allocator & allocator, size_t size) : allocator_(allocator), ref_(1), size_(size), used_(0) {
     Empty();
 }
 
-uv_buf_t * Buffer::GetUVBuffer() const
-{
+uv_buf_t * Buffer::GetUVBuffer() const {
     return const_cast<uv_buf_t *>(&uv_buf_);
 }
 
-const uint8_t * Buffer::GetBuffer() const
-{
+const uint8_t * Buffer::GetBuffer() const {
     return &buffer_[0];
 }
 
-size_t Buffer::GetUsed() const
-{
+size_t Buffer::GetUsed() const {
     return used_;
 }
 
-size_t Buffer::GetSize() const
-{
+size_t Buffer::GetSize() const {
     return size_;
 }
 
-void Buffer::SetupRead()
-{
-    if (used_ == 0)
-    {
+void Buffer::SetupRead() {
+    if (0 == used_) {
         uv_buf_.base = reinterpret_cast<char *>(buffer_);
         uv_buf_.len = size_;
-    }
-    else
-    {
+    } else {
         uv_buf_.base = reinterpret_cast<char *>(buffer_ + used_);
         uv_buf_.len = size_ - used_;
     }
 }
 
-void Buffer::SetupWrite(size_t offset)
-{
+void Buffer::SetupWrite(size_t offset) {
     assert(used_ > offset);
     uv_buf_.base = reinterpret_cast<char *>(buffer_ + offset);
     uv_buf_.len = used_ - offset;
 }
 
-void Buffer::AddData(const char * const data, size_t data_length)
-{
+void Buffer::AddData(const char * const data, size_t data_length) {
     assert(data_length < size_ - used_);
     memcpy(buffer_ + used_, data, data_length);
     used_ += data_length;
 }
 
-void Buffer::AddData(const uint8_t * const data, size_t data_length)
-{
+void Buffer::AddData(const uint8_t * const data, size_t data_length) {
     this->AddData(reinterpret_cast<const char *>(data), data_length);
 }
 
-void Buffer::AddData(char data)
-{
+void Buffer::AddData(char data) {
     this->AddData(&data, 1);
 }
 
-void Buffer::Use(size_t data_used)
-{
+void Buffer::Use(size_t data_used) {
     used_ += data_used;
 }
 
-Buffer * Buffer::SplitBuffer(size_t bytes_to_remove)
-{
+Buffer * Buffer::SplitBuffer(size_t bytes_to_remove) {
     Buffer * buffer = allocator_.Allocate();
 
     buffer->AddData(buffer_, bytes_to_remove);
@@ -83,60 +67,51 @@ Buffer * Buffer::SplitBuffer(size_t bytes_to_remove)
     return buffer;
 }
 
-void Buffer::Empty()
-{
+void Buffer::Empty() {
     uv_buf_.base = reinterpret_cast<char *>(buffer_);
     uv_buf_.len = size_;
 
     used_ = 0;
 }
 
-void Buffer::AddRef()
-{
+void Buffer::AddRef() {
     ++ref_;
 }
 
-void Buffer::Release()
-{
-    if (--ref_ == 0)
+void Buffer::Release() {
+    if (--ref_ == 0) {
         allocator_.Release(this);
+    }
 }
 
-void * Buffer::operator new(size_t object_size, size_t buffer_size)
-{
+void * Buffer::operator new(size_t object_size, size_t buffer_size) {
     return jc_malloc(object_size + buffer_size);
 }
 
-void Buffer::operator delete(void * object)
-{
+void Buffer::operator delete(void * object) {
     jc_free(object);
 }
 
 Buffer::Allocator::Allocator(size_t buffer_size, size_t max_free_buffers)
-    : buffer_size_(buffer_size), max_free_buffers_(max_free_buffers)
-{
+    : buffer_size_(buffer_size), max_free_buffers_(max_free_buffers) {
 
 }
 
-Buffer::Allocator::~Allocator()
-{
+Buffer::Allocator::~Allocator() {
     Flush();
 }
 
-Buffer * Buffer::Allocator::Allocate()
-{
+Buffer * Buffer::Allocator::Allocate() {
     Buffer * buffer = nullptr;
 
-    if (!free_list_.IsEmpty())
-    {
+    if (!free_list_.IsEmpty()) {
         buffer = free_list_.PopNode();
         buffer->AddRef();
-    }
-    else
-    {
+    } else {
         buffer = new(buffer_size_)Buffer(*this, buffer_size_);
-        if (!buffer)
+        if (!buffer) {
             throw BaseException("Buffer::Allocator::Allocate()", "Out of memory");
+        }
         
         /*
          * Call to unqualified virtual function
@@ -154,10 +129,8 @@ Buffer * Buffer::Allocator::Allocate()
     return buffer;
 }
 
-void Buffer::Allocator::Flush()
-{
-    while (!active_list_.IsEmpty())
-    {
+void Buffer::Allocator::Flush() {
+    while (!active_list_.IsEmpty()) {
         /*
          * Call to unqualified virtual function
          */
@@ -166,16 +139,15 @@ void Buffer::Allocator::Flush()
         DestroyBuffer(active_list_.PopNode());
     }
 
-    while (!free_list_.IsEmpty())
-    {
+    while (!free_list_.IsEmpty()) {
         DestroyBuffer(free_list_.PopNode());
     }
 }
 
-void Buffer::Allocator::Release(Buffer * buffer)
-{
-    if (!buffer)
+void Buffer::Allocator::Release(Buffer * buffer) {
+    if (!buffer) {
         throw BaseException("Buffer::Allocator::Release()", "buffer is null");
+    }
 
     /*
      * Call to unqualified virtual function
@@ -187,27 +159,39 @@ void Buffer::Allocator::Release(Buffer * buffer)
      */
     buffer->RemoveFromList();
 
-    if (max_free_buffers_ == 0 || free_list_.Count() < max_free_buffers_)
-    {
+    if (0 == max_free_buffers_ || free_list_.Count() < max_free_buffers_) {
         buffer->Empty();
 
         /*
          * Add to the free list
          */
         free_list_.PushNode(buffer);
-    }
-    else
-    {
+    } else {
         DestroyBuffer(buffer);
     }
 }
 
-void Buffer::Allocator::DestroyBuffer(Buffer * buffer)
-{
+void Buffer::Allocator::DestroyBuffer(Buffer * buffer) {
     delete buffer;
 
     /*
      * Call to unqualified virtual function
      */
     OnBufferDestroyed();
+}
+
+void Buffer::Allocator::OnBufferCreated() {
+
+}
+
+void Buffer::Allocator::OnBufferAllocated() {
+
+}
+
+void Buffer::Allocator::OnBufferReleased() {
+
+}
+
+void Buffer::Allocator::OnBufferDestroyed() {
+
 }

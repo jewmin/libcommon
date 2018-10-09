@@ -15,8 +15,7 @@
 #define TWHITE  5 // °×
 #define TBLUE   6 // À¶
 
-static const char * ColorStrings[TBLUE + 1] =
-{
+static const char * ColorStrings[TBLUE + 1] = {
     "",
     "\033[22;31m",
     "\033[22;32m",
@@ -27,8 +26,7 @@ static const char * ColorStrings[TBLUE + 1] =
 };
 #endif
 
-uint16_t GetLogColor(Logger::LogLevel log_level)
-{
+uint16_t GetLogColor(Logger::LogLevel log_level) {
     switch (log_level)
     {
         case Logger::Trace: return TBLUE;
@@ -41,8 +39,7 @@ uint16_t GetLogColor(Logger::LogLevel log_level)
     }
 }
 
-void SetColor(Logger::LogLevel log_level)
-{
+void SetColor(Logger::LogLevel log_level) {
 #ifdef _MSC_VER
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), GetLogColor(log_level));
 #else
@@ -50,34 +47,28 @@ void SetColor(Logger::LogLevel log_level)
 #endif
 }
 
-Logger::Logger()
-{
+Logger::Logger() {
     log_level_ = Info;
 }
 
-Logger::~Logger()
-{
+Logger::~Logger() {
     log_list_.Flush();
     allocator_.ReleaseList(static_cast<Packet * *>(log_list_), log_list_.Count());
     log_list_.Clear();
 }
 
-int Logger::InitLogger(LogLevel log_level)
-{
+int Logger::InitLogger(LogLevel log_level) {
     log_level_ = log_level;
 
     return Start();
 }
 
-void Logger::DeInitLogger()
-{
+void Logger::DeInitLogger() {
     Stop();
 }
 
-void Logger::LogStub(LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, ...)
-{
-    if (log_level_ <= log_level)
-    {
+void Logger::LogStub(LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, ...) {
+    if (log_level_ <= log_level) {
         va_list ap; 
         va_start(ap, fmt);
         LogStub2(log_level, file, func, line, fmt, ap);
@@ -85,8 +76,7 @@ void Logger::LogStub(LogLevel log_level, const char * file, const char * func, c
     }
 }
 
-void Logger::LogStub2(LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, va_list ap)
-{
+void Logger::LogStub2(LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, va_list ap) {
     thread_local static char msg[2048] = {0};
     thread_local static int offset = 0;
     thread_local static int len = 0;
@@ -94,14 +84,20 @@ void Logger::LogStub2(LogLevel log_level, const char * file, const char * func, 
     offset = 0;
     len = sizeof(msg) - 1;
     int ret = snprintf(msg, len, "%s[%s:%s:%d] ", GetLogPrefix(log_level), file, func, line);
-    if (ret < 0) return;
+    if (ret < 0) {
+        return;
+    }
 
     offset += ret;
     len -= ret;
     ret = vsnprintf(msg + offset, len, fmt, ap);
-    if (ret < 0) return;
-    else if (ret > len) offset += len;
-    else offset += ret;
+    if (ret < 0) {
+        return;
+    } else if (ret > len) {
+        offset += len;
+    } else {
+        offset += ret;
+    }
     msg[offset] = 0;
 
     allocator_lock_.Lock();
@@ -114,10 +110,8 @@ void Logger::LogStub2(LogLevel log_level, const char * file, const char * func, 
     log_list_.Push(packet);
 }
 
-const char * Logger::GetLogPrefix(const LogLevel log_level)
-{
-    switch (log_level)
-    {
+const char * Logger::GetLogPrefix(const LogLevel log_level) {
+    switch (log_level) {
         case Trace: return "[TRACE]";
         case Debug: return "[DEBUG]";
         case Info:  return "[INFO]";
@@ -128,10 +122,8 @@ const char * Logger::GetLogPrefix(const LogLevel log_level)
     }
 }
 
-void Logger::SingleRun()
-{
-    if (log_list_.AppendCount() > 0)
-    {
+void Logger::SingleRun() {
+    if (log_list_.AppendCount() > 0) {
         static char time_string[256];
         time_t raw_time;
         struct tm * time_info;
@@ -143,13 +135,14 @@ void Logger::SingleRun()
 
         log_list_.Flush();
         int count = log_list_.Count();
-        for (int i = 0; i < count; ++i)
-        {
+        for (int i = 0; i < count; ++i) {
             Packet * packet = log_list_[i];
             packet->SetPosition(0);
             LogLevel log_level = static_cast<LogLevel>(packet->ReadAtom<uint8_t>());
             const char * msg = packet->ReadString();
-            if (msg) Log(log_level, time_string, msg);
+            if (msg) {
+                Log(log_level, time_string, msg);
+            }
         }
 
         allocator_lock_.Lock();
@@ -159,8 +152,11 @@ void Logger::SingleRun()
     }
 }
 
-void Logger::Log(LogLevel log_level, const char * time_string, const char * msg)
-{
+void Logger::Update(struct tm * time_info) {
+
+}
+
+void Logger::Log(LogLevel log_level, const char * time_string, const char * msg) {
     SetColor(log_level);
     fprintf(stdout, time_string);
     fprintf(stdout, msg);
@@ -168,19 +164,18 @@ void Logger::Log(LogLevel log_level, const char * time_string, const char * msg)
     fflush(stdout);
 }
 
-void Logger::Run()
-{
-    while (!IsTerminated())
-    {
+void Logger::Run() {
+    while (!IsTerminated()) {
         clock_t begin = clock();
         SingleRun();
         clock_t end = clock();
         int duration = static_cast<int>(static_cast<double>(end - begin) / CLOCKS_PER_SEC * 1000);
-        if (duration < 16) jc_sleep(16 - duration);
+        if (duration < 16) {
+            jc_sleep(16 - duration);
+        }
     }
 }
 
-void Logger::OnTerminated()
-{
+void Logger::OnTerminated() {
     SingleRun();
 }

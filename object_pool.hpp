@@ -7,33 +7,32 @@
 #include "non_copy_able.hpp"
 
 template<class T, int SIZE = 1024>
-class ObjectPool : public NonCopyAble
-{
+class ObjectPool : public NonCopyAble {
 public:
-    ObjectPool() : total_object_count_(0), free_object_count_(0) {}
-
-    virtual ~ObjectPool()
-    {
-        assert(total_object_count_ == free_object_count_);
-
-        for (int i = free_list_.Count() - 1; i > -1; --i)
-            free_list_[i]->~T();
-
-        for (int i = chunk_list_.Count() - 1; i > -1; --i)
-            jc_free(chunk_list_[i]);
+    ObjectPool() : total_object_count_(0), free_object_count_(0) {
     }
 
-    virtual T * Allocate()
-    {
-        if (free_list_.Count() == 0)
-        {
+    virtual ~ObjectPool() {
+        assert(total_object_count_ == free_object_count_);
+
+        for (int i = free_list_.Count() - 1; i > -1; --i) {
+            free_list_[i]->~T();
+        }
+            
+
+        for (int i = chunk_list_.Count() - 1; i > -1; --i) {
+            jc_free(chunk_list_[i]);
+        }
+    }
+
+    virtual T * Allocate() {
+        if (0 == free_list_.Count()) {
             T * new_chunk = static_cast<T *>(jc_calloc(SIZE, sizeof(T)));
             chunk_list_.Add(new_chunk);
             total_object_count_ += SIZE;
             free_list_.Reserve(total_object_count_);
 
-            for (int i = 0; i < SIZE; ++i)
-            {
+            for (int i = 0; i < SIZE; ++i) {
                 new(new_chunk)T();
                 free_list_[i] = new_chunk;
                 new_chunk++;
@@ -49,19 +48,15 @@ public:
         return object;
     }
 
-    void Release(T * object)
-    {
-        if (object)
-        {
+    void Release(T * object) {
+        if (object) {
             free_list_.Add(object);
             ++free_object_count_;
         }
     }
 
-    void ReleaseList(T * * list, int count)
-    {
-        if (list && count > 0)
-        {
+    void ReleaseList(T * * list, int count) {
+        if (list && count > 0) {
             free_list_.AddArray(list, count);
             free_object_count_ += count;
         }

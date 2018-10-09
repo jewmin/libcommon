@@ -9,12 +9,10 @@
 #include "packet.hpp"
 #include "object_pool.hpp"
 
-class Logger : protected BaseThread
-{
+class Logger : protected BaseThread {
 public:
     /* Indicates the log level */
-    typedef enum LogLevel
-    {
+    typedef enum LogLevel {
         Trace,  /*< The trace log level */
         Debug,  /*< The debug log level */
         Info,   /*< The info log level */
@@ -32,7 +30,9 @@ public:
     /* Function used to deinitialize the logger. */
     virtual void DeInitLogger();
 
-    inline void SetLogLevel(LogLevel log_level) { log_level_ = log_level; }
+    inline void SetLogLevel(LogLevel log_level) {
+        log_level_ = log_level;
+    }
 
 #define LogTrace(fmt, ...)  LogStub(Logger::Trace, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 #define LogDebug(fmt, ...)  LogStub(Logger::Debug, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
@@ -47,10 +47,11 @@ protected:
     const char * GetLogPrefix(const LogLevel log_level);
     void SingleRun();
 
-    virtual void Update(struct tm * time_info) {}
+    void Run() override;
+    void OnTerminated() override;
+
+    virtual void Update(struct tm * time_info);
     virtual void Log(LogLevel log_level, const char * time_string, const char * msg);
-    virtual void Run() override;
-    virtual void OnTerminated() override;
 
 protected:
     LogLevel log_level_;

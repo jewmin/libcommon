@@ -1,8 +1,7 @@
 #ifndef __LIBCOMMON_NON_COPY_ABLE_HPP__
 #define __LIBCOMMON_NON_COPY_ABLE_HPP__
 
-class NonCopyAble
-{
+class NonCopyAble {
 protected:
     NonCopyAble() = default;
     ~NonCopyAble() = default;

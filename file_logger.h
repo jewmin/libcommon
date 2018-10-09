@@ -3,15 +3,13 @@
 
 #include "logger.h"
 
-class FileLogger : public Logger
-{
+class FileLogger : public Logger {
 public:
     FileLogger(const char * file_name);
     virtual ~FileLogger();
 
 protected:
-    inline void OpenFile()
-    {
+    inline void OpenFile() {
         CloseFile();
 
         char fn[MAX_PATH];
@@ -19,20 +17,20 @@ protected:
         fn[MAX_PATH - 1] = 0;
 
         file_ = fopen(fn, "a+");
-        if (!file_) fprintf(stderr, "could not open log file %s", fn);
+        if (!file_) {
+            fprintf(stderr, "could not open log file %s", fn);
+        }
     }
 
-    inline void CloseFile()
-    {
-        if (file_)
-        {
+    inline void CloseFile() {
+        if (file_) {
             fclose(file_);
             file_ = nullptr;
         }
     }
 
-    virtual void Update(struct tm * time_info) override;
-    virtual void Log(LogLevel log_level, const char * time_string, const char * msg) override;
+    void Update(struct tm * time_info) override;
+    void Log(LogLevel log_level, const char * time_string, const char * msg) override;
 
 private:
     FILE * file_;

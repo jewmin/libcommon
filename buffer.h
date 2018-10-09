@@ -9,8 +9,7 @@
 #include "list.hpp"
 #include "non_copy_able.hpp"
 
-class Buffer : public NonCopyAble, public BaseList::BaseNode
-{
+class Buffer : public NonCopyAble, public BaseList::BaseNode {
 public:
     class Allocator;
     friend class Allocator;
@@ -54,8 +53,7 @@ private:
     uint8_t buffer_[1];
 };
 
-class Buffer::Allocator : public NonCopyAble
-{
+class Buffer::Allocator : public NonCopyAble {
     friend class Buffer;
     typedef TNodeList<Buffer> BufferList;
 
@@ -72,10 +70,10 @@ private:
     void Release(Buffer * buffer);
     void DestroyBuffer(Buffer * buffer);
 
-    virtual void OnBufferCreated() {}
-    virtual void OnBufferAllocated() {}
-    virtual void OnBufferReleased() {}
-    virtual void OnBufferDestroyed() {}
+    virtual void OnBufferCreated();
+    virtual void OnBufferAllocated();
+    virtual void OnBufferReleased();
+    virtual void OnBufferDestroyed();
 
 private:
     const size_t buffer_size_;
