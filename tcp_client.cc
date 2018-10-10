@@ -2,7 +2,7 @@
 
 TcpClient::TcpClient(size_t max_free_buffers, size_t buffer_size, Logger * logger)
     : Buffer::Allocator(buffer_size, max_free_buffers), logger_(logger)
-    , state_(kNew), recv_buffer_(nullptr), send_buffer_(nullptr) {
+    , state_(kNew), send_buffer_len_(0) {
     loop_.data = this;
     int err = uv_loop_init(&loop_);
     assert(0 == err);
@@ -11,11 +11,17 @@ TcpClient::TcpClient(size_t max_free_buffers, size_t buffer_size, Logger * logge
 
     memset(host_, 0, sizeof(host_));
     port_ = 0;
+
+    recv_buffer_ = Allocate();
+    send_buffer_ = Allocate();
 }
 
 TcpClient::~TcpClient() {
     uv_sem_destroy(&thread_start_sem_);
     uv_loop_close(&loop_);
+
+    recv_buffer_->Release();
+    send_buffer_->Release();
 }
 
 int TcpClient::ConnectTo(const char * host, uint16_t port) {
@@ -37,6 +43,7 @@ int TcpClient::ConnectTo(const char * host, uint16_t port) {
 
 void TcpClient::WaitForShutdownToComplete() {
     assert(kRunning == state_);
+    AppendMessage(kStop);
     Stop();
 }
 
@@ -47,10 +54,7 @@ void TcpClient::Run() {
 
     state_ = kRunning;
     uv_sem_post(&thread_start_sem_);
-    while (!IsTerminated()) {
-        uv_run(&loop_, UV_RUN_ONCE);
-        jc_sleep(1);
-    }
+    uv_run(&loop_, UV_RUN_DEFAULT);
 }
 
 void TcpClient::OnTerminated() {
@@ -75,25 +79,25 @@ int TcpClient::ConnectToServer() {
     }
 
     if (0 == err) {
-        err = uv_tcp_init(&loop_, tcp());
+        err = uv_tcp_init(&loop_, uv_tcp());
         tcp_.data = nullptr;
     }
 
     if (0 == err) {
-        err = uv_tcp_nodelay(tcp(), GetNoDelay() ? 1 : 0);
+        err = uv_tcp_nodelay(uv_tcp(), GetNoDelay() ? 1 : 0);
     }
 
     if (0 == err) {
         if (GetKeepAlive() > 0) {
-            err = uv_tcp_keepalive(tcp(), 1, GetKeepAlive());
+            err = uv_tcp_keepalive(uv_tcp(), 1, GetKeepAlive());
         } else {
-            uv_tcp_keepalive(tcp(), 0, 0);
+            uv_tcp_keepalive(uv_tcp(), 0, 0);
         }
     }
 
     if (0 == err) {
-        err = uv_tcp_connect(&connect_, tcp(), &s.addr, AfterConnect);
-        connect_.data = nullptr;
+        err = uv_tcp_connect(&connect_req_, uv_tcp(), &s.addr, AfterConnect);
+        connect_req_.data = nullptr;
     }
 
     if (0 == err) {
@@ -124,10 +128,63 @@ void TcpClient::Close() {
     }
 
     AddFlag(SocketOpt::F_CLOSING);
-    if (0 == uv_is_closing(handle())) {
-        uv_read_stop(stream());
-        uv_close(handle(), AfterClose);
+    if (0 == uv_is_closing(uv_handle())) {
+        uv_read_stop(uv_stream());
+        uv_close(uv_handle(), AfterClose);
     }
+}
+
+bool TcpClient::SendData(const char * data, size_t length) {
+    if (!data || length == 0) {
+        return false;
+    }
+
+    if (GetStatus() != SocketOpt::S_CONNECTED) {
+        return false;
+    }
+
+    {
+        Mutex::Guard guard(send_buffer_lock_);
+
+        if (HasFlag(SocketOpt::F_WRITING)) {
+            return false;
+        }
+
+        AddFlag(SocketOpt::F_WRITING);
+    }
+
+    if (IsCurrentThread()) {
+        Send(data, length);
+    } else {
+        size_t avaliable = send_buffer_->GetSize() - send_buffer_->GetUsed();
+        if (avaliable > length) {
+            avaliable = length;
+        }
+        send_buffer_->AddData(data, avaliable);
+        AppendMessage(kSendMessage);
+    }
+
+    return true;
+}
+
+void TcpClient::Send(const char * data, size_t length) {
+    uv_buf_t buf = uv_buf_init(const_cast<char *>(data), static_cast<unsigned int>(length));
+    int err = uv_write(&write_req_, uv_stream(), &buf, 1, AfterWrite);
+    if (0 != err) {
+        if (logger_) {
+            logger_->LogError("Send error: %s", uv_strerror(err));
+        }
+        RemoveFlag(SocketOpt::F_WRITING);
+        OnWriteComplete(err);
+    } else {
+        send_buffer_len_ = length;
+    }
+}
+
+void TcpClient::AppendMessage(action_t action) {
+    outgoing_message_queue_.Push(kSendMessage);
+    int err = uv_async_send(&thread_req_);
+    assert(err == 0);
 }
 
 void TcpClient::OnConnected() {
@@ -147,6 +204,22 @@ void TcpClient::ThreadReqCb(uv_async_t * handle) {
     if (!client) {
         return;
     }
+
+    client->outgoing_message_queue_.Flush();
+    for (int i = 0; i < client->outgoing_message_queue_.Count(); ++i) {
+        action_t action = client->outgoing_message_queue_[i];
+        switch (action) {
+        case kSendMessage:
+            client->Send(reinterpret_cast<const char *>(client->send_buffer_->GetBuffer()), client->send_buffer_->GetUsed());
+            client->send_buffer_->Empty();
+            break;
+
+        case kStop:
+            uv_stop(&client->loop_);
+            break;
+        }
+    }
+    client->outgoing_message_queue_.Clear();
 }
 
 void TcpClient::AfterConnect(uv_connect_t * req, int status) {
@@ -169,10 +242,7 @@ void TcpClient::AfterConnect(uv_connect_t * req, int status) {
         client->AddFlag(SocketOpt::F_CONNECT);
         client->AddFlag(SocketOpt::F_READING);
         client->OnConnected();
-        uv_read_start(client->stream(), AllocBuffer, AfterRead);
-        /*if (!client->send_buffer_) {
-            client->send_buffer_ = client->Allocate();
-        }*/
+        uv_read_start(client->uv_stream(), AllocBuffer, AfterRead);
     }
 }
 
@@ -196,10 +266,6 @@ void TcpClient::AllocBuffer(uv_handle_t * handle, size_t suggested_size, uv_buf_
         return;
     }
 
-    if (!client->recv_buffer_) {
-        client->recv_buffer_ = client->Allocate();
-    }
-
     client->recv_buffer_->SetupRead();
     *buf = *client->recv_buffer_->GetUVBuffer();
 }
@@ -210,13 +276,7 @@ void TcpClient::AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * 
         return;
     }
 
-    if (!client->recv_buffer_) {
-        return;
-    }
-
     if (client->GetStatus() != SocketOpt::S_CONNECTED) {
-        client->recv_buffer_->Release();
-        client->recv_buffer_ = nullptr;
         return;
     }
 
@@ -227,9 +287,26 @@ void TcpClient::AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * 
         client->Shutdown();
     } else {
         client->recv_buffer_->Use(nread);
-        client->OnRead(client->recv_buffer_);
+        client->OnReadComplete(client->recv_buffer_);
+    }
+}
+
+void TcpClient::AfterWrite(uv_write_t * req, int status) {
+    TcpClient * client = static_cast<TcpClient *>(req->handle->loop->data);
+    if (!client) {
+        return;
     }
 
-    client->recv_buffer_->Release();
-    client->recv_buffer_ = nullptr;
+    if (status < 0)
+    {
+        if (client->logger_) {
+            client->logger_->LogError("AfterWrite error: %s", uv_strerror(status));
+        }
+        client->Shutdown();
+    }
+
+    int err = status < 0 ? status : static_cast<int>(client->send_buffer_len_);
+    client->send_buffer_len_ = 0;
+    client->RemoveFlag(SocketOpt::F_WRITING);
+    client->OnWriteComplete(err);
 }
