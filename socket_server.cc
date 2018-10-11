@@ -442,8 +442,8 @@ void SocketServer::OnConnectionCloseCb(uv_handle_t * handle)
     socket->SetStatus(SocketOpt::S_DISCONNECTED);
 
     /*
-    * Call to unqualified virtual function
-    */
+     * Call to unqualified virtual function
+     */
     socket->_server.OnConnectionClosed(socket);
 
     if (socket->HasFlag(SocketOpt::F_READING))

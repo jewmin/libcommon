@@ -1,8 +1,6 @@
 #ifndef __LIBCOMMON_TCP_CLIENT_H__
 #define __LIBCOMMON_TCP_CLIENT_H__
 
-#include <time.h>
-
 #include "uv.h"
 #include "mutex.h"
 #include "thread.h"
@@ -12,17 +10,6 @@
 #include "queue.hpp"
 
 class TcpClient : public SocketOpt, protected BaseThread, protected Buffer::Allocator {
-    typedef enum {
-        kNew,
-        kRunning,
-        kDone
-    } state_t;
-
-    typedef enum {
-        kSendMessage,
-        kStop
-    } action_t;
-
 public:
     int ConnectTo(const char * host, uint16_t port);
     void WaitForShutdownToComplete();

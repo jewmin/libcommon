@@ -3,6 +3,17 @@
 
 #include "uv.h"
 
+typedef enum {
+    kNew,
+    kRunning,
+    kDone
+} state_t;
+
+typedef enum {
+    kSendMessage,
+    kStop
+} action_t;
+
 class SocketOpt
 {
 public:

@@ -22,6 +22,7 @@ TcpClient::~TcpClient() {
 
     recv_buffer_->Release();
     send_buffer_->Release();
+    Flush();
 }
 
 int TcpClient::ConnectTo(const char * host, uint16_t port) {
@@ -36,6 +37,7 @@ int TcpClient::ConnectTo(const char * host, uint16_t port) {
 
     if (0 == err) {
         uv_sem_wait(&thread_start_sem_);
+        assert(kRunning == state_);
     }
 
     return err;
@@ -79,8 +81,8 @@ int TcpClient::ConnectToServer() {
     }
 
     if (0 == err) {
-        err = uv_tcp_init(&loop_, uv_tcp());
         tcp_.data = nullptr;
+        err = uv_tcp_init(&loop_, uv_tcp());
     }
 
     if (0 == err) {
@@ -96,8 +98,8 @@ int TcpClient::ConnectToServer() {
     }
 
     if (0 == err) {
-        err = uv_tcp_connect(&connect_req_, uv_tcp(), &s.addr, AfterConnect);
         connect_req_.data = nullptr;
+        err = uv_tcp_connect(&connect_req_, uv_tcp(), &s.addr, AfterConnect);
     }
 
     if (0 == err) {
@@ -107,6 +109,9 @@ int TcpClient::ConnectToServer() {
             logger_->LogError("ConnectToServer error: %s", uv_strerror(err));
         }
 
+        /*
+         * Call to unqualified virtual function
+         */
         OnConnectFailed();
     }
 
@@ -175,6 +180,10 @@ void TcpClient::Send(const char * data, size_t length) {
             logger_->LogError("Send error: %s", uv_strerror(err));
         }
         RemoveFlag(SocketOpt::F_WRITING);
+
+        /*
+         * Call to unqualified virtual function
+         */
         OnWriteComplete(err);
     } else {
         send_buffer_len_ = length;
@@ -182,9 +191,9 @@ void TcpClient::Send(const char * data, size_t length) {
 }
 
 void TcpClient::AppendMessage(action_t action) {
-    outgoing_message_queue_.Push(kSendMessage);
+    outgoing_message_queue_.Push(action);
     int err = uv_async_send(&thread_req_);
-    assert(err == 0);
+    assert(0 == err);
 }
 
 void TcpClient::OnConnected() {
@@ -235,14 +244,21 @@ void TcpClient::AfterConnect(uv_connect_t * req, int status) {
             client->logger_->LogError("AfterConnect error: %s", uv_strerror(status));
         }
 
+        /*
+         * Call to unqualified virtual function
+         */
         client->OnConnectFailed();
         client->Close();
     } else {
         client->SetStatus(SocketOpt::S_CONNECTED);
         client->AddFlag(SocketOpt::F_CONNECT);
         client->AddFlag(SocketOpt::F_READING);
-        client->OnConnected();
         uv_read_start(client->uv_stream(), AllocBuffer, AfterRead);
+
+        /*
+         * Call to unqualified virtual function
+         */
+        client->OnConnected();
     }
 }
 
@@ -253,6 +269,10 @@ void TcpClient::AfterClose(uv_handle_t * handle) {
     }
 
     client->SetStatus(SocketOpt::S_DISCONNECTED);
+
+    /*
+     * Call to unqualified virtual function
+     */
     client->OnDisconnected();
 }
 
@@ -287,6 +307,10 @@ void TcpClient::AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * 
         client->Shutdown();
     } else {
         client->recv_buffer_->Use(nread);
+
+        /*
+         * Call to unqualified virtual function
+         */
         client->OnReadComplete(client->recv_buffer_);
     }
 }
@@ -308,5 +332,9 @@ void TcpClient::AfterWrite(uv_write_t * req, int status) {
     int err = status < 0 ? status : static_cast<int>(client->send_buffer_len_);
     client->send_buffer_len_ = 0;
     client->RemoveFlag(SocketOpt::F_WRITING);
+
+    /*
+     * Call to unqualified virtual function
+     */
     client->OnWriteComplete(err);
 }
