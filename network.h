@@ -11,6 +11,7 @@ typedef enum {
 
 typedef enum {
     kSendMessage,
+    kKill,
     kStop
 } action_t;
 

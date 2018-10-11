@@ -71,7 +71,7 @@ int TcpServer::Listen(const char * host, uint16_t port) {
 
 void TcpServer::WaitForShutdownToComplete() {
     assert(kRunning == state_);
-    AppendMessage(kStop);
+    AppendMessage(kStop, nullptr);
     Stop();
 }
 
@@ -157,8 +157,8 @@ void TcpServer::ReleaseSockets() {
     }
 }
 
-void TcpServer::AppendMessage(action_t action) {
-    outgoing_message_queue_.Push(action);
+void TcpServer::AppendMessage(action_t action, Socket * socket) {
+    outgoing_message_queue_.Push(std::make_tuple(action, socket));
     int err = uv_async_send(&thread_req_);
     assert(0 == err);
 }
@@ -183,10 +183,20 @@ void TcpServer::ThreadReqCb(uv_async_t * handle) {
 
     server->outgoing_message_queue_.Flush();
     for (int i = 0; i < server->outgoing_message_queue_.Count(); ++i) {
-        action_t action = server->outgoing_message_queue_[i];
-        switch (action) {
-        case kSendMessage:
+        auto & outgoing = server->outgoing_message_queue_[i];
+        switch (std::get<0>(outgoing)) {
+        case kSendMessage: {
+            Socket * socket = std::get<1>(outgoing);
+            socket->Send(reinterpret_cast<const char *>(socket->send_buffer_->GetBuffer()), socket->send_buffer_->GetUsed());
+            socket->send_buffer_->Empty();
             break;
+        }
+
+        case kKill: {
+            Socket * socket = std::get<1>(outgoing);
+            socket->Shutdown();
+            break;
+        }
 
         case kStop:
             uv_stop(&server->loop_);
@@ -286,11 +296,66 @@ void TcpServer::AfterClose(uv_handle_t * handle) {
 }
 
 void TcpServer::AllocBuffer(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf) {
+    Socket * socket = static_cast<Socket *>(handle->data);
+    if (!socket) {
+        return;
+    }
 
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED) {
+        return;
+    }
+
+    socket->recv_buffer_->SetupRead();
+    *buf = *socket->recv_buffer_->GetUVBuffer();
 }
 
 void TcpServer::AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf) {
+    Socket * socket = static_cast<Socket *>(stream->data);
+    if (!socket) {
+        return;
+    }
 
+    if (socket->GetStatus() != SocketOpt::S_CONNECTED) {
+        return;
+    }
+
+    if (UV_EOF == nread || nread < 0) {
+        if (socket->server_.logger_) {
+            socket->server_.logger_->LogError("AfterRead error: %s", uv_strerror(static_cast<int>(nread)));
+        }
+        socket->Shutdown();
+    } else {
+        socket->recv_buffer_->Use(nread);
+
+        /*
+         * Call to unqualified virtual function
+         */
+        socket->server_.OnReadComplete(socket, socket->recv_buffer_);
+    }
+}
+
+void TcpServer::AfterWrite(uv_write_t * req, int status) {
+    Socket * socket = static_cast<Socket *>(req->handle->data);
+    if (!socket) {
+        return;
+    }
+
+    if (status < 0)
+    {
+        if (socket->server_.logger_) {
+            socket->server_.logger_->LogError("AfterWrite error: %s", uv_strerror(status));
+        }
+        socket->Shutdown();
+    }
+
+    int err = status < 0 ? status : static_cast<int>(socket->send_buffer_len_);
+    socket->send_buffer_len_ = 0;
+    socket->RemoveFlag(SocketOpt::F_WRITING);
+
+    /*
+     * Call to unqualified virtual function
+     */
+    socket->server_.OnWriteComplete(socket, err);
 }
 
 TcpServer::Socket::Socket(TcpServer & server)
@@ -312,6 +377,44 @@ void TcpServer::Socket::Release() {
     if (--ref_ == 0) {
         server_.ReleaseSocket(this);
     }
+}
+
+bool TcpServer::Socket::SendData(const char * data, size_t length) {
+    if (!data || length == 0) {
+        return false;
+    }
+
+    if (GetStatus() != SocketOpt::S_CONNECTED) {
+        return false;
+    }
+
+    {
+        Mutex::Guard guard(send_buffer_lock_);
+
+        if (HasFlag(SocketOpt::F_WRITING)) {
+            return false;
+        }
+
+        AddFlag(SocketOpt::F_WRITING);
+    }
+
+    if (server_.IsCurrentThread()) {
+        Send(data, length);
+    }
+    else {
+        size_t avaliable = send_buffer_->GetSize() - send_buffer_->GetUsed();
+        if (avaliable > length) {
+            avaliable = length;
+        }
+        send_buffer_->AddData(data, avaliable);
+        server_.AppendMessage(kSendMessage, this);
+    }
+
+    return true;
+}
+
+void TcpServer::Socket::AbortiveClose() {
+    server_.AppendMessage(kKill, this);
 }
 
 void TcpServer::Socket::Shutdown() {
@@ -339,4 +442,22 @@ void TcpServer::Socket::Clear() {
     Reset();
     recv_buffer_->Empty();
     send_buffer_->Empty();
+}
+
+void TcpServer::Socket::Send(const char * data, size_t length) {
+    uv_buf_t buf = uv_buf_init(const_cast<char *>(data), static_cast<unsigned int>(length));
+    int err = uv_write(&write_req_, uv_stream(), &buf, 1, TcpServer::AfterWrite);
+    if (0 != err) {
+        if (server_.logger_) {
+            server_.logger_->LogError("Send error: %s", uv_strerror(err));
+        }
+        RemoveFlag(SocketOpt::F_WRITING);
+
+        /*
+         * Call to unqualified virtual function
+         */
+        server_.OnWriteComplete(this, err);
+    } else {
+        send_buffer_len_ = length;
+    }
 }

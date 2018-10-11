@@ -33,16 +33,8 @@ protected:
 
     // 连接
     int ConnectToServer();
-    // 断开连接
-    void Shutdown();
-    // 关闭连接
-    void Close();
     // 发送数据到缓冲区
     bool SendData(const char * data, size_t length);
-    // 提交发送
-    void Send(const char * data, size_t length);
-    // 发送异步消息
-    void AppendMessage(action_t action);
 
     // 连接成功事件
     virtual void OnConnected();
@@ -54,6 +46,16 @@ protected:
     virtual void OnReadComplete(Buffer * buffer) = 0;
     // 发送完成事件，返回已发送的数据长度，<0为错误码
     virtual void OnWriteComplete(int written) = 0;
+
+private:
+    // 断开连接
+    void Shutdown();
+    // 关闭连接
+    void Close();
+    // 提交发送
+    void Send(const char * data, size_t length);
+    // 发送异步消息
+    void AppendMessage(action_t action);
 
     static void ThreadReqCb(uv_async_t * handle);
     static void AfterConnect(uv_connect_t * req, int status);
