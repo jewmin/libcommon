@@ -25,7 +25,7 @@ void BaseThread::OnTerminated() {
 }
 
 void BaseThread::Callback(void * arg) {
-    BaseThread * thread = (BaseThread *)arg;
+    BaseThread * thread = static_cast<BaseThread *>(arg);
     thread->Run();
     thread->OnTerminated();
     thread->thread_ = 0;
