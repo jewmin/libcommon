@@ -1,7 +1,16 @@
 #ifndef __LIBCOMMON_NETWORK_H__
 #define __LIBCOMMON_NETWORK_H__
 
+#include <functional>
 #include "uv.h"
+
+typedef std::function<void()> Functor;
+typedef std::function<void(int)> WriteCallback;
+
+struct WriteRequest {
+    uv_write_t req;
+    WriteCallback cb;
+};
 
 typedef enum {
     kNew,

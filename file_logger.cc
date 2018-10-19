@@ -1,8 +1,7 @@
 #include "file_logger.h"
 
 FileLogger::FileLogger(const char * file_name) {
-    strncpy(file_name_, file_name, sizeof(file_name_));
-    file_name_[MAX_PATH - 1] = 0;
+    STRNCPY_S(file_name_, file_name);
 
     file_ = nullptr;
     memset(&last_time_, 0, sizeof(last_time_));

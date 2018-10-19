@@ -1,19 +1,18 @@
 #include "tcp_client.h"
 
-TcpClient::TcpClient(size_t max_free_buffers, size_t buffer_size, Logger * logger)
-    : Buffer::Allocator(buffer_size, max_free_buffers), logger_(logger)
-    , state_(kNew), send_buffer_len_(0) {
+TcpClient::TcpClient(const char * name, size_t max_free_buffers, size_t buffer_size, Logger * logger)
+    : Buffer::Allocator(buffer_size, max_free_buffers), logger_(logger), state_(kNew) {
     loop_.data = this;
     int err = uv_loop_init(&loop_);
     assert(0 == err);
 
     uv_sem_init(&thread_start_sem_, 0);
 
+    STRNCPY_S(name_, name);
     memset(host_, 0, sizeof(host_));
     port_ = 0;
 
     recv_buffer_ = Allocate();
-    send_buffer_ = Allocate();
 }
 
 TcpClient::~TcpClient() {
@@ -21,13 +20,12 @@ TcpClient::~TcpClient() {
     uv_loop_close(&loop_);
 
     recv_buffer_->Release();
-    send_buffer_->Release();
     Flush();
 }
 
 int TcpClient::ConnectTo(const char * host, uint16_t port) {
     assert(kNew == state_);
-    strncpy(host_, host, sizeof(host_));
+    STRNCPY_S(host_, host);
     port_ = port;
 
     int err = ConnectToServer();
@@ -43,10 +41,31 @@ int TcpClient::ConnectTo(const char * host, uint16_t port) {
     return err;
 }
 
+void TcpClient::InitiateShutdown() {
+    uv_stop(&loop_);
+}
+
 void TcpClient::WaitForShutdownToComplete() {
     assert(kRunning == state_);
-    AppendMessage(kStop);
+    QueueInLoop(std::bind(&TcpClient::InitiateShutdown, this));
     Stop();
+}
+
+void TcpClient::RunInLoop(const Functor & cb) {
+    if (IsCurrentThread()) {
+        cb();
+    } else {
+        QueueInLoop(cb);
+    }
+}
+
+void TcpClient::QueueInLoop(const Functor & cb) {
+    functor_lock_.Lock();
+    pending_functors_.push_back(cb);
+    functor_lock_.Unlock();
+
+    int err = uv_async_send(&thread_req_);
+    assert(0 == err);
 }
 
 void TcpClient::Run() {
@@ -139,61 +158,27 @@ void TcpClient::Close() {
     }
 }
 
-bool TcpClient::SendData(const char * data, size_t length) {
-    if (!data || length == 0) {
-        return false;
-    }
-
+int TcpClient::SendInLoop(const char * data, size_t length, const WriteCallback & cb) {
     if (GetStatus() != SocketOpt::S_CONNECTED) {
-        return false;
+        return UV_EPIPE;
     }
 
-    {
-        Mutex::Guard guard(send_buffer_lock_);
-
-        if (HasFlag(SocketOpt::F_WRITING)) {
-            return false;
-        }
-
-        AddFlag(SocketOpt::F_WRITING);
+    WriteRequest * write_request = static_cast<WriteRequest *>(jc_malloc(sizeof(WriteRequest)));
+    if (!write_request) {
+        return UV_ENOMEM;
     }
 
-    if (IsCurrentThread()) {
-        Send(data, length);
-    } else {
-        size_t avaliable = send_buffer_->GetSize() - send_buffer_->GetUsed();
-        if (avaliable > length) {
-            avaliable = length;
-        }
-        send_buffer_->AddData(data, avaliable);
-        AppendMessage(kSendMessage);
-    }
-
-    return true;
-}
-
-void TcpClient::Send(const char * data, size_t length) {
+    write_request->cb = cb;
     uv_buf_t buf = uv_buf_init(const_cast<char *>(data), static_cast<unsigned int>(length));
-    int err = uv_write(&write_req_, uv_stream(), &buf, 1, AfterWrite);
+    int err = uv_write(&write_request->req, uv_stream(), &buf, 1, AfterWrite);
     if (0 != err) {
         if (logger_) {
-            logger_->LogError("Send error: %s", uv_strerror(err));
+            logger_->LogError("SendInLoop error: %s", uv_strerror(err));
         }
-        RemoveFlag(SocketOpt::F_WRITING);
-
-        /*
-         * Call to unqualified virtual function
-         */
-        OnWriteComplete(err);
-    } else {
-        send_buffer_len_ = length;
+        jc_free(write_request);
     }
-}
 
-void TcpClient::AppendMessage(action_t action) {
-    outgoing_message_queue_.Push(action);
-    int err = uv_async_send(&thread_req_);
-    assert(0 == err);
+    return err;
 }
 
 void TcpClient::OnConnected() {
@@ -214,21 +199,14 @@ void TcpClient::ThreadReqCb(uv_async_t * handle) {
         return;
     }
 
-    client->outgoing_message_queue_.Flush();
-    for (int i = 0; i < client->outgoing_message_queue_.Count(); ++i) {
-        action_t action = client->outgoing_message_queue_[i];
-        switch (action) {
-        case kSendMessage:
-            client->Send(reinterpret_cast<const char *>(client->send_buffer_->GetBuffer()), client->send_buffer_->GetUsed());
-            client->send_buffer_->Empty();
-            break;
+    std::vector<Functor> functors;
+    client->functor_lock_.Lock();
+    functors.swap(client->pending_functors_);
+    client->functor_lock_.Unlock();
 
-        case kStop:
-            uv_stop(&client->loop_);
-            break;
-        }
+    for (auto & func : functors) {
+        func();
     }
-    client->outgoing_message_queue_.Clear();
 }
 
 void TcpClient::AfterConnect(uv_connect_t * req, int status) {
@@ -312,29 +290,26 @@ void TcpClient::AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * 
          * Call to unqualified virtual function
          */
         client->OnReadComplete(client->recv_buffer_);
+        client->recv_buffer_->Empty();
     }
 }
 
 void TcpClient::AfterWrite(uv_write_t * req, int status) {
-    TcpClient * client = static_cast<TcpClient *>(req->handle->loop->data);
-    if (!client) {
-        return;
-    }
+    WriteRequest * write_request = reinterpret_cast<WriteRequest *>(req);
 
-    if (status < 0)
-    {
-        if (client->logger_) {
-            client->logger_->LogError("AfterWrite error: %s", uv_strerror(status));
+    TcpClient * client = static_cast<TcpClient *>(write_request->req.handle->loop->data);
+    if (client) {
+        if (status < 0) {
+            if (client->logger_) {
+                client->logger_->LogError("AfterWrite error: %s", uv_strerror(status));
+            }
+            client->Shutdown();
         }
-        client->Shutdown();
+
+        if (write_request->cb) {
+            write_request->cb(status);
+        }
     }
 
-    int err = status < 0 ? status : static_cast<int>(client->send_buffer_len_);
-    client->send_buffer_len_ = 0;
-    client->RemoveFlag(SocketOpt::F_WRITING);
-
-    /*
-     * Call to unqualified virtual function
-     */
-    client->OnWriteComplete(err);
+    jc_free(write_request);
 }

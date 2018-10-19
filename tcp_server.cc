@@ -1,7 +1,7 @@
 #include "tcp_server.h"
 #include "exception.h"
 
-TcpServer::TcpServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size, Logger * logger)
+TcpServer::TcpServer(const char * name, size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size, Logger * logger)
     : Buffer::Allocator(buffer_size, max_free_buffers)
     , logger_(logger), max_free_sockets_(max_free_sockets), state_(kNew) {
     loop_.data = this;
@@ -10,6 +10,7 @@ TcpServer::TcpServer(size_t max_free_sockets, size_t max_free_buffers, size_t bu
 
     uv_sem_init(&thread_start_sem_, 0);
 
+    STRNCPY_S(name_, name);
     memset(host_, 0, sizeof(host_));
     port_ = 0;
 }
@@ -24,7 +25,7 @@ TcpServer::~TcpServer() {
 
 int TcpServer::Listen(const char * host, uint16_t port) {
     assert(kNew == state_);
-    strncpy(host_, host, sizeof(host_));
+    STRNCPY_S(host_, host);
     port_ = port;
 
     union {

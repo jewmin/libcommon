@@ -39,6 +39,7 @@
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
 #define strncasecmp _strnicmp
+#define STRNCPY_S(dst, src) { strncpy(dst, (src) ? (src) : "", sizeof(dst) - 1); dst[sizeof(dst) - 1] = 0; }
 #endif
 
 #endif

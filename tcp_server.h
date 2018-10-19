@@ -22,9 +22,12 @@ public:
     void WaitForShutdownToComplete();
 
 protected:
-    TcpServer(size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size = 1024, Logger * logger = nullptr);
+    TcpServer(const char * name, size_t max_free_sockets, size_t max_free_buffers, size_t buffer_size = 1024, Logger * logger = nullptr);
     virtual ~TcpServer();
 
+    const char * name() {
+        return name_;
+    }
     uv_tcp_t * uv_tcp() {
         return &tcp_;
     }
@@ -68,6 +71,7 @@ private:
     static void AfterWrite(uv_write_t * req, int status);
 
 private:
+    char name_[64];         // 名称
     char host_[256];        // 主机名
     uint16_t port_;         // 端口
 
