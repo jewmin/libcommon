@@ -60,5 +60,7 @@
     "files.encoding": "gbk",
     "editor.renderWhitespace": "all",
     "editor.renderControlCharacters": true,
-    "editor.fontSize": 18
+    "editor.fontSize": 18,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
 }

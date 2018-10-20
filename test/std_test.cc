@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "std_test.h"
 #include <vector>
+#include <functional>
 
 TEST(LockQueueTest, mutex)
 {
@@ -151,4 +152,33 @@ TEST(StdVectorTest, constructor)
         printf("%c", it);
     }
     printf("\n");
+}
+
+void func1()
+{
+    printf("func1\n");
+}
+
+void func2(int a)
+{
+    printf("func2 %d\n", a);
+}
+
+TEST(FunctionTest, use)
+{
+    /*LockQueue<std::function<void()>> func_queue;
+    func_queue.Push(std::move(std::bind(func1)));
+    func_queue.Push(std::bind(func2, 10));
+    func_queue.Flush();
+    for (int i = 0; i < func_queue.Count(); ++i)
+    {
+        func_queue[i]();
+    }*/
+	std::vector<std::function<void()>> func_queue;
+	func_queue.push_back(std::bind(func1));
+	func_queue.push_back(std::bind(func2, 10));
+	for (auto & func : func_queue)
+	{
+		func();
+	}
 }
