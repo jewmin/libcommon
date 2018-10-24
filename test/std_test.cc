@@ -26,24 +26,24 @@ TEST(LockQueueTest, mutex)
     EXPECT_EQ(lq[2], 300);
 }
 
-TEST(DoubleBufferTest, use)
-{
-    DoubleBuffer<int> db;
-    db.Push(10);
-    db.Push(20);
-    db.Push(30);
-    db.Push(40);
-    EXPECT_EQ(db.Size(), 4);
-    EXPECT_EQ(db.Pop(), 10);
-    EXPECT_EQ(db.Pop(), 20);
-    int i = 2;
-    while (!db.Empty())
-    {
-        int data = db.Front();
-        EXPECT_EQ(data, ++i * 10);
-        db.PopFront();
-    }
-}
+//TEST(DoubleBufferTest, use)
+//{
+//    DoubleBuffer<int> db;
+//    db.Push(10);
+//    db.Push(20);
+//    db.Push(30);
+//    db.Push(40);
+//    EXPECT_EQ(db.Size(), 4);
+//    EXPECT_EQ(db.Pop(), 10);
+//    EXPECT_EQ(db.Pop(), 20);
+//    int i = 2;
+//    while (!db.Empty())
+//    {
+//        int data = db.Front();
+//        EXPECT_EQ(data, ++i * 10);
+//        db.PopFront();
+//    }
+//}
 
 TEST(BaseVectorTest, use)
 {

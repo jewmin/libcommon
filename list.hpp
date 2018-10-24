@@ -36,6 +36,7 @@ public:
 
     protected:
         BaseNode() : next_(nullptr), prev_(nullptr), list_(nullptr) {
+
         }
         ~BaseNode() {
             RemoveFromList();
@@ -65,6 +66,7 @@ public:
     };
 
     BaseList() : head_(nullptr), tail_(nullptr), count_(0) {
+
     }
 
     void PushNode(BaseNode * node) {

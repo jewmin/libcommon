@@ -8,6 +8,7 @@ template<typename T, int SIZE = 10>
 class BaseVector : public NonCopyAble {
 public:
     BaseVector() : data_(nullptr), capacity_(0), count_(0) {
+
     }
 
     virtual ~BaseVector() {

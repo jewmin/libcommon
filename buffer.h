@@ -7,9 +7,8 @@
 #include "mutex.h"
 #include "common.h"
 #include "list.hpp"
-#include "non_copy_able.hpp"
 
-class Buffer : public NonCopyAble, public BaseList::BaseNode {
+class Buffer : public BaseList::BaseNode {
 public:
     class Allocator;
     friend class Allocator;
@@ -55,7 +54,7 @@ private:
 
 class Buffer::Allocator : public NonCopyAble {
     friend class Buffer;
-    typedef TNodeList<Buffer> BufferList;
+    using BufferList = TNodeList<Buffer>;
 
 public:
     explicit Allocator(size_t buffer_size, size_t max_free_buffers);

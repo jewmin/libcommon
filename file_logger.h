@@ -5,7 +5,7 @@
 
 class FileLogger : public Logger {
 public:
-    FileLogger(const char * file_name);
+    explicit FileLogger(const char * file_name);
     virtual ~FileLogger();
 
 protected:

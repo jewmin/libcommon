@@ -10,6 +10,7 @@ template<class T, int SIZE = 1024>
 class ObjectPool : public NonCopyAble {
 public:
     ObjectPool() : total_object_count_(0), free_object_count_(0) {
+
     }
 
     virtual ~ObjectPool() {

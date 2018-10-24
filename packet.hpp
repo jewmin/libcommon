@@ -5,9 +5,10 @@
 #include "packet_reader.hpp"
 #include "non_copy_able.hpp"
 
-class Packet : public PacketReader, public NonCopyAble {
+class Packet : public PacketReader {
 public:
     Packet() : PacketReader(), alloc_size_(0), size_(0) {
+
     }
     Packet(uint8_t * buf, size_t size) : PacketReader(buf, size), alloc_size_(0), size_(0) {
         data_end_ = mem_ptr_;

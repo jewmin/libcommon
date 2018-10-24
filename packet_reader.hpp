@@ -2,12 +2,15 @@
 #define __LIBCOMMON_PACKET_READER_HPP__
 
 #include "common.h"
+#include "non_copy_able.hpp"
 
-class PacketReader {
+class PacketReader : public NonCopyAble {
 public:
     PacketReader() : mem_ptr_(nullptr), end_ptr_(nullptr), offset_(nullptr), data_end_(nullptr) {
+
     }
     PacketReader(uint8_t * buf, size_t size) : mem_ptr_(buf), end_ptr_(buf + size), offset_(buf), data_end_(buf + size) {
+
     }
 
     // 获取内存空间的大小
