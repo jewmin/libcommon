@@ -1,7 +1,7 @@
 #include "event_loop.h"
 
-EventLoop::EventLoop()
-    : timer_queue_(new TimerQueue(*this)) {
+EventLoop::EventLoop(Logger * logger)
+    : timer_queue_(new TimerQueue(*this)), logger_(logger) {
     loop_.data = this;
     int err = uv_loop_init(&loop_);
     assert(0 == err);

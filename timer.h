@@ -14,15 +14,15 @@ class Timer : public NonCopyAble {
 public:
     using TimerCallback = std::function<void()>;
 
-    uv_timer_t * uv_timer() {
+    inline uv_timer_t * uv_timer() {
         return &timer_;
     }
 
-    uv_handle_t * uv_handle() {
+    inline uv_handle_t * uv_handle() {
         return reinterpret_cast<uv_handle_t *>(&timer_);
     }
 
-    uint32_t sequence() const {
+    inline uint32_t sequence() const {
         return sequence_;
     }
 

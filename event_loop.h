@@ -8,22 +8,27 @@
 #include "mutex.h"
 #include "timer.h"
 #include "common.h"
+#include "logger.h"
 #include "non_copy_able.hpp"
 
 class EventLoop : public NonCopyAble {
 public:
     using Callback = std::function<void()>;
 
-    EventLoop();
+    EventLoop(Logger * logger = nullptr);
     ~EventLoop();
 
-    uv_loop_t * uv_loop() {
+    inline uv_loop_t * uv_loop() {
         return &loop_;
     }
 
-    bool IsInLoopThread() {
+    inline bool IsInLoopThread() {
         uv_thread_t current_thread = uv_thread_self();
         return !!uv_thread_equal(&thread_id_, &current_thread);
+    }
+
+    inline Logger * log() {
+        return logger_;
     }
 
     // 在循环中执行回调
@@ -59,6 +64,7 @@ private:
     Mutex callbacks_lock_;
     std::vector<Callback> pending_callbacks_;
     TimerQueue * timer_queue_;
+    Logger * logger_;
 };
 
 #endif

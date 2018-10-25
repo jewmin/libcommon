@@ -152,3 +152,32 @@ TEST(StdVectorTest, constructor)
     }
     printf("\n");
 }
+
+int * func1(int arg)
+{
+    return new int(arg);
+}
+
+TEST(FuncTest, use)
+{
+    std::function<int*(int)> func;
+    func = std::bind(&func1, std::placeholders::_1);
+    int * p = func(10);
+    printf("%d\n", *p);
+    delete p;
+
+    TestClass tc;//implicit return type no suitable user-defined conversion from
+    //tc.SetCallback(std::bind(&TestClass::test, &tc, std::placeholders::_1));
+    tc.SetCallback2(std::bind(&TestClass::test2, &tc, std::placeholders::_1));
+    p = tc.run();
+    if (p) {
+        printf("%d\n", *p);
+        delete p;
+    }
+    
+    tc.run2(&p);
+    if (p) {
+        printf("%d\n", *p);
+        delete p;
+    }
+}

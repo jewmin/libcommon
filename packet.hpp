@@ -22,7 +22,7 @@ public:
         alloc_size_ = size;
     }
     // 获取当前缓冲长度下的可用字节数
-    inline size_t GetAvaliableBufferLength() {
+    inline size_t GetWritableLength() {
         return end_ptr_ - offset_;
     }
 
@@ -89,7 +89,7 @@ public:
     // 写入原子数据
     template<typename T>
     inline void WriteAtom(const T & data) {
-        size_t mem_size = GetAvaliableBufferLength();
+        size_t mem_size = GetWritableLength();
         if (mem_size < sizeof(data)) {
             Realloc(GetSize() + sizeof(data));
         }
@@ -104,7 +104,7 @@ public:
 
     // 写入二进制数据
     inline void WriteBinary(const uint8_t * buf, size_t size) {
-        size_t mem_size = GetAvaliableBufferLength();
+        size_t mem_size = GetWritableLength();
         if (mem_size < size) {
             Realloc(GetSize() + size);
         }

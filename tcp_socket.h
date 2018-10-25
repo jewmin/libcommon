@@ -1,51 +1,113 @@
 #ifndef __LIBCOMMON_TCP_SOCKET_H__
 #define __LIBCOMMON_TCP_SOCKET_H__
 
+#include <vector>
+#include <functional>
+
 #include "uv.h"
-#include "network.h"
+#include "common.h"
+#include "packet.hpp"
+#include "event_loop.h"
+#include "socket_opt.h"
 
-class EventLoop;
 class TcpSocket : public SocketOpt {
-protected:
-    TcpSocket(EventLoop * loop);
-    virtual ~TcpSocket();
+public:
+    using WriteCompleteCallback = std::function<void(int)>;
+    class WriteRequest {
+    public:
+        WriteRequest(TcpSocket * socket, const char * data, size_t size, const WriteCompleteCallback & cb)
+            : socket_(socket), storage_(data, data + size), buf_(uv_buf_init(&storage_[0], static_cast<unsigned int>(storage_.size())))
+            , write_complete_cb_(cb) {
+            req_.data = this;
+        }
 
-    uv_tcp_t * uv_tcp() {
+        TcpSocket * const socket_;
+        std::vector<char> storage_;
+        uv_write_t req_;
+        uv_buf_t buf_;
+        const WriteCompleteCallback write_complete_cb_;
+    };
+
+    inline uv_tcp_t * uv_tcp() {
         return &tcp_;
     }
-    uv_stream_t * uv_stream() {
+
+    inline uv_stream_t * uv_stream() {
         return reinterpret_cast<uv_stream_t *>(&tcp_);
     }
-    uv_handle_t * uv_handle() {
+
+    inline uv_handle_t * uv_handle() {
         return reinterpret_cast<uv_handle_t *>(&tcp_);
     }
-    uv_loop_t * uv_loop() {
-        return nullptr;
+
+    inline uv_loop_t * uv_loop() const {
+        return loop_.uv_loop();
     }
 
-    int Connect();
-    static void AfterConnect(uv_connect_t * req, int status);
-    virtual void OnConnected();
-    virtual void OnConnectFailed();
+    inline Logger * log() const {
+        return loop_.log();
+    }
 
-    void Shutdown();
-    void Close();
-    static void AfterClose(uv_handle_t * handle);
-    virtual void OnDisconnected();
+    inline const char * name() const {
+        return name_;
+    }
 
-    void ReadStart();
-    void ReadStop();
-    static void AllocBuffer(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
-    static void AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
-    virtual void OnReadComplete() = 0;
+    inline void SetHost(const char * host) {
+        STRNCPY_S(host_, host);
+    }
+
+    inline const char * GetHost() const {
+        return host_;
+    }
+
+    inline void SetPort(uint16_t port) {
+        port_ = port;
+    }
+
+    inline uint16_t GetPort() const {
+        return port_;
+    }
+
+protected:
+    TcpSocket(EventLoop & loop, const char * name, const int max_out_buffer_size, const int max_in_buffer_size);
+    virtual ~TcpSocket();
+
+    void ListenInLoop();
+    void ConnectInLoop();
+    void ShutdownInLoop();
+    void CloseInLoop();
+    void ReadStartInLoop();
+    void ReadStopInLoop();
+    void SendInLoop(const char * data, size_t size, const WriteCompleteCallback & cb = nullptr);
+    int AcceptInLoop(TcpSocket * accept_socket);
+
+    virtual void OnConnected() {}
+    virtual void OnConnectFailed() {}
+    virtual void OnDisconnected() {}
+    virtual void OnReadCompleted(const char * data, size_t size) {}
+    virtual TcpSocket * AllocateSocket() { return nullptr; }
 
 private:
-    char name_[64];
-    char host_[256];
-    uint16_t port_;
+    static void NewConnection(uv_stream_t * stream, int status);
+    static void AfterConnect(uv_connect_t * req, int status);
+    static void AfterClose(uv_handle_t * handle);
+    static void AllocBuffer(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
+    static void AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
+    static void AfterWrite(uv_write_t * req, int status);
 
+protected:
+    EventLoop & loop_;
+    const int max_out_buffer_size_;
+    const int max_in_buffer_size_;
+
+private:
     uv_tcp_t tcp_;
-    EventLoop * loop_;
+    uv_connect_t connect_;
+    Packet recv_buffer_;
+
+    char name_[128];
+    char host_[128];    // 监听/连接/对端地址
+    uint16_t port_;     // 监听/连接/对端端口
 };
 
 #endif

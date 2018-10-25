@@ -22,7 +22,7 @@ public:
         return data_end_ - mem_ptr_;
     }
     // 获取自当前读写指针开始可以读取的剩余字节数
-    inline size_t GetAvaliableLength() {
+    inline size_t GetReadableLength() {
         return data_end_ - offset_;
     }
     // 获取数据包当前读写位置字节偏移量
@@ -67,7 +67,7 @@ public:
     template<typename T>
     inline T ReadAtom() {
         T value;
-        size_t avaliable = GetAvaliableLength();
+        size_t avaliable = GetReadableLength();
         if (avaliable >= sizeof(T)) {
             value = *(reinterpret_cast<T *>(offset_));
             offset_ += sizeof(T);
@@ -80,7 +80,7 @@ public:
 
     // 读取二进制数据
     inline size_t ReadBinary(uint8_t * buf, size_t size) {
-        size_t avaliable = GetAvaliableLength();
+        size_t avaliable = GetReadableLength();
         if (avaliable >= size) {
             memcpy(buf, offset_, size);
         } else {
@@ -120,7 +120,7 @@ protected:
     template<typename LENGTH>
     size_t RawReadStringLength(char * str, size_t len) {
         assert(len > 0);
-        size_t avaliable = GetAvaliableLength(), read_len = 0, str_len = 0;
+        size_t avaliable = GetReadableLength(), read_len = 0, str_len = 0;
         
         if (avaliable >= sizeof(LENGTH)) {
             read_len = str_len = *(reinterpret_cast<LENGTH *>(offset_));
@@ -167,7 +167,7 @@ protected:
     // 读取字符串数据
     template<typename LENGTH>
     const char * RawReadStringPtr() {
-        size_t avaliable = GetAvaliableLength();
+        size_t avaliable = GetReadableLength();
 
         if (avaliable >= sizeof(LENGTH) + sizeof(char)) {
             size_t str_len = *(reinterpret_cast<LENGTH *>(offset_));

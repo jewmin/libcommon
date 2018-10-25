@@ -79,7 +79,7 @@ TEST(PacketTest, use)
 
     EXPECT_EQ(reader2.GetSize(), writer2.GetLength());
     EXPECT_EQ(reader2.GetLength(), writer2.GetLength());
-    EXPECT_EQ(reader2.GetAvaliableLength(), reader2.GetLength() - 6);
+    EXPECT_EQ(reader2.GetReadableLength(), reader2.GetLength() - 6);
     EXPECT_EQ(reader2.GetPosition(), 6);
     EXPECT_EQ(reader2.GetMemoryPtr(), writer2.GetMemoryPtr());
     EXPECT_EQ(reader2.GetOffsetPtr(), reader2.GetPositionPtr(6));
