@@ -9,8 +9,9 @@
 #include "packet.hpp"
 #include "event_loop.h"
 #include "socket_opt.h"
+#include "non_copy_able.hpp"
 
-class TcpSocket : public SocketOpt {
+class TcpSocket : public SocketOpt, public NonCopyAble {
 public:
     using WriteCompleteCallback = std::function<void(int)>;
     class WriteRequest {

@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "std_test.h"
 #include <vector>
+#include <functional>
 
 TEST(LockQueueTest, mutex)
 {
