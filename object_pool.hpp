@@ -14,12 +14,16 @@ public:
     }
 
     virtual ~ObjectPool() {
+        Clear();
+    }
+
+    void Clear() {
         assert(total_object_count_ == free_object_count_);
 
         for (int i = free_list_.Count() - 1; i > -1; --i) {
             free_list_[i]->~T();
         }
-            
+
 
         for (int i = chunk_list_.Count() - 1; i > -1; --i) {
             jc_free(chunk_list_[i]);

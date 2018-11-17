@@ -8,6 +8,7 @@ TEST(ObjectPoolTest, use)
     int * p2 = pool.Allocate();
     pool.Release(p1);
     pool.ReleaseList(&p2, 1);
+    pool.Clear();
 }
 
 TEST(ObjectPoolTest, use_struct)

@@ -10,9 +10,11 @@ public:
     Packet() : PacketReader(), alloc_size_(0), size_(0) {
 
     }
+
     Packet(uint8_t * buf, size_t size) : PacketReader(buf, size), alloc_size_(0), size_(0) {
         data_end_ = mem_ptr_;
     }
+
     virtual ~Packet() {
         Free();
     }
@@ -21,6 +23,7 @@ public:
     inline void SetAllocSize(size_t size) {
         alloc_size_ = size;
     }
+
     // 获取当前缓冲长度下的可用字节数
     inline size_t GetWritableLength() {
         return end_ptr_ - offset_;

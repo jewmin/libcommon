@@ -203,8 +203,7 @@ void TcpSocket::AfterConnect(uv_connect_t * req, int status) {
             }
             socket->CloseInLoop();
             socket->OnConnectFailed();
-        }
-        else {
+        } else {
             socket->status_ = SocketOpt::S_CONNECTED;
             socket->ReadStartInLoop();
             socket->OnConnected();

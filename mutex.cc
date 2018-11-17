@@ -3,8 +3,7 @@
 Mutex::Mutex(bool recursive) {
     if (recursive) {
         uv_mutex_init_recursive(&lock_);
-    }
-    else {
+    } else {
         uv_mutex_init(&lock_);
     }
 }

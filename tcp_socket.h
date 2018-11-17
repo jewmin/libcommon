@@ -41,6 +41,10 @@ public:
         return reinterpret_cast<uv_handle_t *>(&tcp_);
     }
 
+    inline EventLoop * event_loop() const {
+        return &loop_;
+    }
+
     inline uv_loop_t * uv_loop() const {
         return loop_.uv_loop();
     }
@@ -69,6 +73,8 @@ public:
         return port_;
     }
 
+    void SendInLoop(const char * data, size_t size, const WriteCompleteCallback & cb = nullptr);
+
 protected:
     TcpSocket(EventLoop & loop, const char * name, const int max_out_buffer_size, const int max_in_buffer_size);
     virtual ~TcpSocket();
@@ -79,14 +85,13 @@ protected:
     void CloseInLoop();
     void ReadStartInLoop();
     void ReadStopInLoop();
-    void SendInLoop(const char * data, size_t size, const WriteCompleteCallback & cb = nullptr);
     int AcceptInLoop(TcpSocket * accept_socket);
 
     virtual void OnConnected() {}
     virtual void OnConnectFailed() {}
     virtual void OnDisconnected() {}
     virtual void OnReadCompleted(const char * data, size_t size) {}
-    virtual TcpSocket * AllocateSocket() { return nullptr; }
+    virtual TcpSocket * AllocateSocket() = 0;
 
 private:
     static void NewConnection(uv_stream_t * stream, int status);

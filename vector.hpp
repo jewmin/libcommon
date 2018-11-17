@@ -106,7 +106,7 @@ public:
     // 查找数据，找到则返回索引，否则返回-1
     int Find(const T & data) const {
         for (int i = count_ - 1; i > -1; --i) {
-            if (data_[i] == data) return i;
+            if (data == data_[i]) return i;
         }
 
         return -1;

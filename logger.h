@@ -6,8 +6,7 @@
 #include "mutex.h"
 #include "thread.h"
 #include "queue.hpp"
-#include "packet.hpp"
-#include "object_pool.hpp"
+#include "packet_pool.hpp"
 
 class Logger : protected BaseThread {
 public:
@@ -56,8 +55,8 @@ protected:
 protected:
     LogLevel log_level_;
     LockQueue<Packet *> log_list_;
-    ObjectPool<Packet> allocator_;
     Mutex allocator_lock_;
+    PacketPool allocator_;
 };
 
 #endif

@@ -43,9 +43,9 @@ public:
 
     // 运行定时器
     uint32_t RunAt(uint64_t timeout_ms, uint64_t interval_ms, const Timer::TimerCallback & cb);
-    // N秒后运行定时器
+    // N毫秒后运行定时器
     uint32_t RunAfter(uint64_t delay_ms, const Timer::TimerCallback & cb);
-    // 每隔N秒运行定时器
+    // 每隔N毫秒运行定时器
     uint32_t RunEvery(uint64_t interval_ms, const Timer::TimerCallback & cb);
     // 取消定时器
     void Cancel(uint32_t timer_id);

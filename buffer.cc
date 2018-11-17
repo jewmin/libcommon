@@ -79,7 +79,7 @@ void Buffer::AddRef() {
 }
 
 void Buffer::Release() {
-    if (--ref_ == 0) {
+    if (0 == --ref_) {
         allocator_.Release(this);
     }
 }
