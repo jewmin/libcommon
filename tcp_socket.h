@@ -42,15 +42,15 @@ public:
     }
 
     inline EventLoop * event_loop() const {
-        return &loop_;
+        return loop_;
     }
 
     inline uv_loop_t * uv_loop() const {
-        return loop_.uv_loop();
+        return loop_->uv_loop();
     }
 
     inline Logger * log() const {
-        return loop_.log();
+        return loop_->log();
     }
 
     inline const char * name() const {
@@ -76,7 +76,7 @@ public:
     void SendInLoop(const char * data, size_t size, const WriteCompleteCallback & cb = nullptr);
 
 protected:
-    TcpSocket(EventLoop & loop, const char * name, const int max_out_buffer_size, const int max_in_buffer_size);
+    TcpSocket(EventLoop * loop, const char * name, const int max_out_buffer_size, const int max_in_buffer_size);
     virtual ~TcpSocket();
 
     void ListenInLoop();
@@ -102,7 +102,7 @@ private:
     static void AfterWrite(uv_write_t * req, int status);
 
 protected:
-    EventLoop & loop_;
+    EventLoop * loop_;
     const int max_out_buffer_size_;
     const int max_in_buffer_size_;
 

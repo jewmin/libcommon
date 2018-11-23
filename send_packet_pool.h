@@ -13,7 +13,7 @@
 
 class SendPacketPool : public NonCopyAble {
 public:
-    SendPacketPool(TcpSocket & socket);
+    SendPacketPool(TcpSocket * socket);
     ~SendPacketPool();
 
     inline Packet & AllocSendPacket() {
@@ -66,7 +66,7 @@ protected:
     void OnWriteComplete(int status);
 
 private:
-    TcpSocket & socket_;
+    TcpSocket * socket_;
     int send_idx_;
     bool packet_blocked_;
     int last_send_error_;

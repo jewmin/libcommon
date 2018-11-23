@@ -1,12 +1,10 @@
 #include "tcp_socket.h"
 
-TcpSocket::TcpSocket(EventLoop & loop, const char * name, const int max_out_buffer_size, const int max_in_buffer_size)
+TcpSocket::TcpSocket(EventLoop * loop, const char * name, const int max_out_buffer_size, const int max_in_buffer_size)
     : loop_(loop), max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
     STRNCPY_S(name_, name);
     host_[0] = 0;
     port_ = 0;
-
-    recv_buffer_.Reserve(max_in_buffer_size_);
 }
 
 TcpSocket::~TcpSocket() {
@@ -105,6 +103,7 @@ void TcpSocket::ShutdownInLoop() {
 void TcpSocket::ReadStartInLoop() {
     if (!(flags_ & SocketOpt::F_READING)) {
         flags_ |= SocketOpt::F_READING;
+        recv_buffer_.Reserve(max_in_buffer_size_);
         uv_read_start(uv_stream(), AllocBuffer, AfterRead);
     }
 }

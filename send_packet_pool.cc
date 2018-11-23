@@ -1,6 +1,6 @@
 #include "send_packet_pool.h"
 
-SendPacketPool::SendPacketPool(TcpSocket & socket)
+SendPacketPool::SendPacketPool(TcpSocket * socket)
     : socket_(socket), send_idx_(0), packet_blocked_(false), last_send_error_(0), is_writable_(false) {
     
 }
@@ -32,10 +32,10 @@ void SendPacketPool::SendToSocket() {
     if (GetPacketCount() >= 1024) {
         packet_blocked_ = true;
         static uint64_t next_t = 0;
-        uint64_t now_t = uv_now(socket_.uv_loop());
+        uint64_t now_t = uv_now(socket_->uv_loop());
         if (next_t < now_t) {
-            if (socket_.log()) {
-                socket_.log()->LogError("too many send packets (%d) in SendPacketPool! last error code (%d).", GetPacketCount(), last_send_error_);
+            if (socket_->log()) {
+                socket_->log()->LogError("too many send packets (%d) in SendPacketPool! last error code (%d).", GetPacketCount(), last_send_error_);
             }
             next_t = now_t + 10; // 10ºÁÃëÊä³öÒ»´Î
         }
@@ -49,14 +49,14 @@ void SendPacketPool::SendToSocket() {
 
     if (send_queue_.Count() > 0) {
         Packet * packet = send_queue_[send_idx_];
-        socket_.event_loop()->RunInLoop(std::bind(&SendPacketPool::Write, this, packet));
+        socket_->event_loop()->RunInLoop(std::bind(&SendPacketPool::Write, this, packet));
     } else {
         SetWritable(true);
     }
 }
 
 void SendPacketPool::Write(Packet * packet) {
-    socket_.SendInLoop(reinterpret_cast<const char *>(packet->GetOffsetPtr()), packet->GetReadableLength(), std::bind(&SendPacketPool::OnWriteComplete, this, std::placeholders::_1));
+    socket_->SendInLoop(reinterpret_cast<const char *>(packet->GetOffsetPtr()), packet->GetReadableLength(), std::bind(&SendPacketPool::OnWriteComplete, this, std::placeholders::_1));
 }
 
 void SendPacketPool::OnWriteComplete(int status) {
