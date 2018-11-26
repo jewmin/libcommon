@@ -91,7 +91,7 @@ protected:
     virtual void OnConnectFailed() {}
     virtual void OnDisconnected() {}
     virtual void OnReadCompleted(const char * data, size_t size) {}
-    virtual TcpSocket * AllocateSocket() = 0;
+    virtual TcpSocket * AllocateSocket() { return nullptr; }
 
 private:
     static void NewConnection(uv_stream_t * stream, int status);

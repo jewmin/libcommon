@@ -200,6 +200,7 @@ void TcpSocket::AfterConnect(uv_connect_t * req, int status) {
             if (socket->log()) {
                 socket->log()->LogError("(%s) AfterConnect error: %s", socket->name(), uv_strerror(status));
             }
+            socket->status_ = SocketOpt::S_DISCONNECTED;
             socket->CloseInLoop();
             socket->OnConnectFailed();
         } else {
@@ -213,9 +214,11 @@ void TcpSocket::AfterConnect(uv_connect_t * req, int status) {
 void TcpSocket::AfterClose(uv_handle_t * handle) {
     TcpSocket * socket = static_cast<TcpSocket *>(handle->data);
     if (socket) {
+        if (SocketOpt::S_DISCONNECTING == socket->status_) {
+            socket->OnDisconnected();
+        }
         socket->flags_ = 0;
         socket->status_ = SocketOpt::S_DISCONNECTED;
-        socket->OnDisconnected();
     }
 }
 
@@ -238,7 +241,7 @@ void TcpSocket::AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * 
         } else {
             socket->recv_buffer_.AdjustOffset(nread);
             socket->OnReadCompleted(reinterpret_cast<const char *>(socket->recv_buffer_.GetMemoryPtr()), socket->recv_buffer_.GetLength());
-            socket->recv_buffer_.SetLength(0);
+            //socket->recv_buffer_.SetLength(0);
         }
     }
 }
