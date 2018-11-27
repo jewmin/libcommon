@@ -7,13 +7,12 @@
 
 class TcpClient : public TcpSocket, public SendPacketPool {
 public:
-    TcpClient(EventLoop * loop, const char * name, const uint64_t tick_ms, const uint64_t reconnect_ms, const int max_out_buffer_size, const int max_in_buffer_size);
-    ~TcpClient();
-
     void Connect(const char * host, uint16_t port);
     void Shutdown();
 
 protected:
+    TcpClient(EventLoop * loop, const char * name, const uint64_t tick_ms, const uint64_t reconnect_ms, const int max_out_buffer_size, const int max_in_buffer_size);
+    virtual ~TcpClient();
     void OnConnected() override;
     void OnConnectFailed() override;
     void OnDisconnected() override;

@@ -23,6 +23,7 @@ void TcpClient::Shutdown() {
         destroy_ = true;
         if (tick_timer_ > 0) {
             event_loop()->Cancel(tick_timer_);
+            tick_timer_ = 0;
         }
         event_loop()->RunInLoop(std::bind(&TcpClient::ShutdownInLoop, this));
     }
