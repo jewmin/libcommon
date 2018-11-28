@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "std_test.h"
+#include "uv.h"
 #include <vector>
 #include <functional>
 
@@ -181,4 +182,25 @@ TEST(FuncTest, use)
         printf("%d\n", *p);
         delete p;
     }
+}
+
+TEST(StdVectorTest, t1)
+{
+    const char * str = "hello world!";
+    std::vector<char> storage1(str, str + strlen(str));
+    std::vector<char> storage2;
+    storage2.assign(str, str + strlen(str));
+    for (int i = 0; i < storage1.size() && i < storage2.size(); i++)
+    {
+        EXPECT_EQ(storage1[i], storage2[i]);
+    }
+    EXPECT_EQ(storage1.size(), storage2.size());
+}
+
+TEST(BufTest, t1)
+{
+    const char * str = "hello world";
+    uv_buf_t buf = uv_buf_init(const_cast<char *>(str), strlen(str));
+    EXPECT_STREQ(buf.base, str);
+    EXPECT_EQ(buf.len, 11);
 }

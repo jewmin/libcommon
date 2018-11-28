@@ -115,8 +115,8 @@ void TcpSocket::ReadStopInLoop() {
     }
 }
 
-void TcpSocket::SendInLoop(const char * data, size_t size, const WriteCompleteCallback & cb) {
-    WriteRequest * request = new WriteRequest(this, data, size, cb);
+void TcpSocket::SendInLoop(const char * data, size_t size, bool assign, const WriteCompleteCallback & cb) {
+    WriteRequest * request = new WriteRequest(this, data, size, assign, cb);
     int err = uv_write(&request->req_, uv_stream(), &request->buf_, 1, AfterWrite);
     if (err < 0) {
         if (log()) {

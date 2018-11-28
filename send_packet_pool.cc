@@ -56,7 +56,7 @@ void SendPacketPool::SendToSocket() {
 }
 
 void SendPacketPool::Write(Packet * packet) {
-    socket_->SendInLoop(reinterpret_cast<const char *>(packet->GetOffsetPtr()), packet->GetReadableLength(), std::bind(&SendPacketPool::OnWriteComplete, this, std::placeholders::_1));
+    socket_->SendInLoop(reinterpret_cast<const char *>(packet->GetOffsetPtr()), packet->GetReadableLength(), false, std::bind(&SendPacketPool::OnWriteComplete, this, std::placeholders::_1));
 }
 
 void SendPacketPool::OnWriteComplete(int status) {

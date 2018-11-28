@@ -48,7 +48,7 @@ private:
     static std::atomic_uint32_t s_num_created_;
 };
 
-class TcpServer::TcpConnection : public BaseList::BaseNode, public TcpSocket {
+class TcpServer::TcpConnection : public BaseList::BaseNode, public TcpSocket, public SendPacketPool {
 public:
     friend class TcpServer;
 

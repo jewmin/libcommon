@@ -16,10 +16,15 @@ public:
     using WriteCompleteCallback = std::function<void(int)>;
     class WriteRequest {
     public:
-        WriteRequest(TcpSocket * socket, const char * data, size_t size, const WriteCompleteCallback & cb)
-            : socket_(socket), storage_(data, data + size), buf_(uv_buf_init(&storage_[0], static_cast<unsigned int>(storage_.size())))
-            , write_complete_cb_(cb) {
+        WriteRequest(TcpSocket * socket, const char * data, size_t size, bool assign, const WriteCompleteCallback & cb)
+            : socket_(socket), write_complete_cb_(cb) {
             req_.data = this;
+            if (assign) {
+                storage_.assign(data, data + size);
+                buf_ = uv_buf_init(&storage_[0], static_cast<unsigned int>(storage_.size()));
+            } else {
+                buf_ = uv_buf_init(const_cast<char *>(data), static_cast<unsigned int>(size));
+            }
         }
 
         TcpSocket * const socket_;
@@ -73,7 +78,7 @@ public:
         return port_;
     }
 
-    void SendInLoop(const char * data, size_t size, const WriteCompleteCallback & cb = nullptr);
+    void SendInLoop(const char * data, size_t size, bool assign = true, const WriteCompleteCallback & cb = nullptr);
 
 protected:
     TcpSocket(EventLoop * loop, const char * name, const int max_out_buffer_size, const int max_in_buffer_size);

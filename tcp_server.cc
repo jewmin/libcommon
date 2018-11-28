@@ -96,6 +96,7 @@ void TcpServer::ReleaseSockets() {
 void TcpServer::ReleaseSocket(TcpConnection * conn) {
     conn->RemoveFromList();
     if (0 == max_free_sockets_ || free_list_.Count() < max_free_sockets_) {
+        conn->ClearSendQueue();
         free_list_.PushNode(conn);
     } else {
         DestroySocket(conn);
@@ -109,7 +110,7 @@ void TcpServer::DestroySocket(TcpConnection * conn) {
 /* TcpServer::TcpConnection implement */
 
 TcpServer::TcpConnection::TcpConnection(TcpServer & server)
-    : TcpSocket(server.event_loop(), server.name(), server.max_out_buffer_size_, server.max_in_buffer_size_)
+    : TcpSocket(server.event_loop(), server.name(), server.max_out_buffer_size_, server.max_in_buffer_size_), SendPacketPool(this)
     , server_(server), index_(++TcpServer::s_num_created_) {
 
 }
