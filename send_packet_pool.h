@@ -30,6 +30,10 @@ public:
             pakcet.SetPosition(0);
             // 将数据包追加到发送队列中
             send_queue_.Push(&pakcet);
+            // 尝试发送
+            if (IsWritable()) {
+                SendToSocket();
+            }
         } else {
             Mutex::Guard guard(allocator_lock_);
             allocator_.Release(&pakcet);
@@ -71,9 +75,9 @@ private:
     bool packet_blocked_;
     int last_send_error_;
     std::atomic_bool is_writable_;
+    LockQueue<Packet *, 512> send_queue_;
     Mutex allocator_lock_;
     PacketPool allocator_;
-    LockQueue<Packet *, 512> send_queue_;
 };
 
 #endif

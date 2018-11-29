@@ -52,3 +52,13 @@ TEST(LogTest, multi_thread)
         uv_thread_join(&tid[i]);
     logger.DeInitLogger();
 }
+
+TEST(LogTest, no_start_thread)
+{
+    Logger logger;
+    logger.LogTrace("this is %s log", "trace");
+    logger.LogDebug("this is %s log", "debug");
+    logger.LogInfo("this is %s log", "info");
+    logger.LogWarn("this is %s log", "warn");
+    logger.LogError("this is %s log", "error");
+}

@@ -1,7 +1,7 @@
 #include "send_packet_pool.h"
 
 SendPacketPool::SendPacketPool(TcpSocket * socket)
-    : socket_(socket), send_idx_(0), packet_blocked_(false), last_send_error_(0), is_writable_(false) {
+    : socket_(socket), send_idx_(0), packet_blocked_(false), last_send_error_(0), is_writable_(true) {
     
 }
 
@@ -62,7 +62,6 @@ void SendPacketPool::Write(Packet * packet) {
 void SendPacketPool::OnWriteComplete(int status) {
     if (status < 0) {
         last_send_error_ = status;
-        SetWritable(true);
     } else {
         ++send_idx_;
         if (send_idx_ >= send_queue_.Count()) {
@@ -71,7 +70,7 @@ void SendPacketPool::OnWriteComplete(int status) {
             allocator_.ReleaseList(static_cast<Packet * *>(send_queue_), send_queue_.Count());
             send_queue_.Clear();
         }
-        SetWritable(true);
-        SendToSocket();
     }
+    SetWritable(true);
+    SendToSocket();
 }

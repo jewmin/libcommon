@@ -42,6 +42,7 @@ void TcpSocket::ListenInLoop() {
 
     if (0 == err) {
         flags_ |= SocketOpt::F_LISTEN;
+        status_ = SocketOpt::S_CONNECTED;
     } else {
         if (log()) {
             log()->LogError("(%s) ListenInLoop error: %s", name_, uv_strerror(err));

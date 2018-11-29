@@ -23,11 +23,15 @@ public:
         for (int i = free_list_.Count() - 1; i > -1; --i) {
             free_list_[i]->~T();
         }
+        free_list_.Clear();
+        free_object_count_ = 0;
 
 
         for (int i = chunk_list_.Count() - 1; i > -1; --i) {
             jc_free(chunk_list_[i]);
         }
+        chunk_list_.Clear();
+        total_object_count_ = 0;
     }
 
     virtual T * Allocate() {
