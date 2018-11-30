@@ -95,7 +95,8 @@ protected:
     virtual void OnConnected() {}
     virtual void OnConnectFailed() {}
     virtual void OnDisconnected() {}
-    virtual void OnReadCompleted(const char * data, size_t size) {}
+    //virtual void OnReadCompleted(const char * data, size_t size) {}
+    virtual void OnReadCompleted(Packet * packet) {}
     virtual TcpSocket * AllocateSocket() { return nullptr; }
 
 private:

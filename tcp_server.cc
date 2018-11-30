@@ -145,6 +145,10 @@ void TcpServer::TcpConnection::OnDisconnected() {
     server_.ReleaseSocket(this);
 }
 
-void TcpServer::TcpConnection::OnReadCompleted(const char * data, size_t size) {
-    server_.OnReadCompleted(this, data, size);
+//void TcpServer::TcpConnection::OnReadCompleted(const char * data, size_t size) {
+//    server_.OnReadCompleted(this, data, size);
+//}
+
+void TcpServer::TcpConnection::OnReadCompleted(Packet * packet) {
+    server_.OnReadCompleted(this, packet);
 }

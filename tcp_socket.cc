@@ -243,8 +243,9 @@ void TcpSocket::AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * 
             socket->ShutdownInLoop();
         } else {
             socket->recv_buffer_.AdjustOffset(nread);
-            socket->OnReadCompleted(reinterpret_cast<const char *>(socket->recv_buffer_.GetMemoryPtr()), socket->recv_buffer_.GetLength());
+            //socket->OnReadCompleted(reinterpret_cast<const char *>(socket->recv_buffer_.GetMemoryPtr()), socket->recv_buffer_.GetLength());
             //socket->recv_buffer_.SetLength(0);
+            socket->OnReadCompleted(&socket->recv_buffer_);
         }
     }
 }

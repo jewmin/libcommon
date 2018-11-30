@@ -28,7 +28,8 @@ protected:
     virtual void OnTickEvent(TcpConnection * conn) = 0;
     virtual void OnConnectionEstablished(TcpConnection * conn) = 0;
     virtual void OnConnectionClosed(TcpConnection * conn) = 0;
-    virtual void OnReadCompleted(TcpConnection * conn, const char * data, size_t size) = 0;
+    //virtual void OnReadCompleted(TcpConnection * conn, const char * data, size_t size) = 0;
+    virtual void OnReadCompleted(TcpConnection * conn, Packet * packet) = 0;
 
 private:
     void ReleaseSockets();
@@ -64,7 +65,8 @@ protected:
     void OnConnected() override;
     void OnConnectFailed() override;
     void OnDisconnected() override;
-    void OnReadCompleted(const char * data, size_t size) override;
+    //void OnReadCompleted(const char * data, size_t size) override;
+    void OnReadCompleted(Packet * packet) override;
 
 private:
     TcpServer & server_;
