@@ -73,6 +73,10 @@ void TcpSocket::ConnectInLoop() {
     }
 
     if (0 == err) {
+        err = uv_tcp_nodelay(uv_tcp(), 1);
+    }
+
+    if (0 == err) {
         connect_.data = nullptr;
         err = uv_tcp_connect(&connect_, uv_tcp(), &s.addr, AfterConnect);
     }
@@ -137,6 +141,10 @@ int TcpSocket::AcceptInLoop(TcpSocket * accept_socket) {
     int err = uv_tcp_init(uv_loop(), accept_socket->uv_tcp());
     if (0 == err) {
         err = uv_accept(uv_stream(), accept_socket->uv_stream());
+    }
+
+    if (0 == err) {
+        err = uv_tcp_nodelay(accept_socket->uv_tcp(), 1);
     }
 
     if (0 == err) {
@@ -236,7 +244,7 @@ void TcpSocket::AllocBuffer(uv_handle_t * handle, size_t suggested_size, uv_buf_
 void TcpSocket::AfterRead(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf) {
     TcpSocket * socket = static_cast<TcpSocket *>(stream->data);
     if (socket) {
-        if (UV_EOF == nread || nread < 0) {
+        if (nread < 0) {
             if (socket->log()) {
                 socket->log()->LogError("(%s) AfterRead error: %s", socket->name(), uv_strerror(static_cast<int>(nread)));
             }

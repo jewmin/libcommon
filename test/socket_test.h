@@ -110,6 +110,19 @@ public:
     std::list<MockConnection> socket_list_;
 };
 
+class MockServerSocket_null_conn : public MockServerSocket {
+public:
+    MockServerSocket_null_conn(EventLoop * loop)
+        : MockServerSocket(loop, 1) {
+
+    }
+    virtual ~MockServerSocket_null_conn() {
+
+    }
+protected:
+    virtual TcpSocket * AllocateSocket() override;
+};
+
 class MockServerSocket::MockConnection : public TcpSocket, public SendPacketPool {
 public:
     MockConnection(MockServerSocket & server)
@@ -195,6 +208,11 @@ public:
     virtual ~MockClientSocket_write_error2() {
 
     }
+    void write_cb(int status) {
+        if (UV_EPIPE == status) {
+            ShutdownInLoop();
+        }
+    }
 
 protected:
     void OnConnected() override {
@@ -207,7 +225,7 @@ protected:
 #else
         uv_stream()->flags &= ~0x40;
 #endif
-        SendInLoop(hello, sizeof(hello));
+        SendInLoop(hello, sizeof(hello), true, std::bind(&MockClientSocket_write_error2::write_cb, this, std::placeholders::_1));
     }
 };
 

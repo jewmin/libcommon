@@ -56,6 +56,7 @@ protected:
 
 private:
     static void ThreadReqCb(uv_async_t * handle);
+    static void WalkCb(uv_handle_t * handle, void * arg);
 
 private:
     uv_loop_t loop_;

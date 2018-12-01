@@ -16,9 +16,7 @@ EventLoop::EventLoop(Logger * logger)
 EventLoop::~EventLoop() {
     delete timer_queue_;
 
-    if (!uv_is_closing(reinterpret_cast<uv_handle_t *>(&thread_req_))) {
-        uv_close(reinterpret_cast<uv_handle_t *>(&thread_req_), nullptr);
-    }
+    uv_walk(&loop_, WalkCb, nullptr);
 
     while (uv_run(&loop_, UV_RUN_NOWAIT)) {
         uv_run(&loop_, UV_RUN_ONCE);
@@ -40,7 +38,9 @@ void EventLoop::QueueInLoop(const Callback & cb) {
     pending_callbacks_.push_back(cb);
     callbacks_lock_.Unlock();
 
-    uv_async_send(&thread_req_);
+    if (!uv_is_closing(reinterpret_cast<uv_handle_t *>(&thread_req_))) {
+        uv_async_send(&thread_req_);
+    }
 }
 
 void EventLoop::Loop() {
@@ -49,7 +49,9 @@ void EventLoop::Loop() {
 
 void EventLoop::Quit() {
     uv_stop(&loop_);
-    uv_async_send(&thread_req_);
+    if (!uv_is_closing(reinterpret_cast<uv_handle_t *>(&thread_req_))) {
+        uv_async_send(&thread_req_);
+    }
 }
 
 uint32_t EventLoop::RunAt(uint64_t timeout_ms, uint64_t interval_ms, const Timer::TimerCallback & cb) {
@@ -83,5 +85,11 @@ void EventLoop::ThreadReqCb(uv_async_t * handle) {
     EventLoop * event_loop = static_cast<EventLoop *>(handle->loop->data);
     if (event_loop) {
         event_loop->DoPendingCallbacks();
+    }
+}
+
+void EventLoop::WalkCb(uv_handle_t * handle, void * arg) {
+    if (!uv_is_closing(handle)) {
+        uv_close(handle, nullptr);
     }
 }

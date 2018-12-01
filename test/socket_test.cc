@@ -18,6 +18,10 @@ TcpSocket * MockServerSocket::AllocateSocket() {
     return new MockConnection(*this);
 }
 
+TcpSocket * MockServerSocket_null_conn::AllocateSocket() {
+    return nullptr;
+}
+
 TEST(SocketTest, ipv4)
 {
     Logger logger;
@@ -201,7 +205,7 @@ TEST(SocketTest, write_error2)
 
     EXPECT_EQ(server.conn_connected_count_, 1);
     EXPECT_EQ(server.conn_connect_failed_count_, 0);
-    EXPECT_EQ(server.conn_disconnected_count_, 1);
+    EXPECT_EQ(server.conn_disconnected_count_, 0);
     EXPECT_EQ(server.conn_read_count_, 0);
 }
 
@@ -231,4 +235,35 @@ TEST(SocketTest, close_while_connecting)
     EXPECT_EQ(client.connect_failed_count_, 1);
     EXPECT_EQ(client.disconnected_count_, 0);
     EXPECT_EQ(client.read_count_, 0);
+}
+
+static void timer2_cb(MockClientSocket * client) {
+    client->event_loop()->Quit();
+}
+
+TEST(SocketTest, accept_null)
+{
+    Logger logger;
+    logger.InitLogger(Logger::Trace);
+    EventLoop * loop = new EventLoop(&logger);
+    MockServerSocket_null_conn server(loop);
+    MockClientSocket client(loop);
+    server.Listen(ipv6_any, port);
+    client.Connect(ipv4, port);
+    loop->RunAfter(1, std::bind(&timer2_cb, &client));
+    loop->Loop();
+    client.Shutdown();
+    server.Shutdown();
+    delete loop;
+    logger.DeInitLogger();
+
+    EXPECT_EQ(client.connected_count_, 1);
+    EXPECT_EQ(client.connect_failed_count_, 0);
+    EXPECT_EQ(client.disconnected_count_, 1);
+    EXPECT_EQ(client.read_count_, 0);
+
+    EXPECT_EQ(server.connected_count_, 0);
+    EXPECT_EQ(server.connect_failed_count_, 0);
+    EXPECT_EQ(server.disconnected_count_, 1);
+    EXPECT_EQ(server.read_count_, 0);
 }
