@@ -29,7 +29,7 @@ public:
     inline void Flush() {
         Mutex::Guard guard(lock_);
         if (append_vec_.Count() > 0) {
-            AddArray(static_cast<T *>(append_vec_), append_vec_.Count());
+            this->AddArray(static_cast<T *>(append_vec_), append_vec_.Count());
             append_vec_.Clear();
         }
     }
