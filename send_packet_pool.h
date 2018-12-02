@@ -74,7 +74,7 @@ private:
     int send_idx_;
     bool packet_blocked_;
     int last_send_error_;
-    std::atomic_bool is_writable_;
+    std::atomic<bool> is_writable_;
     LockQueue<Packet *, 512> send_queue_;
     Mutex allocator_lock_;
     PacketPool allocator_;

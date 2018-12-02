@@ -46,7 +46,7 @@ private:
     SocketList active_list_;
     SocketList free_list_;
 
-    static std::atomic_uint32_t s_num_created_;
+    static std::atomic<uint32_t> s_num_created_;
 };
 
 class TcpServer::TcpConnection : public BaseList::BaseNode, public TcpSocket, public SendPacketPool {

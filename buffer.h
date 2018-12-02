@@ -42,7 +42,7 @@ private:
     uv_buf_t uv_buf_;
     Allocator & allocator_;
 
-    std::atomic_long ref_;
+    std::atomic<long> ref_;
     const size_t size_;
     size_t used_;
 

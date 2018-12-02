@@ -24,6 +24,7 @@ TEST(EventLoopTest, t1)
 {
     EventLoop loop;
     uint32_t t1 = loop.RunEvery(100, std::bind(&LoopRun));
+    EXPECT_EQ(1, t1);
     loop.RunInLoop(std::bind(&LoopFunc, &loop, t1));
     loop.QueueInLoop(std::bind(&LoopFunc1, &loop));
     loop.Loop();

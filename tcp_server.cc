@@ -1,6 +1,6 @@
 #include "tcp_server.h"
 
-std::atomic_uint32_t TcpServer::s_num_created_ = 0;
+std::atomic<uint32_t> TcpServer::s_num_created_;
 
 TcpServer::TcpServer(EventLoop * loop, const char * name, const uint64_t tick_ms, const int max_out_buffer_size, const int max_in_buffer_size, const int max_free_sockets)
     : TcpSocket(loop, name, max_out_buffer_size, max_in_buffer_size)

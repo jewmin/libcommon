@@ -1,6 +1,8 @@
 #ifndef __LIBCOMMON_PACKET_HPP__
 #define __LIBCOMMON_PACKET_HPP__
 
+#include <algorithm>
+
 #include "common.h"
 #include "packet_reader.hpp"
 #include "non_copy_able.hpp"
@@ -154,7 +156,7 @@ protected:
         size_t offset = GetPosition();
         size_t length = GetLength();
         if (length > 0) {
-            memcpy(new_mem, mem_ptr_, __min(new_size, length));
+            memcpy(new_mem, mem_ptr_, std::min<size_t>(new_size, length));
         }
 
         // 重设数据指针
@@ -182,7 +184,7 @@ protected:
         if ((size_t)-1 == len) {
             len = str ? (LENGTH)strlen(str) : 0;
         } else {
-            len = __min(len, strlen(str));
+            len = std::min<size_t>(len, strlen(str));
         }
 
         WriteAtom<LENGTH>((LENGTH)len);

@@ -200,7 +200,7 @@ TEST(StdVectorTest, t1)
 TEST(BufTest, t1)
 {
     const char * str = "hello world";
-    uv_buf_t buf = uv_buf_init(const_cast<char *>(str), strlen(str));
+    uv_buf_t buf = uv_buf_init(const_cast<char *>(str), static_cast<unsigned int>(strlen(str)));
     EXPECT_STREQ(buf.base, str);
     EXPECT_EQ(buf.len, 11);
 }

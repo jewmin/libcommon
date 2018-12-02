@@ -1,7 +1,7 @@
 #include "timer.h"
 #include "event_loop.h"
 
-std::atomic_uint32_t Timer::s_num_created_ = 0;
+std::atomic<uint32_t> Timer::s_num_created_;
 
 Timer::Timer(EventLoop & loop, TimerQueue & timers, uint64_t timeout_ms, uint64_t interval_ms, const TimerCallback & cb)
     : loop_(loop), timers_(timers), callback_(cb), interval_(interval_ms), sequence_(++s_num_created_) {

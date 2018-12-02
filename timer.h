@@ -45,7 +45,7 @@ private:
     uint64_t expiration_;
     const uint64_t interval_;
     const uint32_t sequence_;
-    static std::atomic_uint32_t s_num_created_;
+    static std::atomic<uint32_t> s_num_created_;
 };
 
 class TimerQueue : public NonCopyAble {
