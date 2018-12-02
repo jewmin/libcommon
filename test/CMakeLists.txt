@@ -43,6 +43,8 @@ link_directories(${libcommon_SOURCE_DIR}/3rd/libuv/lib)
 link_directories(${libcommon_SOURCE_DIR}/3rd/gtest/lib)
 if (MSVC)
     link_directories(${libcommon_SOURCE_DIR}/3rd/jemalloc/lib)
+else()
+    link_directories(/usr/local/lib)
 endif()
 
 # 生成可执行文件
