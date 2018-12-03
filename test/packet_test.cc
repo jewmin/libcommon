@@ -10,6 +10,7 @@ typedef struct test_struct {
     char e;
     uint8_t f;
 } test_struct;
+
 TEST(PacketTest, use)
 {
     const char * null_str = nullptr;

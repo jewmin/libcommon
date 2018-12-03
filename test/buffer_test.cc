@@ -109,18 +109,10 @@ TEST(BufferTest, split)
     EXPECT_STREQ((const char *)c->GetBuffer(), "abcdefghij");
 }
 
-//TEST(BufferTest, add_error)
-//{
-//    try
-//    {
-//        Buffer::Allocator alloc(10, 0);
-//        Buffer * buf = alloc.Allocate();
-//        buf->Use(10);
-//        buf->AddData(0);
-//    }
-//    catch (const BaseException & ex)
-//    {
-//        EXPECT_STREQ(ex.Where().c_str(), "Buffer::AddData()");
-//        EXPECT_STREQ(ex.Message().c_str(), "Not enough space in buffer");
-//    }
-//}
+TEST(BufferTest, add_error)
+{
+    Buffer::Allocator alloc(10, 0);
+    Buffer * buf = alloc.Allocate();
+    buf->Use(1);
+    buf->AddData(0);
+}

@@ -25,7 +25,7 @@ EventLoop::~EventLoop() {
     uv_loop_close(&loop_);
 }
 
-void EventLoop::RunInLoop(const Callback & cb) {
+void EventLoop::RunInLoop(const EventLoop::Callback & cb) {
     if (IsInLoopThread()) {
         cb();
     } else {
@@ -33,7 +33,7 @@ void EventLoop::RunInLoop(const Callback & cb) {
     }
 }
 
-void EventLoop::QueueInLoop(const Callback & cb) {
+void EventLoop::QueueInLoop(const EventLoop::Callback & cb) {
     callbacks_lock_.Lock();
     pending_callbacks_.push_back(cb);
     callbacks_lock_.Unlock();
