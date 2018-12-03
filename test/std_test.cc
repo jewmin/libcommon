@@ -135,6 +135,7 @@ TEST(BaseListTest, use)
     node = a.PopBackNode();
     EXPECT_EQ(node->data_, 102);
     EXPECT_EQ(a.Count(), 7);
+    delete node;
 
     while (node = a.Head())
     {

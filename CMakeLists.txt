@@ -23,6 +23,7 @@ if (MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_definitions(-DJEMALLOC_EXPORT=)
     add_definitions(-DJEMALLOC_DEBUG)
+    add_definitions(-DUSE_VLD)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
@@ -34,6 +35,7 @@ include_directories(3rd/libuv/include)
 if (MSVC)
     include_directories(3rd/jemalloc/include)
     include_directories(3rd/jemalloc/include/msvc_compat)
+    include_directories(3rd/vld/include)
 endif()
 
 # 生成静态库

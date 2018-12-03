@@ -1,7 +1,7 @@
 #ifndef __UNIT_TEST_SOCKET_TEST_H__
 #define __UNIT_TEST_SOCKET_TEST_H__
 
-#include <list>
+#include "list.hpp"
 #include "tcp_socket.h"
 #include "send_packet_pool.h"
 
@@ -107,7 +107,7 @@ public:
     int conn_connect_failed_count_;
     int conn_disconnected_count_;
     int conn_read_count_;
-    std::list<MockConnection> socket_list_;
+    TNodeList<MockConnection> socket_list_;
 };
 
 class MockServerSocket_null_conn : public MockServerSocket {
@@ -123,7 +123,7 @@ protected:
     virtual TcpSocket * AllocateSocket() override;
 };
 
-class MockServerSocket::MockConnection : public TcpSocket, public SendPacketPool {
+class MockServerSocket::MockConnection : public BaseList::BaseNode, public TcpSocket, public SendPacketPool {
 public:
     MockConnection(MockServerSocket & server)
         : TcpSocket(server.loop_, "MockConnection", 1024, 1024), SendPacketPool(this)
@@ -145,13 +145,8 @@ protected:
         server_.conn_connected_count_++;
         SendInLoop(hello, sizeof(hello));
     }
-    virtual void OnConnectFailed() override {
-        server_.conn_connect_failed_count_++;
-    }
-    virtual void OnDisconnected() override {
-        server_.conn_disconnected_count_++;
-        delete this;
-    }
+    virtual void OnConnectFailed() override;
+    virtual void OnDisconnected() override;
     virtual void OnReadCompleted(Packet * packet) override {
         server_.conn_read_count_++;
         EXPECT_STREQ(reinterpret_cast<const char *>(packet->GetMemoryPtr()), hello);

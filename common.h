@@ -44,4 +44,9 @@
 
 #define STRNCPY_S(dst, src) { strncpy(dst, (src) ? (src) : "", sizeof(dst) - 1); dst[sizeof(dst) - 1] = 0; }
 
+// VLD¼ì²éÄÚ´æÐ¹Â©
+#ifdef USE_VLD
+#include "vld.h"
+#endif
+
 #endif

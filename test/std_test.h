@@ -9,7 +9,7 @@
 class TNode : public BaseList::BaseNode
 {
 public:
-    TNode(int data) : data_(data) {}
+    explicit TNode(int data) : data_(data) {}
     int data_;
 };
 

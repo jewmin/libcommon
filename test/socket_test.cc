@@ -8,14 +8,31 @@ static char ipv6_any[] = "::";
 uint16_t port = 8888;
 
 void MockServerSocket::Shutdown() {
-    for (auto & it : socket_list_) {
-        it.Shutdown();
+    MockConnection * conn = socket_list_.Head();
+    while (conn) {
+        MockConnection * next = TNodeList<MockConnection>::Next(conn);
+        conn->Shutdown();
+        conn = next;
     }
     event_loop()->RunInLoop(std::bind(&MockServerSocket::ShutdownInLoop, this));
 }
 
 TcpSocket * MockServerSocket::AllocateSocket() {
-    return new MockConnection(*this);
+    MockConnection * conn = new MockConnection(*this);
+    socket_list_.PushNode(conn);
+    return conn;
+}
+
+void MockServerSocket::MockConnection::OnConnectFailed() {
+    server_.conn_connect_failed_count_++;
+    RemoveFromList();
+    delete this;
+}
+
+void MockServerSocket::MockConnection::OnDisconnected() {
+    server_.conn_disconnected_count_++;
+    RemoveFromList();
+    delete this;
 }
 
 TcpSocket * MockServerSocket_null_conn::AllocateSocket() {
@@ -205,7 +222,7 @@ TEST(SocketTest, write_error2)
 
     EXPECT_EQ(server.conn_connected_count_, 1);
     EXPECT_EQ(server.conn_connect_failed_count_, 0);
-    EXPECT_EQ(server.conn_disconnected_count_, 0);
+    EXPECT_EQ(server.conn_disconnected_count_, 1);
     EXPECT_EQ(server.conn_read_count_, 0);
 }
 
