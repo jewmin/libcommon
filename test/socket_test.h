@@ -97,8 +97,19 @@ public:
         event_loop()->RunInLoop(std::bind(&MockServerSocket::ListenInLoop, this));
     }
     void Shutdown();
+    void Send() {
+        Packet packet;
+        packet.WriteString(welcome);
+        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockServerSocket::OnWriteCompleted, this, std::placeholders::_1));
+    }
 
 protected:
+    void OnWriteCompleted(int status) {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) server write completed (%s)", name(), GetHost(), GetPort(), uv_strerror(status));
+        }
+        event_loop()->Quit();
+    }
     virtual void OnConnected() override {
         if (log()) {
             log()->LogInfo("%s(%s:%d) server listen", name(), GetHost(), GetPort());
@@ -200,72 +211,72 @@ protected:
     virtual TcpSocket * AllocateSocket() override;
 };
 
-class MockClientSocket_write_error : public MockClientSocket {
-public:
-    MockClientSocket_write_error(EventLoop * loop)
-        : MockClientSocket(loop) {
+//class MockClientSocket_write_error : public MockClientSocket {
+//public:
+//    MockClientSocket_write_error(EventLoop * loop)
+//        : MockClientSocket(loop) {
+//
+//    }
+//    virtual ~MockClientSocket_write_error() {
+//
+//    }
+//
+//protected:
+//    void OnConnected() override {
+//        if (log()) {
+//            log()->LogInfo("%s(%s:%d) client connected", name(), GetHost(), GetPort());
+//        }
+//        connected_count_++;
+//        close_socket();
+//        Packet packet;
+//        packet.WriteString(hello);
+//        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket_write_error::OnWriteCompleted, this, std::placeholders::_1));
+//    }
+//    void close_socket() {
+//        uv_os_fd_t fd;
+//
+//        int r = uv_fileno(uv_handle(), &fd);
+//#ifdef _MSC_VER
+//        r = closesocket((uv_os_sock_t)fd);
+//#else
+//        r = close(fd);
+//#endif
+//    }
+//};
 
-    }
-    virtual ~MockClientSocket_write_error() {
-
-    }
-
-protected:
-    void OnConnected() override {
-        if (log()) {
-            log()->LogInfo("%s(%s:%d) client connected", name(), GetHost(), GetPort());
-        }
-        connected_count_++;
-        close_socket();
-        Packet packet;
-        packet.WriteString(hello);
-        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket_write_error::OnWriteCompleted, this, std::placeholders::_1));
-    }
-    void close_socket() {
-        uv_os_fd_t fd;
-
-        int r = uv_fileno(uv_handle(), &fd);
-#ifdef _MSC_VER
-        r = closesocket((uv_os_sock_t)fd);
-#else
-        r = close(fd);
-#endif
-    }
-};
-
-class MockClientSocket_write_error2 : public MockClientSocket {
-public:
-    MockClientSocket_write_error2(EventLoop * loop)
-        : MockClientSocket(loop) {
-
-    }
-    virtual ~MockClientSocket_write_error2() {
-
-    }
-
-protected:
-    void OnConnected() override {
-        if (log()) {
-            log()->LogInfo("%s(%s:%d) client connected", name(), GetHost(), GetPort());
-        }
-        connected_count_++;
-        close_writable();
-        Packet packet;
-        packet.WriteString(hello);
-        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket_write_error2::write_cb, this, std::placeholders::_1));
-    }
-    void close_writable() {
-#ifdef _MSC_VER
-        uv_stream()->flags &= ~0x00010000;
-#else
-        uv_stream()->flags &= ~0x40;
-#endif
-    }
-    void write_cb(int status) {
-        if (UV_EPIPE == status) {
-            ShutdownInLoop();
-        }
-    }
-};
+//class MockClientSocket_write_error2 : public MockClientSocket {
+//public:
+//    MockClientSocket_write_error2(EventLoop * loop)
+//        : MockClientSocket(loop) {
+//
+//    }
+//    virtual ~MockClientSocket_write_error2() {
+//
+//    }
+//
+//protected:
+//    void OnConnected() override {
+//        if (log()) {
+//            log()->LogInfo("%s(%s:%d) client connected", name(), GetHost(), GetPort());
+//        }
+//        connected_count_++;
+//        close_writable();
+//        Packet packet;
+//        packet.WriteString(hello);
+//        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket_write_error2::write_cb, this, std::placeholders::_1));
+//    }
+//    void close_writable() {
+//#ifdef _MSC_VER
+//        uv_stream()->flags &= ~0x00010000;
+//#else
+//        uv_stream()->flags &= ~0x40;
+//#endif
+//    }
+//    void write_cb(int status) {
+//        if (UV_EPIPE == status) {
+//            ShutdownInLoop();
+//        }
+//    }
+//};
 
 #endif
