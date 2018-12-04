@@ -5,12 +5,13 @@
 #include "tcp_socket.h"
 #include "send_packet_pool.h"
 
-static char hello[] = { 'h','e','l','l','o',' ','w','o','r','l','d','!',0 };
+const char * hello = "hello world!";
+const char * welcome = "welcome to tcp socket.";
 
-class MockClientSocket : public TcpSocket, public SendPacketPool {
+class MockClientSocket : public TcpSocket {
 public:
     MockClientSocket(EventLoop * loop)
-        : TcpSocket(loop, "MockClientSocket", 1024, 1024), SendPacketPool(this)
+        : TcpSocket(loop, "MockClientSocket", 1024, 1024)
         , connected_count_(0), connect_failed_count_(0), disconnected_count_(0), read_count_(0) {
 
     }
@@ -23,30 +24,49 @@ public:
         event_loop()->RunInLoop(std::bind(&MockClientSocket::ConnectInLoop, this));
     }
     void Shutdown() {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) client shutdown", name(), GetHost(), GetPort());
+        }
         event_loop()->RunInLoop(std::bind(&MockClientSocket::ShutdownInLoop, this));
     }
 
 protected:
+    void OnWriteCompleted(int status) {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) client write completed (%s)", name(), GetHost(), GetPort(), uv_strerror(status));
+        }
+    }
     virtual void OnConnected() override {
         if (log()) {
-            log()->LogInfo("%s(%s:%d) connected", name(), GetHost(), GetPort());
+            log()->LogInfo("%s(%s:%d) client connected", name(), GetHost(), GetPort());
         }
         connected_count_++;
-        SendToSocket();
+        Packet packet;
+        packet.WriteString(hello);
+        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket::OnWriteCompleted, this, std::placeholders::_1));
     }
     virtual void OnConnectFailed() override {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) client connect failed", name(), GetHost(), GetPort());
+        }
         connect_failed_count_++;
-        loop_->Quit();
+        event_loop()->Quit();
     }
     virtual void OnDisconnected() override {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) client disconnected", name(), GetHost(), GetPort());
+        }
         disconnected_count_++;
-        loop_->Quit();
+        event_loop()->Quit();
     }
     virtual void OnReadCompleted(Packet * packet) override {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) client read completed", name(), GetHost(), GetPort());
+        }
         read_count_++;
-        Packet & send_packet = AllocSendPacket();
-        send_packet.WriteBinary(packet->GetMemoryPtr(), packet->GetLength());
-        Flush(send_packet);
+        packet->SetPosition(0);
+        const char * read_content = packet->ReadString();
+        EXPECT_STREQ(read_content, welcome);
         packet->SetLength(0);
     }
 
@@ -62,9 +82,9 @@ public:
     class MockConnection;
     friend class MockConnection;
 
-    MockServerSocket(EventLoop * loop, int close_after_read_count)
+    MockServerSocket(EventLoop * loop)
         : TcpSocket(loop, "MockServerSocket", 1024, 1024)
-        , close_after_read_count_(close_after_read_count), connected_count_(0), connect_failed_count_(0), disconnected_count_(0), read_count_(0)
+        , connected_count_(0), connect_failed_count_(0), disconnected_count_(0), read_count_(0)
         , conn_connected_count_(0), conn_connect_failed_count_(0), conn_disconnected_count_(0), conn_read_count_(0) {
 
     }
@@ -81,24 +101,32 @@ public:
 protected:
     virtual void OnConnected() override {
         if (log()) {
-            log()->LogInfo("%s(%s:%d) connected", name(), GetHost(), GetPort());
+            log()->LogInfo("%s(%s:%d) server listen", name(), GetHost(), GetPort());
         }
         connected_count_++;
     }
     virtual void OnConnectFailed() override {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) server listen failed", name(), GetHost(), GetPort());
+        }
         connect_failed_count_++;
     }
     virtual void OnDisconnected() override {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) server disconnected", name(), GetHost(), GetPort());
+        }
         disconnected_count_++;
     }
     virtual TcpSocket * AllocateSocket() override;
     virtual void OnReadCompleted(Packet * packet) override {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) server read completed", name(), GetHost(), GetPort());
+        }
         read_count_++;
         packet->SetLength(0);
     }
 
 public:
-    int close_after_read_count_;
     int connected_count_;
     int connect_failed_count_;
     int disconnected_count_;
@@ -110,54 +138,66 @@ public:
     TNodeList<MockConnection> socket_list_;
 };
 
-class MockServerSocket_null_conn : public MockServerSocket {
-public:
-    MockServerSocket_null_conn(EventLoop * loop)
-        : MockServerSocket(loop, 1) {
-
-    }
-    virtual ~MockServerSocket_null_conn() {
-
-    }
-protected:
-    virtual TcpSocket * AllocateSocket() override;
-};
-
-class MockServerSocket::MockConnection : public BaseList::BaseNode, public TcpSocket, public SendPacketPool {
+class MockServerSocket::MockConnection : public BaseList::BaseNode, public TcpSocket {
 public:
     MockConnection(MockServerSocket & server)
-        : TcpSocket(server.loop_, "MockConnection", 1024, 1024), SendPacketPool(this)
-        , server_(server) {
+        : TcpSocket(server.loop_, "MockConnection", 1024, 1024), server_(server) {
 
     }
     virtual ~MockConnection() {
 
     }
     void Shutdown() {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) connection shutdown", name(), GetHost(), GetPort());
+        }
         event_loop()->RunInLoop(std::bind(&MockConnection::ShutdownInLoop, this));
     }
 
 protected:
+    void OnWriteCompleted(int status) {
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) connection write completed (%s)", name(), GetHost(), GetPort(), uv_strerror(status));
+        }
+    }
     virtual void OnConnected() override {
         if (log()) {
-            log()->LogInfo("%s(%s:%d) connected", name(), GetHost(), GetPort());
+            log()->LogInfo("%s(%s:%d) connection connected", name(), GetHost(), GetPort());
         }
         server_.conn_connected_count_++;
-        SendInLoop(hello, sizeof(hello));
+        Packet packet;
+        packet.WriteString(welcome);
+        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockConnection::OnWriteCompleted, this, std::placeholders::_1));
     }
     virtual void OnConnectFailed() override;
     virtual void OnDisconnected() override;
     virtual void OnReadCompleted(Packet * packet) override {
-        server_.conn_read_count_++;
-        EXPECT_STREQ(reinterpret_cast<const char *>(packet->GetMemoryPtr()), hello);
-        EXPECT_EQ(packet->GetLength(), sizeof(hello));
-        packet->SetLength(0);
-        if (server_.close_after_read_count_ == server_.conn_read_count_) {
-            Shutdown();
+        if (log()) {
+            log()->LogInfo("%s(%s:%d) connection read completed", name(), GetHost(), GetPort());
         }
+        server_.conn_read_count_++;
+        packet->SetPosition(0);
+        const char * read_content = packet->ReadString();
+        EXPECT_STREQ(read_content, hello);
+        packet->SetLength(0);
+        event_loop()->QueueInLoop(std::bind(&MockConnection::ShutdownInLoop, this));
     }
 
     MockServerSocket & server_;
+};
+
+class MockServerSocket_null_conn : public MockServerSocket {
+public:
+    MockServerSocket_null_conn(EventLoop * loop)
+        : MockServerSocket(loop) {
+
+    }
+    virtual ~MockServerSocket_null_conn() {
+
+    }
+
+protected:
+    virtual TcpSocket * AllocateSocket() override;
 };
 
 class MockClientSocket_write_error : public MockClientSocket {
@@ -173,15 +213,14 @@ public:
 protected:
     void OnConnected() override {
         if (log()) {
-            log()->LogInfo("%s(%s:%d) connected", name(), GetHost(), GetPort());
+            log()->LogInfo("%s(%s:%d) client connected", name(), GetHost(), GetPort());
         }
         connected_count_++;
         close_socket();
-        Packet & packet = AllocSendPacket();
-        packet.WriteString(hello, sizeof(hello));
-        Flush(packet);
+        Packet packet;
+        packet.WriteString(hello);
+        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket_write_error::OnWriteCompleted, this, std::placeholders::_1));
     }
-
     void close_socket() {
         uv_os_fd_t fd;
 
@@ -203,24 +242,29 @@ public:
     virtual ~MockClientSocket_write_error2() {
 
     }
-    void write_cb(int status) {
-        if (UV_EPIPE == status) {
-            ShutdownInLoop();
-        }
-    }
 
 protected:
     void OnConnected() override {
         if (log()) {
-            log()->LogInfo("%s(%s:%d) connected", name(), GetHost(), GetPort());
+            log()->LogInfo("%s(%s:%d) client connected", name(), GetHost(), GetPort());
         }
         connected_count_++;
+        close_writable();
+        Packet packet;
+        packet.WriteString(hello);
+        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket_write_error2::write_cb, this, std::placeholders::_1));
+    }
+    void close_writable() {
 #ifdef _MSC_VER
         uv_stream()->flags &= ~0x00010000;
 #else
         uv_stream()->flags &= ~0x40;
 #endif
-        SendInLoop(hello, sizeof(hello), true, std::bind(&MockClientSocket_write_error2::write_cb, this, std::placeholders::_1));
+    }
+    void write_cb(int status) {
+        if (UV_EPIPE == status) {
+            ShutdownInLoop();
+        }
     }
 };
 

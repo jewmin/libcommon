@@ -8,6 +8,9 @@ static char ipv6_any[] = "::";
 uint16_t port = 8888;
 
 void MockServerSocket::Shutdown() {
+    if (log()) {
+        log()->LogInfo("%s(%s:%d) server shutdown", name(), GetHost(), GetPort());
+    }
     MockConnection * conn = socket_list_.Head();
     while (conn) {
         MockConnection * next = TNodeList<MockConnection>::Next(conn);
@@ -24,12 +27,18 @@ TcpSocket * MockServerSocket::AllocateSocket() {
 }
 
 void MockServerSocket::MockConnection::OnConnectFailed() {
+    if (log()) {
+        log()->LogInfo("%s(%s:%d) connection connect failed", name(), GetHost(), GetPort());
+    }
     server_.conn_connect_failed_count_++;
     RemoveFromList();
     delete this;
 }
 
 void MockServerSocket::MockConnection::OnDisconnected() {
+    if (log()) {
+        log()->LogInfo("%s(%s:%d) connection disconnected", name(), GetHost(), GetPort());
+    }
     server_.conn_disconnected_count_++;
     RemoveFromList();
     delete this;
@@ -44,7 +53,7 @@ TEST(SocketTest, ipv4)
     Logger logger;
     logger.InitLogger(Logger::Trace);
     EventLoop * loop = new EventLoop(&logger);
-    MockServerSocket server(loop, 1);
+    MockServerSocket server(loop);
     MockClientSocket client(loop);
     server.Listen(ipv4_any, port);
     client.Connect(ipv4, port);
@@ -74,7 +83,7 @@ TEST(SocketTest, ipv6)
     Logger logger;
     logger.InitLogger(Logger::Trace);
     EventLoop * loop = new EventLoop(&logger);
-    MockServerSocket server(loop, 1);
+    MockServerSocket server(loop);
     MockClientSocket client(loop);
     server.Listen(ipv6_any, port);
     client.Connect(ipv6, port);
@@ -105,7 +114,7 @@ TEST(SocketTest, ip_error)
     Logger logger;
     logger.InitLogger(Logger::Trace);
     EventLoop * loop = new EventLoop(&logger);
-    MockServerSocket server(loop, 1);
+    MockServerSocket server(loop);
     MockClientSocket client(loop);
     server.Listen("www.baidu.com", port);
     client.Connect("www.baidu.com", port);
@@ -136,7 +145,7 @@ TEST(SocketTest, repeat)
     Logger logger;
     logger.InitLogger(Logger::Trace);
     EventLoop * loop = new EventLoop(&logger);
-    MockServerSocket server(loop, 1);
+    MockServerSocket server(loop);
     MockClientSocket client(loop);
     server.Listen(ipv6_any, port);
     client.Connect(ipv4, port);
@@ -169,7 +178,7 @@ TEST(SocketTest, write_error)
     Logger logger;
     logger.InitLogger(Logger::Trace);
     EventLoop * loop = new EventLoop(&logger);
-    MockServerSocket server(loop, 1);
+    MockServerSocket server(loop);
     MockClientSocket_write_error client(loop);
     server.Listen(ipv6_any, port);
     client.Connect(ipv4, port);
@@ -200,7 +209,7 @@ TEST(SocketTest, write_error2)
     Logger logger;
     logger.InitLogger(Logger::Trace);
     EventLoop * loop = new EventLoop(&logger);
-    MockServerSocket server(loop, 1);
+    MockServerSocket server(loop);
     MockClientSocket_write_error2 client(loop);
     server.Listen(ipv6_any, port);
     client.Connect(ipv4, port);
