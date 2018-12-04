@@ -5,6 +5,9 @@ TcpSocket::TcpSocket(EventLoop * loop, const char * name, const int max_out_buff
     STRNCPY_S(name_, name);
     host_[0] = 0;
     port_ = 0;
+
+    tcp_.data = this;
+    connect_.data = nullptr;
 }
 
 TcpSocket::~TcpSocket() {
@@ -28,7 +31,6 @@ void TcpSocket::ListenInLoop() {
     }
 
     if (0 == err) {
-        tcp_.data = this;
         err = uv_tcp_init(uv_loop(), uv_tcp());
     }
 
@@ -68,7 +70,6 @@ void TcpSocket::ConnectInLoop() {
     }
 
     if (0 == err) {
-        tcp_.data = this;
         err = uv_tcp_init(uv_loop(), uv_tcp());
     }
 
@@ -77,7 +78,6 @@ void TcpSocket::ConnectInLoop() {
     }
 
     if (0 == err) {
-        connect_.data = nullptr;
         err = uv_tcp_connect(&connect_, uv_tcp(), &s.addr, AfterConnect);
     }
 
@@ -137,7 +137,6 @@ void TcpSocket::SendInLoop(const char * data, size_t size, bool assign, const Wr
 }
 
 int TcpSocket::AcceptInLoop(TcpSocket * accept_socket) {
-    accept_socket->uv_tcp()->data = accept_socket;
     int err = uv_tcp_init(uv_loop(), accept_socket->uv_tcp());
     if (0 == err) {
         err = uv_accept(uv_stream(), accept_socket->uv_stream());
@@ -225,11 +224,9 @@ void TcpSocket::AfterConnect(uv_connect_t * req, int status) {
 void TcpSocket::AfterClose(uv_handle_t * handle) {
     TcpSocket * socket = static_cast<TcpSocket *>(handle->data);
     if (socket) {
-        if (SocketOpt::S_DISCONNECTING == socket->status_) {
-            socket->OnDisconnected();
-        }
         socket->flags_ = 0;
         socket->status_ = SocketOpt::S_DISCONNECTED;
+        socket->OnDisconnected();
     }
 }
 
