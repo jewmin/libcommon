@@ -98,7 +98,7 @@ public:
     inline void Remove(const int index, const int count) {
         assert(index > -1 && index + count <= count_);
         if (count > 0) {
-            memcpy(data_ + index, data_ + index + count, sizeof(T) * (count_ - index - count));
+            memmove(data_ + index, data_ + index + count, sizeof(T) * (count_ - index - count));
             count_ -= count;
         }
     }
