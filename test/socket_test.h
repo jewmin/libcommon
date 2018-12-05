@@ -226,7 +226,7 @@ protected:
         if (log()) {
             log()->LogInfo("%s(%s:%d) client write completed (%s)", name(), GetHost(), GetPort(), uv_strerror(status));
         }
-        event_loop()->Quit();
+        ShutdownInLoop();
     }
     void OnConnected() override {
         if (log()) {
