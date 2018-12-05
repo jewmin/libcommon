@@ -179,6 +179,37 @@ TEST(SocketTest, write_error)
     logger.InitLogger(Logger::Trace);
     EventLoop * loop = new EventLoop(&logger);
     MockServerSocket server(loop);
+    MockClientSocket_write_error client(loop);
+    server.Listen(ipv6_any, port);
+    client.Connect(ipv4, port);
+    loop->Loop();
+    client.Shutdown();
+    server.Shutdown();
+    delete loop;
+    logger.DeInitLogger();
+
+    EXPECT_EQ(client.connected_count_, 1);
+    EXPECT_EQ(client.connect_failed_count_, 0);
+    EXPECT_EQ(client.disconnected_count_, 1);
+    EXPECT_EQ(client.read_count_, 0);
+
+    EXPECT_EQ(server.connected_count_, 0);
+    EXPECT_EQ(server.connect_failed_count_, 0);
+    EXPECT_EQ(server.disconnected_count_, 1);
+    EXPECT_EQ(server.read_count_, 0);
+
+    EXPECT_EQ(server.conn_connected_count_, 1);
+    EXPECT_EQ(server.conn_connect_failed_count_, 0);
+    EXPECT_EQ(server.conn_disconnected_count_, 1);
+    EXPECT_EQ(server.conn_read_count_, 0);
+}
+
+TEST(SocketTest, write_error2)
+{
+    Logger logger;
+    logger.InitLogger(Logger::Trace);
+    EventLoop * loop = new EventLoop(&logger);
+    MockServerSocket server(loop);
     server.Listen(ipv6_any, port);
     loop->RunInLoop(std::bind(&MockServerSocket::Send, &server));
     loop->Loop();
@@ -191,68 +222,6 @@ TEST(SocketTest, write_error)
     EXPECT_EQ(server.disconnected_count_, 1);
     EXPECT_EQ(server.read_count_, 0);
 }
-
-//TEST(SocketTest, write_error)
-//{
-//    Logger logger;
-//    logger.InitLogger(Logger::Trace);
-//    EventLoop * loop = new EventLoop(&logger);
-//    MockServerSocket server(loop);
-//    MockClientSocket_write_error client(loop);
-//    server.Listen(ipv6_any, port);
-//    client.Connect(ipv4, port);
-//    loop->Loop();
-//    client.Shutdown();
-//    server.Shutdown();
-//    delete loop;
-//    logger.DeInitLogger();
-//
-//    EXPECT_EQ(client.connected_count_, 1);
-//    EXPECT_EQ(client.connect_failed_count_, 0);
-//    EXPECT_EQ(client.disconnected_count_, 1);
-//    EXPECT_EQ(client.read_count_, 0);
-//
-//    EXPECT_EQ(server.connected_count_, 0);
-//    EXPECT_EQ(server.connect_failed_count_, 0);
-//    EXPECT_EQ(server.disconnected_count_, 1);
-//    EXPECT_EQ(server.read_count_, 0);
-//
-//    EXPECT_EQ(server.conn_connected_count_, 1);
-//    EXPECT_EQ(server.conn_connect_failed_count_, 0);
-//    EXPECT_EQ(server.conn_disconnected_count_, 1);
-//    EXPECT_EQ(server.conn_read_count_, 0);
-//}
-
-//TEST(SocketTest, write_error2)
-//{
-//    Logger logger;
-//    logger.InitLogger(Logger::Trace);
-//    EventLoop * loop = new EventLoop(&logger);
-//    MockServerSocket server(loop);
-//    MockClientSocket_write_error2 client(loop);
-//    server.Listen(ipv6_any, port);
-//    client.Connect(ipv4, port);
-//    loop->Loop();
-//    client.Shutdown();
-//    server.Shutdown();
-//    delete loop;
-//    logger.DeInitLogger();
-//
-//    EXPECT_EQ(client.connected_count_, 1);
-//    EXPECT_EQ(client.connect_failed_count_, 0);
-//    EXPECT_EQ(client.disconnected_count_, 1);
-//    EXPECT_EQ(client.read_count_, 0);
-//
-//    EXPECT_EQ(server.connected_count_, 0);
-//    EXPECT_EQ(server.connect_failed_count_, 0);
-//    EXPECT_EQ(server.disconnected_count_, 1);
-//    EXPECT_EQ(server.read_count_, 0);
-//
-//    EXPECT_EQ(server.conn_connected_count_, 1);
-//    EXPECT_EQ(server.conn_connect_failed_count_, 0);
-//    EXPECT_EQ(server.conn_disconnected_count_, 1);
-//    EXPECT_EQ(server.conn_read_count_, 0);
-//}
 
 static void close_cb(uv_handle_t * handle) {
     TcpSocket * socket = static_cast<TcpSocket *>(handle->data);
