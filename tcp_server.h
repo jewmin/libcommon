@@ -14,7 +14,7 @@ public:
     friend class TcpConnection;
 
     void Listen(const char * host, uint16_t port);
-    void Shutdown();
+    void Shutdown() override;
     TcpConnection * GetConnection(uint32_t index);
 
 protected:

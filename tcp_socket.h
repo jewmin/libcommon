@@ -78,6 +78,11 @@ public:
         return port_;
     }
 
+    inline int GetMaxOutBufferSize() const {
+        return max_out_buffer_size_;
+    }
+
+    virtual void Shutdown() = 0;
     void SendInLoop(const char * data, size_t size, bool assign = true, const WriteCompleteCallback & cb = nullptr);
 
 protected:

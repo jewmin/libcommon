@@ -54,7 +54,7 @@ void TcpSocket::ListenInLoop() {
 }
 
 void TcpSocket::ConnectInLoop() {
-    if (SocketOpt::S_DISCONNECTED != status_) {
+    if (SocketOpt::S_DISCONNECTED != status()) {
         return;
     }
 
@@ -98,7 +98,7 @@ void TcpSocket::CloseInLoop() {
 }
 
 void TcpSocket::ShutdownInLoop() {
-    if (SocketOpt::S_CONNECTED == status_) {
+    if (SocketOpt::S_CONNECTED == status()) {
         status_ = SocketOpt::S_DISCONNECTING;
         ReadStopInLoop();
         CloseInLoop();
@@ -121,7 +121,7 @@ void TcpSocket::ReadStopInLoop() {
 }
 
 void TcpSocket::SendInLoop(const char * data, size_t size, bool assign, const WriteCompleteCallback & cb) {
-    if (SocketOpt::S_CONNECTED == status_) {
+    if (SocketOpt::S_CONNECTED == status()) {
         WriteRequest * request = new WriteRequest(this, data, size, assign, cb);
         int err = uv_write(&request->req_, uv_stream(), &request->buf_, 1, AfterWrite);
         if (err < 0) {
@@ -224,9 +224,12 @@ void TcpSocket::AfterConnect(uv_connect_t * req, int status) {
 void TcpSocket::AfterClose(uv_handle_t * handle) {
     TcpSocket * socket = static_cast<TcpSocket *>(handle->data);
     if (socket) {
+        bool do_disconnect = SocketOpt::S_DISCONNECTING == socket->status();
         socket->flags_ = 0;
         socket->status_ = SocketOpt::S_DISCONNECTED;
-        socket->OnDisconnected();
+        if (do_disconnect) {
+            socket->OnDisconnected();
+        }
     }
 }
 

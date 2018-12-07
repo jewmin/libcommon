@@ -1,6 +1,7 @@
 #ifndef __LIBCOMMON_EVENT_LOOP_H__
 #define __LIBCOMMON_EVENT_LOOP_H__
 
+#include <list>
 #include <vector>
 #include <functional>
 
@@ -9,6 +10,7 @@
 #include "timer.h"
 #include "common.h"
 #include "logger.h"
+#include "signal_wrap.h"
 #include "non_copy_able.hpp"
 
 class EventLoop : public NonCopyAble {
@@ -50,6 +52,9 @@ public:
     // 取消定时器
     void Cancel(uint32_t timer_id);
 
+    // 开启信号监听，只能在主线程启动前调用
+    void StartSignal(int signum, const SignalWrap::SignalCallback & cb);
+
 protected:
     // 执行回调
     void DoPendingCallbacks();
@@ -65,6 +70,7 @@ private:
     Mutex callbacks_lock_;
     std::vector<Callback> pending_callbacks_;
     TimerQueue * timer_queue_;
+    std::list<SignalWrap *> signal_list_;
     Logger * logger_;
 };
 

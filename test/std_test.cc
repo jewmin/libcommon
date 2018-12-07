@@ -185,6 +185,17 @@ TEST(FuncTest, use)
     }
 }
 
+void func2(int arg1, int arg2) {
+    printf("arg1=%d,arg2=%d\n", arg1, arg2);
+}
+
+TEST(FuncTest, use1)
+{
+    std::function<void(int)> func;
+    func = std::bind(&func2, 10, std::placeholders::_1);
+    func(20);
+}
+
 TEST(StdVectorTest, t1)
 {
     const char * str = "hello world!";

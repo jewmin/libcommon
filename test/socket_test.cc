@@ -281,3 +281,34 @@ TEST(SocketTest, accept_null)
     EXPECT_EQ(server.disconnected_count_, 1);
     EXPECT_EQ(server.read_count_, 0);
 }
+
+TEST(SocketTest, connection_error)
+{
+    Logger logger;
+    logger.InitLogger(Logger::Trace);
+    EventLoop * loop = new EventLoop(&logger);
+    MockServerSocket_connection_error server(loop);
+    MockClientSocket client(loop);
+    server.Listen(ipv4_any, port);
+    server.close_socket();
+    client.Connect(ipv4, port);
+    loop->Loop();
+    client.Shutdown();
+    server.Shutdown();
+    delete loop;
+    logger.DeInitLogger();
+
+    EXPECT_EQ(client.connected_count_, 0);
+    EXPECT_EQ(client.connect_failed_count_, 1);
+    EXPECT_EQ(client.disconnected_count_, 0);
+
+    EXPECT_EQ(server.connected_count_, 0);
+    EXPECT_EQ(server.connect_failed_count_, 0);
+    EXPECT_EQ(server.disconnected_count_, 1);
+    EXPECT_EQ(server.read_count_, 0);
+
+    EXPECT_EQ(server.conn_connected_count_, 0);
+    EXPECT_EQ(server.conn_connect_failed_count_, 0);
+    EXPECT_EQ(server.conn_disconnected_count_, 0);
+    EXPECT_EQ(server.conn_read_count_, 0);
+}

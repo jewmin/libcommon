@@ -23,7 +23,7 @@ public:
         SetPort(port);
         event_loop()->RunInLoop(std::bind(&MockClientSocket::ConnectInLoop, this));
     }
-    void Shutdown() {
+    void Shutdown() override {
         if (log()) {
             log()->LogInfo("%s(%s:%d) client shutdown", name(), GetHost(), GetPort());
         }
@@ -96,7 +96,7 @@ public:
         SetPort(port);
         event_loop()->RunInLoop(std::bind(&MockServerSocket::ListenInLoop, this));
     }
-    void Shutdown();
+    void Shutdown() override;
     void Send() {
         Packet packet;
         packet.WriteString(welcome);
@@ -158,7 +158,7 @@ public:
     virtual ~MockConnection() {
 
     }
-    void Shutdown() {
+    void Shutdown() override {
         if (log()) {
             log()->LogInfo("%s(%s:%d) connection shutdown", name(), GetHost(), GetPort());
         }
@@ -226,7 +226,11 @@ protected:
         if (log()) {
             log()->LogInfo("%s(%s:%d) client write completed (%s)", name(), GetHost(), GetPort(), uv_strerror(status));
         }
-        ShutdownInLoop();
+        if (UV_EBADF == status) {
+            ShutdownInLoop();
+        } else {
+            event_loop()->Quit();
+        }
     }
     void OnConnected() override {
         if (log()) {
@@ -247,6 +251,30 @@ protected:
 #else
         r = close(fd);
 #endif
+    }
+};
+
+class MockServerSocket_connection_error : public MockServerSocket {
+public:
+    MockServerSocket_connection_error(EventLoop * loop)
+        : MockServerSocket(loop) {
+
+    }
+    virtual ~MockServerSocket_connection_error() {
+
+    }
+    void close_socket() {
+        uv_os_fd_t fd;
+
+        int r = uv_fileno(uv_handle(), &fd);
+#ifdef _MSC_VER
+        r = closesocket((uv_os_sock_t)fd);
+#else
+        r = close(fd);
+#endif
+    }
+    int AcceptInLoop(TcpSocket * accept_socket) {
+        return UV_ENOSYS;
     }
 };
 

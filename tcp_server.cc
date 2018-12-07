@@ -75,11 +75,13 @@ TcpSocket * TcpServer::AllocateSocket() {
 }
 
 void TcpServer::OnTick() {
-    TcpConnection * conn = active_list_.Head();
-    while (conn) {
-        TcpConnection * next_conn = SocketList::Next(conn);
-        OnTickEvent(conn);
-        conn = next_conn;
+    if (SocketOpt::S_CONNECTED == status()) {
+        TcpConnection * conn = active_list_.Head();
+        while (conn) {
+            TcpConnection * next_conn = SocketList::Next(conn);
+            OnTickEvent(conn);
+            conn = next_conn;
+        }
     }
 }
 

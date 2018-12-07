@@ -1,7 +1,7 @@
 #include "send_packet_pool.h"
 
 SendPacketPool::SendPacketPool(TcpSocket * socket)
-    : socket_(socket), send_idx_(0), packet_blocked_(false), last_send_error_(0), is_writable_(true) {
+    : socket_(socket), send_idx_(0), packet_blocked_(false), last_send_error_(0), current_out_buffer_size_(0), blocked_(false) {
     
 }
 
@@ -21,11 +21,12 @@ void SendPacketPool::ClearSendQueue() {
     allocator_.ReleaseList(static_cast<Packet * *>(send_queue_), send_queue_.Count());
     send_queue_.Clear();
     send_idx_ = 0;
+    current_out_buffer_size_ = 0;
 }
 
 void SendPacketPool::SendToSocket() {
-    bool expected = true;
-    if (!is_writable_.compare_exchange_strong(expected, false)) {
+    bool expected = false;
+    if (!blocked_.compare_exchange_strong(expected, true)) {
         return;
     }
 
@@ -48,10 +49,9 @@ void SendPacketPool::SendToSocket() {
     }
 
     if (send_queue_.Count() > 0) {
-        Packet * packet = send_queue_[send_idx_];
-        socket_->event_loop()->RunInLoop(std::bind(&SendPacketPool::Write, this, packet));
+        socket_->event_loop()->RunInLoop(std::bind(&SendPacketPool::Write, this, send_queue_[send_idx_]));
     } else {
-        SetWritable(true);
+        UnBlocked();
     }
 }
 
@@ -62,7 +62,12 @@ void SendPacketPool::Write(Packet * packet) {
 void SendPacketPool::OnWriteComplete(int status) {
     if (status < 0) {
         last_send_error_ = status;
+        if (UV_ECONNRESET == status || UV_ENOTCONN == status || UV_ESHUTDOWN == status || UV_ECONNABORTED == status || UV_EPIPE == status || UV_EBADF == status) {
+            socket_->Shutdown();
+        }
     } else {
+        current_out_buffer_size_ -= static_cast<int>(send_queue_[send_idx_]->GetLength());
+
         ++send_idx_;
         if (send_idx_ >= send_queue_.Count()) {
             send_idx_ = 0;
@@ -71,6 +76,6 @@ void SendPacketPool::OnWriteComplete(int status) {
             send_queue_.Clear();
         }
     }
-    SetWritable(true);
+    UnBlocked();
     SendToSocket();
 }

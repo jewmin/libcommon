@@ -8,6 +8,8 @@
 #include "queue.hpp"
 #include "packet_pool.hpp"
 
+#define MAX_MSG_LENGTH 2048
+
 class Logger : protected BaseThread {
 public:
     /* Indicates the log level */

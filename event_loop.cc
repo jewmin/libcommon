@@ -16,6 +16,10 @@ EventLoop::EventLoop(Logger * logger)
 EventLoop::~EventLoop() {
     delete timer_queue_;
 
+    for (auto & it : signal_list_) {
+        it->Stop();
+    }
+
     uv_walk(&loop_, WalkCb, nullptr);
 
     while (uv_run(&loop_, UV_RUN_NOWAIT)) {
@@ -68,6 +72,14 @@ uint32_t EventLoop::RunEvery(uint64_t interval_ms, const Timer::TimerCallback & 
 
 void EventLoop::Cancel(uint32_t timer_id) {
     timer_queue_->UnregisterTimer(timer_id);
+}
+
+void EventLoop::StartSignal(int signum, const SignalWrap::SignalCallback & cb) {
+    SignalWrap * wrap = SignalWrap::Create(*this, signum, cb);
+    if (wrap) {
+        wrap->Start();
+        signal_list_.push_back(wrap);
+    }
 }
 
 void EventLoop::DoPendingCallbacks() {

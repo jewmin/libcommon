@@ -44,7 +44,7 @@ public:
             for (int i = 0; i < SIZE; ++i) {
                 new(new_chunk)T();
                 free_list_[i] = new_chunk;
-                new_chunk++;
+                ++new_chunk;
             }
             free_object_count_ = SIZE;
             free_list_.Trunc(free_object_count_);

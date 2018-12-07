@@ -77,7 +77,7 @@ void Logger::LogStub(LogLevel log_level, const char * file, const char * func, c
 }
 
 void Logger::LogStub2(LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, va_list ap) {
-    thread_local static char msg[2048] = {0};
+    thread_local static char msg[MAX_MSG_LENGTH] = {0};
     thread_local static int offset = 0;
     thread_local static int len = 0;
 

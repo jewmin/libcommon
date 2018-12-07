@@ -20,6 +20,10 @@ public:
         S_DISCONNECTING,
         S_DISCONNECTED
     } status_t;
+
+    inline status_t status() {
+        return status_;
+    }
     
 protected:
     SocketOpt() : flags_(0), status_(S_DISCONNECTED) {

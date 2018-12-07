@@ -51,9 +51,9 @@ else()
 endif()
 
 # 生成可执行文件
-add_executable(unit_test ${all_headers} ${all_srcs})
+add_executable(${PROJECT_NAME} ${all_headers} ${all_srcs})
 if (MSVC)
-    target_link_libraries(unit_test libcommon libuv jemalloc gtestd gmockd advapi32 iphlpapi psapi ws2_32 userenv vld)
+    target_link_libraries(${PROJECT_NAME} libcommon libuv jemalloc gtestd gmockd advapi32 iphlpapi psapi ws2_32 userenv vld)
 else()
-    target_link_libraries(unit_test common uv jemalloc gtest gmock)
+    target_link_libraries(${PROJECT_NAME} common uv jemalloc gtest gmock)
 endif()

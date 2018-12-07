@@ -1,77 +1,36 @@
 #include <signal.h>
-#include "common.h"
-#include "test_log.h"
-#include "exception.h"
 #include "echo_client.h"
+#include "file_logger.h"
+#include "event_loop_thread.h"
 
-void close_cb(uv_handle_t * handle, void * arg)
-{
-    if (uv_is_closing(handle) == 0)
-        uv_close(handle, NULL);
+void signal_handler(EventLoop * loop, int signum) {
+    if (loop->log()) {
+        loop->log()->LogInfo("signal_handler: %d", signum);
+    }
+    loop->Quit();
 }
 
-void signal_handler(uv_signal_t * handle, int signum)
-{
-    uv_signal_stop(handle);
-    uv_stop(handle->loop);
-}
-
-int main(int argc, const char * * argv)
-{
+int main(int argc, const char * * argv) {
     uv_replace_allocator(jc_malloc, jc_realloc, jc_calloc, jc_free);
 
-    TestLog log("echo_client.log");
-    log.Start();
+    FileLogger logger("echo_client.log");
+    logger.InitLogger(Logger::Trace);
 
-    try
-    {
-        uv_loop_t * loop = uv_default_loop();
+    EventLoop main_loop(&logger);
+    main_loop.StartSignal(SIGINT, std::bind(&signal_handler, &main_loop, std::placeholders::_1));
 
-        EchoClient client(10, 1500, &log);
+    EventLoopThread * io_thread = new EventLoopThread(&logger);
+    EventLoop * io_loop = io_thread->StartLoop();
+    EchoClient client(io_loop);
+    client.Connect("127.0.0.1", 6789);
+    
+    main_loop.Loop();
+    
+    client.Shutdown();
 
-        client.SetNoDelay(true);
-        client.SetKeepAlive(60);
-        
-        client.ConnectTo("127.0.0.1", 6789);
+    delete io_thread;
 
-        client.StartConnections();
-
-        /*static char message[1000] = { 0 };
-        memset(message, '.', 1000);
-        memcpy(message, "BEGIN", strlen("BEGIN"));
-        memcpy(message + 1000 - strlen("END"), "END", 3);
-        int count = 100;
-        while (--count > 0)
-        {
-            client.Write(message, 1000);
-        }*/
-
-        uv_signal_t sig1, sig2;
-        uv_signal_init(loop, &sig1);
-        uv_signal_init(loop, &sig2);
-        uv_signal_start(&sig1, signal_handler, SIGINT);
-        uv_signal_start(&sig2, signal_handler, SIGTERM);
-
-        uv_run(loop, UV_RUN_DEFAULT);
-
-        client.WaitForShutdownToComplete();
-
-        uv_walk(loop, close_cb, NULL);
-
-        uv_run(loop, UV_RUN_DEFAULT);
-
-        uv_loop_close(loop);
-    }
-    catch (const BaseException & ex)
-    {
-        log.Error("Exception: %s - %s", ex.Where().c_str(), ex.Message().c_str());
-    }
-    catch (...)
-    {
-        log.Error("Unexpected exception");
-    }
-
-    log.Stop();
+    logger.DeInitLogger();
 
     return 0;
 }

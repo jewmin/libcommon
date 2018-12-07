@@ -23,20 +23,22 @@ public:
         return *packet;
     }
 
-    inline void Flush(Packet & pakcet) {
+    void Flush(Packet & packet) {
         // 如果数据包中被写入了数据则提交到发送队列，否则还原数据包到空闲队列
-        if (pakcet.GetLength() > 0) {
+        if (packet.GetLength() > 0 && current_out_buffer_size_ + packet.GetLength() < socket_->GetMaxOutBufferSize()) {
+            // 统计缓冲区大小
+            current_out_buffer_size_ += static_cast<int>(packet.GetLength());
             // 调整数据包偏移为0，才能在发送数据的从数据包头部开始发送
-            pakcet.SetPosition(0);
+            packet.SetPosition(0);
             // 将数据包追加到发送队列中
-            send_queue_.Push(&pakcet);
+            send_queue_.Push(&packet);
             // 尝试发送
             if (IsWritable()) {
                 SendToSocket();
             }
         } else {
             Mutex::Guard guard(allocator_lock_);
-            allocator_.Release(&pakcet);
+            allocator_.Release(&packet);
         }
     }
 
@@ -54,11 +56,16 @@ public:
     }
 
     inline bool IsWritable() {
-        return is_writable_;
+        return !blocked_ && SocketOpt::S_CONNECTED == socket_->status();
     }
 
-    inline void SetWritable(bool writable) {
-        is_writable_ = writable;
+    inline void UnBlocked() {
+        blocked_ = false;
+    }
+
+    void OnConnected() {
+        UnBlocked();
+        SendToSocket();
     }
 
     void FreeAllPackets();
@@ -74,7 +81,8 @@ private:
     int send_idx_;
     bool packet_blocked_;
     int last_send_error_;
-    std::atomic<bool> is_writable_;
+    int current_out_buffer_size_;
+    std::atomic<bool> blocked_;
     LockQueue<Packet *, 512> send_queue_;
     Mutex allocator_lock_;
     PacketPool allocator_;

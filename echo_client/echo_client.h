@@ -1,34 +1,31 @@
 #ifndef __ECHO_CLIENT_ECHO_CLIENT_H__
 #define __ECHO_CLIENT_ECHO_CLIENT_H__
 
-#include "socket_client.h"
+#include "tcp_client.h"
 
-class EchoClient : public SocketClient
-{
+class EchoClient : public TcpClient {
 public:
-    EchoClient(size_t max_free_buffers, size_t buffer_size = 1024, ILog * logger = NULL);
+    EchoClient(EventLoop * loop);
     virtual ~EchoClient();
 
+protected:
+    virtual void OnConnected() override;
+    virtual void OnTickEvent() override;
+    virtual void OnReadCompleted(Packet * packet) override;
+
 private:
-    virtual void OnStartConnections();
-    virtual void OnStopConnections();
-    virtual void OnShutdownInitiated();
-    virtual void OnShutdownComplete();
-
-    virtual void OnConnect();
-    virtual void OnConnectFail();
-    virtual void OnClose();
-
-    virtual void ReadCompleted(Buffer * buffer);
-    virtual void WriteCompleted(Buffer * buffer, int status);
-
-    virtual void PreWrite(Buffer * buffer, const char * data, size_t data_length);
+    void SendRegisterClient();
+    void AfterRegisterClient(int status);
+    void SendMessage();
+    void SendMessage(const char * message, size_t length);
 
     size_t GetMinimumMessageSize() const;
-    size_t GetMessageSize(const Buffer * buffer) const;
+    size_t GetMessageSize(Packet * packet) const;
+    void ProcessCommand(Packet * packet);
 
-    Buffer * ProcessDataStream(Buffer * buffer);
-    void ProcessCommand(Buffer * buffer);
+private:
+    size_t send_total_;
+    size_t recv_total_;
 };
 
 #endif

@@ -54,5 +54,7 @@ void TcpClient::OnDisconnected() {
 }
 
 void TcpClient::OnTick() {
-    OnTickEvent();
+    if (SocketOpt::S_CONNECTED == status()) {
+        OnTickEvent();
+    }
 }
