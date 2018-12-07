@@ -11,8 +11,10 @@
 #include "socket_opt.h"
 #include "non_copy_able.hpp"
 
+class SendPacketPool;
 class TcpSocket : public SocketOpt, public NonCopyAble {
 public:
+    friend class SendPacketPool;
     using WriteCompleteCallback = std::function<void(int)>;
     class WriteRequest {
     public:
@@ -82,8 +84,11 @@ public:
         return max_out_buffer_size_;
     }
 
-    virtual void Shutdown() = 0;
-    void SendInLoop(const char * data, size_t size, bool assign = true, const WriteCompleteCallback & cb = nullptr);
+    inline int GetMaxInBufferSize() const {
+        return max_in_buffer_size_;
+    }
+
+    void WriteInLoop(const char * data, size_t size, bool assign = true, const WriteCompleteCallback & cb = nullptr);
 
 protected:
     TcpSocket(EventLoop * loop, const char * name, const int max_out_buffer_size, const int max_in_buffer_size);

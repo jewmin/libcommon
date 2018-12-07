@@ -23,7 +23,7 @@ public:
         SetPort(port);
         event_loop()->RunInLoop(std::bind(&MockClientSocket::ConnectInLoop, this));
     }
-    void Shutdown() override {
+    void Shutdown() {
         if (log()) {
             log()->LogInfo("%s(%s:%d) client shutdown", name(), GetHost(), GetPort());
         }
@@ -43,7 +43,7 @@ protected:
         connected_count_++;
         Packet packet;
         packet.WriteString(hello);
-        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket::OnWriteCompleted, this, std::placeholders::_1));
+        WriteInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket::OnWriteCompleted, this, std::placeholders::_1));
     }
     virtual void OnConnectFailed() override {
         if (log()) {
@@ -96,11 +96,11 @@ public:
         SetPort(port);
         event_loop()->RunInLoop(std::bind(&MockServerSocket::ListenInLoop, this));
     }
-    void Shutdown() override;
+    void Shutdown();
     void Send() {
         Packet packet;
         packet.WriteString(welcome);
-        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockServerSocket::OnWriteCompleted, this, std::placeholders::_1));
+        WriteInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockServerSocket::OnWriteCompleted, this, std::placeholders::_1));
     }
 
 protected:
@@ -158,7 +158,7 @@ public:
     virtual ~MockConnection() {
 
     }
-    void Shutdown() override {
+    void Shutdown() {
         if (log()) {
             log()->LogInfo("%s(%s:%d) connection shutdown", name(), GetHost(), GetPort());
         }
@@ -178,7 +178,7 @@ protected:
         server_.conn_connected_count_++;
         Packet packet;
         packet.WriteString(welcome);
-        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockConnection::OnWriteCompleted, this, std::placeholders::_1));
+        WriteInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockConnection::OnWriteCompleted, this, std::placeholders::_1));
     }
     virtual void OnConnectFailed() override;
     virtual void OnDisconnected() override;
@@ -240,7 +240,7 @@ protected:
         close_socket();
         Packet packet;
         packet.WriteString(hello);
-        SendInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket_write_error::OnWriteCompleted, this, std::placeholders::_1));
+        WriteInLoop(reinterpret_cast<const char *>(packet.GetMemoryPtr()), packet.GetLength(), true, std::bind(&MockClientSocket_write_error::OnWriteCompleted, this, std::placeholders::_1));
     }
     void close_socket() {
         uv_os_fd_t fd;

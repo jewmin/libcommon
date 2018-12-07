@@ -11,9 +11,9 @@ void MockServerSocket::Shutdown() {
     if (log()) {
         log()->LogInfo("%s(%s:%d) server shutdown", name(), GetHost(), GetPort());
     }
-    MockConnection * conn = socket_list_.Head();
+    MockConnection * conn = socket_list_.Left();
     while (conn) {
-        MockConnection * next = TNodeList<MockConnection>::Next(conn);
+        MockConnection * next = TNodeList<MockConnection>::Right(conn);
         conn->Shutdown();
         conn = next;
     }
@@ -22,7 +22,7 @@ void MockServerSocket::Shutdown() {
 
 TcpSocket * MockServerSocket::AllocateSocket() {
     MockConnection * conn = new MockConnection(*this);
-    socket_list_.PushNode(conn);
+    socket_list_.PushLeft(conn);
     return conn;
 }
 

@@ -9,6 +9,7 @@
 #include "packet_pool.hpp"
 
 #define MAX_MSG_LENGTH 2048
+#define MILLISECOND_PER_FRAME 16
 
 class Logger : protected BaseThread {
 public:

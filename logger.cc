@@ -170,8 +170,8 @@ void Logger::Run() {
         SingleRun();
         clock_t end = clock();
         int duration = static_cast<int>(static_cast<double>(end - begin) / CLOCKS_PER_SEC * 1000);
-        if (duration < 16) {
-            jc_sleep(16 - duration);
+        if (duration < MILLISECOND_PER_FRAME) {
+            jc_sleep(MILLISECOND_PER_FRAME - duration);
         }
     }
 }

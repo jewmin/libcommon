@@ -54,7 +54,7 @@ void TcpSocket::ListenInLoop() {
 }
 
 void TcpSocket::ConnectInLoop() {
-    if (SocketOpt::S_DISCONNECTED != status()) {
+    if (flags_ & SocketOpt::F_CONNECT) {
         return;
     }
 
@@ -82,6 +82,7 @@ void TcpSocket::ConnectInLoop() {
     }
 
     if (0 == err) {
+        flags_ |= SocketOpt::F_CONNECT;
         status_ = SocketOpt::S_CONNECTING;
     } else {
         if (log()) {
@@ -106,27 +107,27 @@ void TcpSocket::ShutdownInLoop() {
 }
 
 void TcpSocket::ReadStartInLoop() {
-    if (!(flags_ & SocketOpt::F_READING)) {
-        flags_ |= SocketOpt::F_READING;
+    if (!IsReading()) {
+        EnableReading();
         recv_buffer_.Reserve(max_in_buffer_size_);
         uv_read_start(uv_stream(), AllocBuffer, AfterRead);
     }
 }
 
 void TcpSocket::ReadStopInLoop() {
-    if (flags_ & SocketOpt::F_READING) {
-        flags_ &= ~SocketOpt::F_READING;
+    if (IsReading()) {
+        DisableReading();
         uv_read_stop(uv_stream());
     }
 }
 
-void TcpSocket::SendInLoop(const char * data, size_t size, bool assign, const WriteCompleteCallback & cb) {
+void TcpSocket::WriteInLoop(const char * data, size_t size, bool assign, const WriteCompleteCallback & cb) {
     if (SocketOpt::S_CONNECTED == status()) {
         WriteRequest * request = new WriteRequest(this, data, size, assign, cb);
         int err = uv_write(&request->req_, uv_stream(), &request->buf_, 1, AfterWrite);
         if (err < 0) {
             if (log()) {
-                log()->LogError("(%s) SendInLoop error: %s", name_, uv_strerror(err));
+                log()->LogError("(%s) WriteInLoop error: %s", name_, uv_strerror(err));
             }
             if (request->write_complete_cb_) {
                 request->write_complete_cb_(err);

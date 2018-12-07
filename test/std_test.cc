@@ -109,35 +109,35 @@ TEST(BaseListTest, use)
 {
     TNode * node;
     TNodeList<TNode> a;
-    a.PushNode(new TNode(1));
-    a.PushNode(new TNode(2));
-    node = a.PopNode();
+    a.PushLeft(new TNode(1));
+    a.PushLeft(new TNode(2));
+    node = a.PopLeft();
     EXPECT_EQ(node->data_, 2);
     delete node;
 
-    a.PushNode(new TNode(3));
-    a.PushNode(new TNode(4));
-    a.PushNode(new TNode(5));
-    a.PushNode(new TNode(6));
+    a.PushLeft(new TNode(3));
+    a.PushLeft(new TNode(4));
+    a.PushLeft(new TNode(5));
+    a.PushLeft(new TNode(6));
     EXPECT_EQ(a.Count(), 5);
     EXPECT_EQ(a.IsEmpty(), false);
-    node = a.Head();
+    node = a.Left();
     EXPECT_EQ(node->data_, 6);
-    EXPECT_EQ(TNodeList<TNode>::Next(node)->data_, 5);
+    EXPECT_EQ(TNodeList<TNode>::Right(node)->data_, 5);
 
-    a.PushBackNode(new TNode(100));
-    a.PushBackNode(new TNode(101));
-    a.PushBackNode(new TNode(102));
+    a.PushRight(new TNode(100));
+    a.PushRight(new TNode(101));
+    a.PushRight(new TNode(102));
     EXPECT_EQ(a.Count(), 8);
-    node = a.Tail();
+    node = a.Right();
     EXPECT_EQ(node->data_, 102);
-    EXPECT_EQ(TNodeList<TNode>::Prev(node)->data_, 101);
-    node = a.PopBackNode();
+    EXPECT_EQ(TNodeList<TNode>::Left(node)->data_, 101);
+    node = a.PopRight();
     EXPECT_EQ(node->data_, 102);
     EXPECT_EQ(a.Count(), 7);
     delete node;
 
-    while (node = a.Head())
+    while (node = a.Left())
     {
         node->RemoveFromList();
         delete node;

@@ -7,61 +7,68 @@ class BaseList : public NonCopyAble {
 public:
     class BaseNode {
     public:
-        BaseNode * Next() const {
-            return next_;
+        inline BaseNode * Right() const {
+            return right_;
         }
-        BaseNode * Prev() const {
-            return prev_;
+
+        inline BaseNode * Left() const {
+            return left_;
         }
-        void Next(BaseNode * next) {
-            next_ = next;
-            if (next) {
-                next->prev_ = this;
+
+        inline void Right(BaseNode * node) {
+            right_ = node;
+            if (node) {
+                node->left_ = this;
             }
         }
-        void Prev(BaseNode * prev) {
-            prev_ = prev;
-            if (prev) {
-                prev->next_ = this;
+
+        inline void Left(BaseNode * node) {
+            left_ = node;
+            if (node) {
+                node->right_ = this;
             }
         }
-        void AddToList(BaseList * list) {
+
+        inline void AddToList(BaseList * list) {
             list_ = list;
         }
-        void RemoveFromList() {
+
+        inline void RemoveFromList() {
             if (list_) {
                 list_->RemoveNode(this);
             }
         }
 
     protected:
-        BaseNode() : next_(nullptr), prev_(nullptr), list_(nullptr) {
+        BaseNode() : right_(nullptr), left_(nullptr), list_(nullptr) {
 
         }
-        ~BaseNode() {
+
+        virtual ~BaseNode() {
             RemoveFromList();
-            next_ = prev_ = nullptr;
+            right_ = left_ = nullptr;
             list_ = nullptr;
         }
 
     private:
         friend class BaseList;
 
-        void Unlink() {
-            if (prev_) {
-                prev_->next_ = next_;
-            }
-            if (next_) {
-                next_->prev_ = prev_;
+        inline void Unlink() {
+            if (left_) {
+                left_->right_ = right_;
             }
 
-            next_ = prev_ = nullptr;
+            if (right_) {
+                right_->left_ = left_;
+            }
+
+            right_ = left_ = nullptr;
             list_ = nullptr;
         }
 
     private:
-        BaseNode * next_;
-        BaseNode * prev_;
+        BaseNode * right_;
+        BaseNode * left_;
         BaseList * list_;
     };
 
@@ -69,10 +76,10 @@ public:
 
     }
 
-    void PushNode(BaseNode * node) {
+    inline void PushLeft(BaseNode * node) {
         node->AddToList(this);
 
-        node->Next(head_);
+        node->Right(head_);
         head_ = node;
         if (!tail_) {
             tail_ = node;
@@ -81,10 +88,10 @@ public:
         ++count_;
     }
 
-    void PushBackNode(BaseNode * node) {
+    inline void PushRight(BaseNode * node) {
         node->AddToList(this);
 
-        node->Prev(tail_);
+        node->Left(tail_);
         tail_ = node;
         if (!head_) {
             head_ = node;
@@ -93,17 +100,17 @@ public:
         ++count_;
     }
 
-    BaseNode * PopNode() {
+    inline BaseNode * PopLeft() {
         BaseNode * node = head_;
 
         if (node) {
             RemoveNode(node);
         }
-
+        
         return node;
     }
 
-    BaseNode * PopBackNode() {
+    inline BaseNode * PopRight() {
         BaseNode * node = tail_;
 
         if (node) {
@@ -113,26 +120,30 @@ public:
         return node;
     }
 
-    BaseNode * Head() const {
+    inline BaseNode * Left() const {
         return head_;
     }
-    BaseNode * Tail() const {
+
+    inline BaseNode * Right() const {
         return tail_;
     }
-    int Count() const {
+
+    inline int Count() const {
         return count_;
     }
-    bool IsEmpty() const {
+
+    inline bool IsEmpty() const {
         return 0 == count_;
     }
 
 private:
-    void RemoveNode(BaseNode * node) {
+    inline void RemoveNode(BaseNode * node) {
         if (node == head_) {
-            head_ = node->Next();
+            head_ = node->Right();
         }
+
         if (node == tail_) {
-            tail_ = node->Prev();
+            tail_ = node->Left();
         }
 
         node->Unlink();
@@ -147,33 +158,37 @@ private:
 };
 
 template<class T>
-class TNodeList : public BaseList
-{
+class TNodeList : public BaseList {
 public:
-    void PushNode(T * node) {
-        BaseList::PushNode(node);
-    }
-    void PushBackNode(T * node) {
-        BaseList::PushBackNode(node);
-    }
-    T * PopNode() {
-        return static_cast<T *>(BaseList::PopNode());
-    }
-    T * PopBackNode() {
-        return static_cast<T *>(BaseList::PopBackNode());
-    }
-    T * Head() const {
-        return static_cast<T *>(BaseList::Head());
-    }
-    T * Tail() const {
-        return static_cast<T *>(BaseList::Tail());
+    inline void PushLeft(T * node) {
+        BaseList::PushLeft(node);
     }
 
-    static T * Next(const T * node) {
-        return static_cast<T *>(node->Next());
+    inline void PushRight(T * node) {
+        BaseList::PushRight(node);
     }
-    static T * Prev(const T * node) {
-        return static_cast<T *>(node->Prev());
+
+    inline T * PopLeft() {
+        return static_cast<T *>(BaseList::PopLeft());
+    }
+
+    inline T * PopRight() {
+        return static_cast<T *>(BaseList::PopRight());
+    }
+
+    inline T * Left() const {
+        return static_cast<T *>(BaseList::Left());
+    }
+
+    inline T * Right() const {
+        return static_cast<T *>(BaseList::Right());
+    }
+
+    static T * Left(const T * node) {
+        return static_cast<T *>(node->Left());
+    }
+    static T * Right(const T * node) {
+        return static_cast<T *>(node->Right());
     }
 };
 

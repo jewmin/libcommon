@@ -27,9 +27,9 @@ void TcpServer::Shutdown() {
             event_loop()->Cancel(tick_timer_);
             tick_timer_ = 0;
         }
-        TcpConnection * conn = active_list_.Head();
+        TcpConnection * conn = active_list_.Left();
         while (conn) {
-            TcpConnection * next_conn = SocketList::Next(conn);
+            TcpConnection * next_conn = SocketList::Right(conn);
             conn->Shutdown();
             conn = next_conn;
         }
@@ -38,12 +38,12 @@ void TcpServer::Shutdown() {
 }
 
 TcpServer::TcpConnection * TcpServer::GetConnection(uint32_t index) {
-    TcpConnection * conn = active_list_.Head();
+    TcpConnection * conn = active_list_.Left();
     while (conn) {
         if (conn->index_ == index) {
             return conn;
         }
-        conn = SocketList::Next(conn);
+        conn = SocketList::Right(conn);
     }
     return nullptr;
 }
@@ -64,21 +64,21 @@ TcpSocket * TcpServer::AllocateSocket() {
     TcpConnection * conn = nullptr;
 
     if (!free_list_.IsEmpty()) {
-        conn = free_list_.PopNode();
+        conn = free_list_.PopLeft();
     } else {
         conn = new TcpConnection(*this);
     }
 
-    active_list_.PushNode(conn);
+    active_list_.PushLeft(conn);
 
     return conn;
 }
 
 void TcpServer::OnTick() {
     if (SocketOpt::S_CONNECTED == status()) {
-        TcpConnection * conn = active_list_.Head();
+        TcpConnection * conn = active_list_.Left();
         while (conn) {
-            TcpConnection * next_conn = SocketList::Next(conn);
+            TcpConnection * next_conn = SocketList::Right(conn);
             OnTickEvent(conn);
             conn = next_conn;
         }
@@ -86,20 +86,20 @@ void TcpServer::OnTick() {
 }
 
 void TcpServer::ReleaseSockets() {
-    while (active_list_.Head()) {
-        ReleaseSocket(active_list_.Head());
+    while (active_list_.Left()) {
+        ReleaseSocket(active_list_.Left());
     }
 
-    while (free_list_.Head()) {
-        DestroySocket(free_list_.PopNode());
+    while (free_list_.Left()) {
+        DestroySocket(free_list_.PopLeft());
     }
 }
 
 void TcpServer::ReleaseSocket(TcpConnection * conn) {
     conn->RemoveFromList();
     if (0 == max_free_sockets_ || free_list_.Count() < max_free_sockets_) {
-        conn->ClearSendQueue();
-        free_list_.PushNode(conn);
+        conn->ClearSendList();
+        free_list_.PushLeft(conn);
     } else {
         DestroySocket(conn);
     }

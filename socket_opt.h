@@ -24,6 +24,30 @@ public:
     inline status_t status() {
         return status_;
     }
+
+    inline void EnableReading() {
+        flags_ |= F_READING;
+    }
+
+    inline void DisableReading() {
+        flags_ &= ~F_READING;
+    }
+
+    inline bool IsReading() const {
+        return !!(flags_ & F_READING);
+    }
+
+    inline void EnableWriting() {
+        flags_ |= F_WRITING;
+    }
+
+    inline void DisableWriting() {
+        flags_ &= ~F_WRITING;
+    }
+
+    inline bool IsWriting() const {
+        return !!(flags_ & F_WRITING);
+    }
     
 protected:
     SocketOpt() : flags_(0), status_(S_DISCONNECTED) {

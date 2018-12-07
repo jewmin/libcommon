@@ -1,7 +1,7 @@
 #include "send_packet_pool.h"
 
 SendPacketPool::SendPacketPool(TcpSocket * socket)
-    : socket_(socket), send_idx_(0), packet_blocked_(false), last_send_error_(0), current_out_buffer_size_(0), blocked_(false) {
+    : socket_(socket), packet_blocked_(false), last_send_error_(0) {
     
 }
 
@@ -10,25 +10,34 @@ SendPacketPool::~SendPacketPool() {
 }
 
 void SendPacketPool::FreeAllPackets() {
-    ClearSendQueue();
+    ClearSendList();
     Mutex::Guard guard(allocator_lock_);
+    allocator_.ReleaseList(static_cast<Packet * *>(gc_list_), gc_list_.Count());
+    gc_list_.Clear();
     allocator_.Clear();
 }
 
-void SendPacketPool::ClearSendQueue() {
-    send_queue_.Flush();
-    Mutex::Guard guard(allocator_lock_);
-    allocator_.ReleaseList(static_cast<Packet * *>(send_queue_), send_queue_.Count());
-    send_queue_.Clear();
-    send_idx_ = 0;
-    current_out_buffer_size_ = 0;
+void SendPacketPool::ClearSendList() {
+    Mutex::Guard guard(send_lock_);
+    gc_list_.Reserve(gc_list_.Count() + GetPacketCount());
+    
+    for (auto & it : ready_list_) {
+        gc_list_.Add(it);
+    }
+    ready_list_.clear();
+
+    for (auto & it : send_list_) {
+        gc_list_.Add(it);
+    }
+    send_list_.clear();
 }
 
 void SendPacketPool::SendToSocket() {
-    bool expected = false;
-    if (!blocked_.compare_exchange_strong(expected, true)) {
+    if (socket_->IsWriting()) {
         return;
     }
+
+    socket_->EnableWriting();
 
     if (GetPacketCount() >= 1024) {
         packet_blocked_ = true;
@@ -44,38 +53,25 @@ void SendPacketPool::SendToSocket() {
         packet_blocked_ = false;
     }
 
-    if (0 == send_queue_.Count()) {
-        send_queue_.Flush();
-    }
+    SwapSendList();
 
-    if (send_queue_.Count() > 0) {
-        socket_->event_loop()->RunInLoop(std::bind(&SendPacketPool::Write, this, send_queue_[send_idx_]));
+    if (send_list_.size() > 0) {
+        Packet * packet = send_list_.front();
+        socket_->WriteInLoop(reinterpret_cast<const char *>(packet->GetOffsetPtr()), packet->GetReadableLength(), false, std::bind(&SendPacketPool::OnWriteComplete, this, std::placeholders::_1));
     } else {
-        UnBlocked();
+        socket_->DisableWriting();
     }
-}
-
-void SendPacketPool::Write(Packet * packet) {
-    socket_->SendInLoop(reinterpret_cast<const char *>(packet->GetOffsetPtr()), packet->GetReadableLength(), false, std::bind(&SendPacketPool::OnWriteComplete, this, std::placeholders::_1));
 }
 
 void SendPacketPool::OnWriteComplete(int status) {
     if (status < 0) {
         last_send_error_ = status;
-        if (UV_ECONNRESET == status || UV_ENOTCONN == status || UV_ESHUTDOWN == status || UV_ECONNABORTED == status || UV_EPIPE == status || UV_EBADF == status) {
-            socket_->Shutdown();
-        }
+        socket_->ShutdownInLoop();
     } else {
-        current_out_buffer_size_ -= static_cast<int>(send_queue_[send_idx_]->GetLength());
-
-        ++send_idx_;
-        if (send_idx_ >= send_queue_.Count()) {
-            send_idx_ = 0;
-            Mutex::Guard guard(allocator_lock_);
-            allocator_.ReleaseList(static_cast<Packet * *>(send_queue_), send_queue_.Count());
-            send_queue_.Clear();
-        }
+        Packet * packet = send_list_.front();
+        send_list_.pop_front();
+        gc_list_.Add(packet);
+        socket_->DisableWriting();
+        SendToSocket();
     }
-    UnBlocked();
-    SendToSocket();
 }

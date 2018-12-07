@@ -105,7 +105,7 @@ Buffer * Buffer::Allocator::Allocate() {
     Buffer * buffer = nullptr;
 
     if (!free_list_.IsEmpty()) {
-        buffer = free_list_.PopNode();
+        buffer = free_list_.PopLeft();
         buffer->AddRef();
     } else {
         buffer = new(buffer_size_)Buffer(*this, buffer_size_);
@@ -119,7 +119,7 @@ Buffer * Buffer::Allocator::Allocate() {
         OnBufferCreated();
     }
 
-    active_list_.PushNode(buffer);
+    active_list_.PushLeft(buffer);
 
     /*
      * call to unqualified virtual function
@@ -136,11 +136,11 @@ void Buffer::Allocator::Flush() {
          */
         OnBufferReleased();
 
-        DestroyBuffer(active_list_.PopNode());
+        DestroyBuffer(active_list_.PopLeft());
     }
 
     while (!free_list_.IsEmpty()) {
-        DestroyBuffer(free_list_.PopNode());
+        DestroyBuffer(free_list_.PopLeft());
     }
 }
 
@@ -165,7 +165,7 @@ void Buffer::Allocator::Release(Buffer * buffer) {
         /*
          * Add to the free list
          */
-        free_list_.PushNode(buffer);
+        free_list_.PushLeft(buffer);
     } else {
         DestroyBuffer(buffer);
     }
