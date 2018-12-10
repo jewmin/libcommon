@@ -19,6 +19,7 @@ protected:
 
     void OnTick();
     virtual void OnTickEvent() = 0;
+    virtual void OnShutdownInitiated() {}
 
 private:
     bool destroy_;

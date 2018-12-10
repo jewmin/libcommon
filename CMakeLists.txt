@@ -47,5 +47,5 @@ endif()
 
 # 添加单元测试项目
 add_subdirectory(test)
-# add_subdirectory(echo_server)
+add_subdirectory(echo_server)
 add_subdirectory(echo_client)

@@ -26,8 +26,9 @@ protected:
 
     void OnTick();
     virtual void OnTickEvent(TcpConnection * conn) = 0;
-    virtual void OnConnectionEstablished(TcpConnection * conn) = 0;
-    virtual void OnConnectionClosed(TcpConnection * conn) = 0;
+    virtual void OnConnectionEstablished(TcpConnection * conn) {}
+    virtual void OnConnectionClosed(TcpConnection * conn) {}
+    virtual void OnShutdownInitiated() {}
     //virtual void OnReadCompleted(TcpConnection * conn, const char * data, size_t size) = 0;
     virtual void OnReadCompleted(TcpConnection * conn, Packet * packet) = 0;
 

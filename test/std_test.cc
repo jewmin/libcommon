@@ -216,3 +216,14 @@ TEST(BufTest, t1)
     EXPECT_STREQ(buf.base, str);
     EXPECT_EQ(buf.len, 11);
 }
+
+TEST(stringTest, use1)
+{
+    char msg[10] = { 0 };
+    int ret = _snprintf(msg, 10, "01234567890");
+    EXPECT_EQ(ret, -1);
+    ret = _snprintf(msg, 10, "0123456789");
+    EXPECT_EQ(ret, 10);
+    ret = _snprintf(msg, 10, "123456789");
+    EXPECT_EQ(ret, 9);
+}

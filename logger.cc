@@ -92,7 +92,8 @@ void Logger::LogStub2(LogLevel log_level, const char * file, const char * func, 
     len -= ret;
     ret = vsnprintf(msg + offset, len, fmt, ap);
     if (ret < 0) {
-        return;
+        //return;
+        offset += len; // 因为linux与windows的返回值不一样，windows下，超出长度，会返回-1，linux会返回实际长度
     } else if (ret > len) {
         offset += len;
     } else {

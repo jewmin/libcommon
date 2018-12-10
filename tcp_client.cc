@@ -25,6 +25,7 @@ void TcpClient::Shutdown() {
             event_loop()->Cancel(tick_timer_);
             tick_timer_ = 0;
         }
+        OnShutdownInitiated();
         event_loop()->RunInLoop(std::bind(&TcpClient::ShutdownInLoop, this));
     }
 }

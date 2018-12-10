@@ -33,6 +33,7 @@ void TcpServer::Shutdown() {
             conn->Shutdown();
             conn = next_conn;
         }
+        OnShutdownInitiated();
         event_loop()->RunInLoop(std::bind(&TcpServer::ShutdownInLoop, this));
     }
 }
@@ -79,7 +80,9 @@ void TcpServer::OnTick() {
         TcpConnection * conn = active_list_.Left();
         while (conn) {
             TcpConnection * next_conn = SocketList::Right(conn);
-            OnTickEvent(conn);
+            if (SocketOpt::S_CONNECTED == conn->status()) {
+                OnTickEvent(conn);
+            }
             conn = next_conn;
         }
     }

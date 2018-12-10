@@ -3,17 +3,12 @@
 #include "test_log.h"
 
 EchoClient::EchoClient(EventLoop * loop)
-    : TcpClient(loop, "EchoClient", 1000, 3000, 64 * 1024 * 1024, 1024), send_total_(0), recv_total_(0) {
+    : TcpClient(loop, "EchoClient", 1000, 5000, 64 * 1024 * 1024, 1024) {
 
 }
 
 EchoClient::~EchoClient() {
     
-}
-
-void EchoClient::OnConnected() {
-    TcpClient::OnConnected();
-    SendRegisterClient();
 }
 
 void EchoClient::OnTickEvent() {
@@ -50,22 +45,6 @@ void EchoClient::OnReadCompleted(Packet * packet) {
     }
 }
 
-void EchoClient::SendRegisterClient() {
-    server_regdata_t reg_data;
-    memset(&reg_data, 0, sizeof(reg_data));
-    reg_data.game_type = server_regdata_t::GT_ID;
-    reg_data.server_type = GameServer;
-    reg_data.server_index = 1;
-    STRNCPY_S(reg_data.server_name, name());
-    SendInLoop(reinterpret_cast<const char *>(&reg_data), sizeof(reg_data), true, std::bind(&EchoClient::AfterRegisterClient, this, std::placeholders::_1));
-}
-
-void EchoClient::AfterRegisterClient(int status) {
-    if (status == 0) {
-        SendPacketPool::OnConnected();
-    }
-}
-
 void EchoClient::SendMessage() {
     static char message[1000] = { 0 };
     memset(message, '.', sizeof(message));
@@ -86,7 +65,6 @@ void EchoClient::SendMessage(const char * message, size_t length) {
         Packet & packet = AllocSendPacket();
         packet.WriteBinary(reinterpret_cast<const uint8_t *>(&ph), PACK_HEADER_LEN);
         packet.WriteBinary(reinterpret_cast<const uint8_t *>(message), length);
-        send_total_ += packet.GetLength();
         Flush(packet);
     }
 }
