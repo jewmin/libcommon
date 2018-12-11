@@ -18,6 +18,7 @@ int main(int argc, const char * * argv) {
 
     EventLoop main_loop(&logger);
     main_loop.StartSignal(SIGINT, std::bind(&signal_handler, &main_loop, std::placeholders::_1));
+    main_loop.StartSignal(SIGTERM, std::bind(&signal_handler, &main_loop, std::placeholders::_1));
 
     EventLoopThread * io_thread = new EventLoopThread(&logger);
     EventLoop * io_loop = io_thread->StartLoop();

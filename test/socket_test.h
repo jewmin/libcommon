@@ -273,9 +273,6 @@ public:
         r = close(fd);
 #endif
     }
-    int AcceptInLoop(TcpSocket * accept_socket) {
-        return UV_ENOSYS;
-    }
 };
 
 #endif
