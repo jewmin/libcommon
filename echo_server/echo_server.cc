@@ -24,6 +24,10 @@ void EchoServer::OnShutdownInitiated() {
         event_loop()->Cancel(statistics_timer_);
         statistics_timer_ = 0;
     }
+    if (log()) {
+        log()->LogInfo("下行:%.2fK/%.2fK/%.2fK ; 上行:%.2fK/%.2fK/%.2fK(即/峰/总)", last_second_recv_ / 1000.0, high_recv_pre_second_ / 1000.0, recv_total_ / 1000.0,
+            last_second_send_ / 1000.0, high_send_pre_second_ / 1000.0, send_total_ / 1000.0);
+    }
 }
 
 void EchoServer::OnReadCompleted(TcpConnection * conn, Packet * packet) {
@@ -76,7 +80,7 @@ void EchoServer::OnStatisticsTick() {
     current_second_recv_ = 0;
 
     if (log()) {
-        log()->LogInfo("下行:%.2fK/%.2fK/%.2fK ; 上行:%.2fK/%.2fK/%.2fK(即/峰/总)", last_second_recv_ / 1000.0, high_recv_pre_second_ / 1000.0, recv_total_ / 1000.0,
+        log()->LogDebug("下行:%.2fK/%.2fK/%.2fK ; 上行:%.2fK/%.2fK/%.2fK(即/峰/总)", last_second_recv_ / 1000.0, high_recv_pre_second_ / 1000.0, recv_total_ / 1000.0,
             last_second_send_ / 1000.0, high_send_pre_second_ / 1000.0, send_total_ / 1000.0);
     }
 }
@@ -129,7 +133,7 @@ void EchoServer::ProcessCommand(Packet * packet) {
     memcpy(&ph, pack_data, PACK_HEADER_LEN);
     const size_t data_length = ph.data_len;
     if (log()) {
-        log()->LogDebug("Package[length:%zu]\n%s", data_length, DumpData(data, data_length, 49).c_str());
+        log()->LogTrace("Package[length:%zu]\n%s", data_length, DumpData(data, data_length, 49).c_str());
     }
 
     packet->AdjustOffset(PACK_HEADER_LEN + ph.data_len);

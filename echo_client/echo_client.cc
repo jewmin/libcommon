@@ -96,7 +96,7 @@ void EchoClient::ProcessCommand(Packet * packet) {
     memcpy(&ph, pack_data, PACK_HEADER_LEN);
     const size_t data_length = ph.data_len;
     if (log()) {
-        log()->LogDebug("Package[length:%zu]\n%s", data_length, DumpData(data, data_length, 49).c_str());
+        log()->LogTrace("Package[length:%zu]\n%s", data_length, DumpData(data, data_length, 49).c_str());
     }
 
     packet->AdjustOffset(PACK_HEADER_LEN + ph.data_len);

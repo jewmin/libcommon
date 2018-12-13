@@ -23,6 +23,7 @@ void TcpServer::Listen(const char * host, uint16_t port) {
 void TcpServer::Shutdown() {
     if (!destroy_) {
         destroy_ = true;
+        OnShutdownInitiated();
         if (tick_timer_ > 0) {
             event_loop()->Cancel(tick_timer_);
             tick_timer_ = 0;
@@ -33,7 +34,6 @@ void TcpServer::Shutdown() {
             conn->Shutdown();
             conn = next_conn;
         }
-        OnShutdownInitiated();
         event_loop()->RunInLoop(std::bind(&TcpServer::ShutdownInLoop, this));
     }
 }

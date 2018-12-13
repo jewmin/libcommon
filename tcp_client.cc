@@ -21,11 +21,11 @@ void TcpClient::Connect(const char * host, uint16_t port) {
 void TcpClient::Shutdown() {
     if (!destroy_) {
         destroy_ = true;
+        OnShutdownInitiated();
         if (tick_timer_ > 0) {
             event_loop()->Cancel(tick_timer_);
             tick_timer_ = 0;
         }
-        OnShutdownInitiated();
         event_loop()->RunInLoop(std::bind(&TcpClient::ShutdownInLoop, this));
     }
 }
