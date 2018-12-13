@@ -282,6 +282,7 @@ TEST(SocketTest, accept_null)
     EXPECT_EQ(server.read_count_, 0);
 }
 
+#ifdef _MSC_VER
 TEST(SocketTest, connection_error)
 {
     Logger logger;
@@ -312,3 +313,4 @@ TEST(SocketTest, connection_error)
     EXPECT_EQ(server.conn_disconnected_count_, 0);
     EXPECT_EQ(server.conn_read_count_, 0);
 }
+#endif

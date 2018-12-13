@@ -13,11 +13,12 @@ void signal_handler(EventLoop * loop, int signum) {
 int main(int argc, const char * * argv) {
     uv_replace_allocator(jc_malloc, jc_realloc, jc_calloc, jc_free);
 
-    FileLogger logger("echo_client.log");
+    FileLogger logger("echo_server.log");
     logger.InitLogger(Logger::Info);
 
     EventLoop main_loop(&logger);
     main_loop.StartSignal(SIGINT, std::bind(&signal_handler, &main_loop, std::placeholders::_1));
+    main_loop.StartSignal(SIGTERM, std::bind(&signal_handler, &main_loop, std::placeholders::_1));
 
     EventLoopThread * io_thread = new EventLoopThread(&logger);
     EventLoop * io_loop = io_thread->StartLoop();

@@ -220,10 +220,14 @@ TEST(BufTest, t1)
 TEST(stringTest, use1)
 {
     char msg[10] = { 0 };
-    int ret = _snprintf(msg, 10, "01234567890");
+    int ret = snprintf(msg, 10, "01234567890");
+#ifdef _MSC_VER
     EXPECT_EQ(ret, -1);
-    ret = _snprintf(msg, 10, "0123456789");
+#else
+    EXPECT_EQ(ret, 11);
+#endif
+    ret = snprintf(msg, 10, "0123456789");
     EXPECT_EQ(ret, 10);
-    ret = _snprintf(msg, 10, "123456789");
+    ret = snprintf(msg, 10, "123456789");
     EXPECT_EQ(ret, 9);
 }
