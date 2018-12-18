@@ -25,8 +25,8 @@ void EchoServer::OnShutdownInitiated() {
         statistics_timer_ = 0;
     }
     if (log()) {
-        log()->LogInfo("下行:%.2fK/%.2fK/%.2fK ; 上行:%.2fK/%.2fK/%.2fK(即/峰/总)", last_second_recv_ / 1000.0, high_recv_pre_second_ / 1000.0, recv_total_ / 1000.0,
-            last_second_send_ / 1000.0, high_send_pre_second_ / 1000.0, send_total_ / 1000.0);
+        log()->LogInfo("下行:%.2fK/%.2fK/%.2fK/%.2fK; 上行:%.2fK/%.2fK/%.2fK/%.2fK(即/峰/总/平)", last_second_recv_ / 1000.0, high_recv_pre_second_ / 1000.0, recv_total_ / 1000.0, recv_average_ / 1000.0,
+            last_second_send_ / 1000.0, high_send_pre_second_ / 1000.0, send_total_ / 1000.0, send_average_ / 1000.0);
     }
 }
 
