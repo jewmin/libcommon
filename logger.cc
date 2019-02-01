@@ -47,6 +47,25 @@ void SetColor(Logger::LogLevel log_level) {
 #endif
 }
 
+Logger * g_logger;
+
+void InitLogger(Logger * logger) {
+    g_logger = logger;
+}
+
+void DeInitLogger() {
+    g_logger = nullptr;
+}
+
+void LogStub(Logger::LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, ...) {
+    if (g_logger && g_logger->GetLogLevel() <= log_level) {
+        va_list ap;
+        va_start(ap, fmt);
+        g_logger->LogStub2(log_level, file, func, line, fmt, ap);
+        va_end(ap);
+    }
+}
+
 Logger::Logger() {
     log_level_ = Info;
 }

@@ -36,6 +36,10 @@ public:
         log_level_ = log_level;
     }
 
+    inline LogLevel GetLogLevel() const {
+        return log_level_;
+    }
+
 #define LogTrace(fmt, ...)  LogStub(Logger::Trace, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 #define LogDebug(fmt, ...)  LogStub(Logger::Debug, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 #define LogInfo(fmt, ...)   LogStub(Logger::Info, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
@@ -43,9 +47,9 @@ public:
 #define LogError(fmt, ...)  LogStub(Logger::Error, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 #define LogFatal(fmt, ...)  LogStub(Logger::Fatal, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
     void LogStub(LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, ...);
+    void LogStub2(LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, va_list ap);
 
 protected:
-    void LogStub2(LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, va_list ap);
     const char * GetLogPrefix(const LogLevel log_level);
     void SingleRun();
 
@@ -61,5 +65,10 @@ protected:
     Mutex allocator_lock_;
     PacketPool allocator_;
 };
+
+void InitLogger(Logger * logger);
+void DeInitLogger();
+void LogStub(Logger::LogLevel log_level, const char * file, const char * func, const int line, const char * fmt, ...);
+#define OutputMsg(log_level, fmt, ...) LogStub(log_level, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 
 #endif

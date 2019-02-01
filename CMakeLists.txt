@@ -8,9 +8,15 @@ project(libcommon VERSION 1.0.1)
 FILE(GLOB all_headers "*.h*")
 source_group("include" FILES ${all_headers})
 
+FILE(GLOB net_headers "net_wrapper/*.h")
+source_group("include\\net_wrapper" FILES ${net_headers})
+
 # Source files
 FILE(GLOB all_srcs "*.c*")
 source_group("src" FILES ${all_srcs})
+
+FILE(GLOB net_srcs "net_wrapper/*.c*")
+source_group("src\\net_wrapper" FILES ${net_srcs})
 
 # 设置
 set(CMAKE_BUILD_TYPE Debug)
@@ -31,18 +37,19 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 # 第三方类库
-include_directories(3rd/libuv/include)
+include_directories(${libcommon_SOURCE_DIR})
+include_directories(${libcommon_SOURCE_DIR}/3rd/libuv/include)
 if (MSVC)
-    include_directories(3rd/jemalloc/include)
-    include_directories(3rd/jemalloc/include/msvc_compat)
-    include_directories(3rd/vld/include)
+    include_directories(${libcommon_SOURCE_DIR}/3rd/jemalloc/include)
+    include_directories(${libcommon_SOURCE_DIR}/3rd/jemalloc/include/msvc_compat)
+    include_directories(${libcommon_SOURCE_DIR}/3rd/vld/include)
 endif()
 
 # 生成静态库
 if (MSVC)
-    add_library(libcommon STATIC ${all_headers} ${all_srcs})
+    add_library(libcommon STATIC ${all_headers} ${net_headers} ${all_srcs} ${net_srcs})
 else()
-    add_library(common STATIC ${all_headers} ${all_srcs})
+    add_library(common STATIC ${all_headers} ${net_headers} ${all_srcs} ${net_srcs})
 endif()
 
 # 添加单元测试项目

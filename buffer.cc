@@ -110,7 +110,7 @@ Buffer * Buffer::Allocator::Allocate() {
     } else {
         buffer = new(buffer_size_)Buffer(*this, buffer_size_);
         if (!buffer) {
-            throw BaseException("Buffer::Allocator::Allocate()", "Out of memory");
+            throw BaseException(__func__, "buffer == nullptr");
         }
         
         /*
@@ -146,7 +146,7 @@ void Buffer::Allocator::Flush() {
 
 void Buffer::Allocator::Release(Buffer * buffer) {
     if (!buffer) {
-        throw BaseException("Buffer::Allocator::Release()", "buffer is null");
+        throw BaseException(__func__, "buffer == nullptr");
     }
 
     /*
