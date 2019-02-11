@@ -18,6 +18,14 @@ namespace NetWrapper {
         void Dispatch();
         void LoopBreak();
 
+        inline void Dispatch() {
+            uv_run(&loop_, UV_RUN_NOWAIT);
+        }
+
+        inline void LoopBreak() {
+            uv_stop(&loop_);
+        }
+
         inline uv_loop_t * GetLibuvLoop() {
             return &loop_;
         }

@@ -17,13 +17,17 @@ namespace NetWrapper {
         virtual void SetMaxInBufferSize(uint32_t max_in_buffer_size) = 0;
         virtual void MakeEventPipe(CEventPipe * & event_pipe) = 0;
         virtual void OnAccepted(CEventPipe * event_pipe) = 0;
-        bool Open(const char * ip, uint16_t port);
         bool Open(const CAddress & address);
+        bool Open(const char * ip, uint16_t port);
+        bool Open6(const CAddress & address);
+        bool Open6(const char * ip, uint16_t port);
         void Close(void);
-        void AcceptEventPipe(CEventPipe * event_pipe);
+        void AcceptEventPipe(CEventPipe * event_pipe, uv_tcp_t * tcp);
         bool ActivateEventPipe(CEventPipe * event_pipe);
+        void Accept();
 
     protected:
+        bool OpenImpl(const CAddress & address, EAddressFamily family);
         static void Accept(uv_stream_t * stream, int status);
 
     private:

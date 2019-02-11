@@ -1,7 +1,6 @@
 #ifndef __LIBCOMMON_NET_WRAPPER_EVENT_PIPE_H__
 #define __LIBCOMMON_NET_WRAPPER_EVENT_PIPE_H__
 
-#include "uv.h"
 #include "packet.hpp"
 #include "socket_opt.h"
 #include "net_wrapper/socket.h"
@@ -40,6 +39,7 @@ namespace NetWrapper {
         virtual void HandleClose4EOF(EPipeDisconnectReason reason, bool remote);
         virtual void HandleClose4Error(EPipeDisconnectReason reason, bool remote);
         virtual int Write(const uint8_t * data, size_t len);
+        virtual void CancelWrite(size_t len);
         virtual uint8_t * ReverseGetOutputData(size_t len);
         virtual uint8_t * GetRecvData() const;
         virtual size_t GetRecvDataSize() const;
@@ -51,22 +51,16 @@ namespace NetWrapper {
         void Shutdown(bool now);
         void ShutdownImmediately();
         void CallOnDisconnected(bool remote);
-        int Read(void*, unsigned long);
         void SetMaxOutBufferSize(uint32_t size);
         void SetMaxInBufferSize(uint32_t size);
-        unsigned long GetInBufferSize();
-        unsigned long GetOutBufferSize();
-        unsigned long GetOutBufferUsedSize();
+        size_t GetInBufferSize();
+        size_t GetOutBufferSize();
+        size_t GetOutBufferUsedSize();
 
-        void AddTimer(unsigned int);
-        void DelTimer(); void CancelWrite(unsigned long);
+        void AddTimer(uint32_t interval);
+        void DelTimer();
         void DumpOutBuf();
         void DumpInBuf();
-        static void Dump(unsigned char*, unsigned int);
-        static void OnReadInternal(bufferevent*, void*);
-        static void OnWriteInternal(bufferevent*, void*);
-        static void OnErrorInternal(bufferevent*, short, void*);
-        static void OnEventTick(int, short, void*);
 
         inline CSocket * GetSocket() {
             return &socket_;
@@ -97,7 +91,11 @@ namespace NetWrapper {
         }
 
     protected:
+        static void Dump(uint8_t * data, size_t len);
+        static void LibuvTimerCb(uv_timer_t * handle);
         static void LibuvTimerCloseCb(uv_handle_t * handle);
+        static void LibuvAllocCb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
+        static void LibuvReadCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
 
     private:
         CSocket socket_;
@@ -105,6 +103,7 @@ namespace NetWrapper {
         uv_timer_t * delay_shutdown_timer_;
         Packet * input_;
         Packet * output_;
+        uv_buf_t * buffer_;
         SocketOpt::status_t connect_state_;
         uint32_t max_out_buffer_size_;
         uint32_t max_in_buffer_size_;

@@ -31,11 +31,3 @@ bool NetWrapper::CEventReactor::UnRegister(CReactorHandler * handler) {
     }
     return ret;
 }
-
-void NetWrapper::CEventReactor::Dispatch() {
-    uv_run(&loop_, UV_RUN_NOWAIT);
-}
-
-void NetWrapper::CEventReactor::LoopBreak() {
-    uv_stop(&loop_);
-}
