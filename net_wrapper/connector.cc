@@ -1,6 +1,6 @@
 #include "net_wrapper/connector.h"
 
-NetWrapper::CConnector::CContext::CContext(CConnector * connector, CEventPipe * event_pipe)
+NetWrapper::CConnector::CContext::CContext(const std::shared_ptr<CConnector> & connector, const std::shared_ptr<CEventPipe> & event_pipe)
     : connector_(connector), event_pipe_(event_pipe) {
 
 }
@@ -63,14 +63,13 @@ void NetWrapper::CConnector::ConnectImpl(CEventPipe * event_pipe, const CAddress
         CSocket::Address2sockaddr_in6(s.addr6, address);
     }
 
-    event_pipe->SetConnectReq(new uv_connect_t());
-    CContext * context = new CContext(this, event_pipe);
-    event_pipe->GetConnectReq()->data = context;
-    int err = uv_tcp_connect(event_pipe->GetConnectReq(), event_pipe->GetSocket()->GetLibuvTcp(), &s.addr, LibuvCb);
+    uv_connect_t * req = new uv_connect_t();
+    CContext * context = new CContext(std::dynamic_pointer_cast<CConnector>(shared_from_this()), std::dynamic_pointer_cast<CEventPipe>(event_pipe->shared_from_this()));
+    req->data = context;
+    int err = uv_tcp_connect(req, event_pipe->GetSocket()->GetLibuvTcp(), &s.addr, LibuvCb);
     if (0 != err) {
-        delete event_pipe->GetConnectReq();
-        event_pipe->SetConnectReq(nullptr);
         delete context;
+        delete req;
 
         ret = 2;
         EPipeConnFailedReason reason;
@@ -132,54 +131,55 @@ void NetWrapper::CConnector::OnOneConnectSuccess(CEventPipe * event_pipe) {
 
 void NetWrapper::CConnector::LibuvCb(uv_connect_t * req, int status) {
     CContext * context = static_cast<CContext *>(req->data);
-    CConnector * connector = context->connector_;
-    CEventPipe * event_pipe = context->event_pipe_;
-    delete event_pipe->GetConnectReq();
-    event_pipe->SetConnectReq(nullptr);
+    std::shared_ptr<CConnector> connector = context->connector_.lock();
+    std::shared_ptr<CEventPipe> event_pipe = context->event_pipe_.lock();
     delete context;
+    delete req;
 
-    if (0 != status) {
-        EPipeConnFailedReason reason;
-        switch (status) {
+    if (connector && event_pipe) {
+        if (0 != status) {
+            EPipeConnFailedReason reason;
+            switch (status) {
             case UV_EADDRNOTAVAIL:
-            reason = CONNFAILEDREASON_EADDRNOTAVAIL;
-            break;
+                reason = CONNFAILEDREASON_EADDRNOTAVAIL;
+                break;
 
             case UV_EADDRINUSE:
-            reason = CONNFAILEDREASON_EADDRINUSE;
-            break;
+                reason = CONNFAILEDREASON_EADDRINUSE;
+                break;
 
             case UV_ENETUNREACH:
             case UV_EHOSTUNREACH:
-            reason = CONNFAILEDREASON_ENETUNREACH;
-            break;
+                reason = CONNFAILEDREASON_ENETUNREACH;
+                break;
 
             case UV_ECONNRESET:
-            reason = CONNFAILEDREASON_ECONNRESET;
-            break;
+                reason = CONNFAILEDREASON_ECONNRESET;
+                break;
 
             case UV_ETIMEDOUT:
-            reason = CONNFAILEDREASON_ETIMEDOUT;
-            break;
+                reason = CONNFAILEDREASON_ETIMEDOUT;
+                break;
 
             case UV_ENOTCONN:
             case UV_ECONNREFUSED:
-            reason = CONNFAILEDREASON_ECONNREFUSED;
-            break;
+                reason = CONNFAILEDREASON_ECONNREFUSED;
+                break;
 
             case UV_ECANCELED:
-            reason = CONNFAILEDREASON_ECANCELED;
-            break;
+                reason = CONNFAILEDREASON_ECANCELED;
+                break;
 
             default:
-            OutputMsg(Logger::Error, "connect failed error [%s]", uv_strerror(status));
-            reason = CONNFAILEDREASON_UNKNOWN;
-            break;
+                OutputMsg(Logger::Error, "connect failed error [%s]", uv_strerror(status));
+                reason = CONNFAILEDREASON_UNKNOWN;
+                break;
+            }
+            event_pipe->GetSocket()->Close();
+            event_pipe->SetConnectState(SocketOpt::S_DISCONNECTED);
+            event_pipe->OnConnectFailed(reason);
+        } else {
+            connector->OnOneConnectSuccess(event_pipe.get());
         }
-        event_pipe->GetSocket()->Close();
-        event_pipe->SetConnectState(SocketOpt::S_DISCONNECTED);
-        event_pipe->OnConnectFailed(reason);
-    } else {
-        connector->OnOneConnectSuccess(event_pipe);
     }
 }

@@ -66,7 +66,7 @@ int NetWrapper::CSocket::BindImpl(const CAddress & address, EAddressFamily famil
     }
 
     Close();
-    OutputMsg(Logger::Error, "绑定端口(%s:%u)失败.(该端口已经被使用?)", address.GetAddress(), address.GetPort());
+    OutputMsg(Logger::Error, "绑定端口(%s:%u)失败.(该端口已经被使用?)", address.GetAddress(), address.getPort());
     return err;
 }
 
@@ -101,30 +101,30 @@ bool NetWrapper::CSocket::GetAddressImpl(CAddress & address, EAddressType type) 
         struct sockaddr_in * check_addr = reinterpret_cast<struct sockaddr_in *>(&addr);
         uv_ip4_name(check_addr, host, sizeof(host));
         address.SetAddress(host);
-        address.SetPort(ntohs(check_addr->sin_port));
+        address.setPort(ntohs(check_addr->sin_port));
     } else if (AF_INET6 == addr.ss_family) {
         char host[128] = { 0 };
         struct sockaddr_in6 * check_addr = reinterpret_cast<struct sockaddr_in6 *>(&addr);
         uv_ip6_name(check_addr, host, sizeof(host));
         address.SetAddress(host);
-        address.SetPort(ntohs(check_addr->sin6_port));
+        address.setPort(ntohs(check_addr->sin6_port));
     }
     return true;
 }
 
 void NetWrapper::CSocket::Address2sockaddr_in(sockaddr_in & addr, const CAddress & address) {
-    int err = uv_ip4_addr(address.GetAddress(), address.GetPort(), &addr);
+    int err = uv_ip4_addr(address.GetAddress(), address.getPort(), &addr);
     if (0 != err) {
-        OutputMsg(Logger::Error, "-- 域名出错:%s:%u --", address.GetAddress(), address.GetPort());
+        OutputMsg(Logger::Error, "-- 域名出错:%s:%u --", address.GetAddress(), address.getPort());
         OutputMsg(Logger::Info, "OnError: %d : %s .", err, uv_strerror(err));
         throw BaseException(__func__, "err != 0");
     }
 }
 
 void NetWrapper::CSocket::Address2sockaddr_in6(sockaddr_in6 & addr, const CAddress & address) {
-    int err = uv_ip6_addr(address.GetAddress(), address.GetPort(), &addr);
+    int err = uv_ip6_addr(address.GetAddress(), address.getPort(), &addr);
     if (0 != err) {
-        OutputMsg(Logger::Error, "-- 域名出错:%s:%u --", address.GetAddress(), address.GetPort());
+        OutputMsg(Logger::Error, "-- 域名出错:%s:%u --", address.GetAddress(), address.getPort());
         OutputMsg(Logger::Info, "OnError: %d : %s .", err, uv_strerror(err));
         throw BaseException(__func__, "err != 0");
     }

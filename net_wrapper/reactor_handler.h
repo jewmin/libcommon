@@ -1,10 +1,11 @@
 #ifndef __LIBCOMMON_NET_WRAPPER_REACTOR_HANDLER_H__
 #define __LIBCOMMON_NET_WRAPPER_REACTOR_HANDLER_H__
 
+#include <memory>
 #include "net_wrapper/event_reactor.h"
 
 namespace NetWrapper {
-    class CReactorHandler {
+    class CReactorHandler : public std::enable_shared_from_this<CReactorHandler> {
     public:
         CReactorHandler(CEventReactor * event_reactor);
         virtual ~CReactorHandler();

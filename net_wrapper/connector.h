@@ -9,10 +9,10 @@ namespace NetWrapper {
     public:
         class CContext {
         public:
-            CContext(CConnector * connector, CEventPipe * event_pipe);
-            virtual ~CContext();
-            CConnector * connector_;
-            CEventPipe * event_pipe_;
+            CContext(const std::shared_ptr<CConnector> & connector, const std::shared_ptr<CEventPipe> & event_pipe);
+            ~CContext();
+            std::weak_ptr<CConnector> connector_;
+            std::weak_ptr<CEventPipe> event_pipe_;
         };
 
         CConnector(CEventReactor * event_reactor);

@@ -1,5 +1,14 @@
 #include "net_wrapper/acceptor.h"
 
+NetWrapper::CAcceptor::CContext::CContext(const std::shared_ptr<CAcceptor> & acceptor)
+    : acceptor_(acceptor) {
+
+}
+
+NetWrapper::CAcceptor::CContext::~CContext() {
+
+}
+
 NetWrapper::CAcceptor::CAcceptor(CEventReactor * event_reactor)
     : CReactorHandler(event_reactor), address_(new CAddress()), open_(false) {
 
@@ -17,7 +26,8 @@ bool NetWrapper::CAcceptor::RegisterToReactor() {
     if (!socket_.GetLibuvTcp()) {
         throw BaseException(__func__, "socket_.GetLibuvTcp() == nullptr");
     }
-    socket_.GetLibuvTcp()->data = this;
+
+    socket_.GetLibuvTcp()->data = new CContext(std::dynamic_pointer_cast<CAcceptor>(shared_from_this()));
     return true;
 }
 
@@ -25,6 +35,9 @@ bool NetWrapper::CAcceptor::UnRegisterFromReactor() {
     if (!socket_.GetLibuvTcp()) {
         throw BaseException(__func__, "socket_.GetLibuvTcp() == nullptr");
     }
+
+    CContext * context = static_cast<CContext *>(socket_.GetLibuvTcp()->data);
+    delete context;
     socket_.GetLibuvTcp()->data = nullptr;
     return true;
 }
@@ -64,7 +77,7 @@ bool NetWrapper::CAcceptor::OpenImpl(const CAddress & address, EAddressFamily fa
         throw BaseException(__func__, ss.str());
     }
 
-    int err = uv_listen(reinterpret_cast<uv_stream_t *>(socket_.GetLibuvTcp()), 128, Accept);
+    err = uv_listen(reinterpret_cast<uv_stream_t *>(socket_.GetLibuvTcp()), 128, Accept);
     if (0 != err) {
         std::stringstream ss;
         ss << "uv_listen error[" << uv_strerror(err) << "]";
@@ -122,7 +135,12 @@ void NetWrapper::CAcceptor::Accept(uv_stream_t * stream, int status) {
     if (0 != status) {
         OutputMsg(Logger::Error, "accept failed error[%s]", uv_strerror(status));
     } else {
-        CAcceptor * acceptor = static_cast<CAcceptor *>(stream->data);
-        acceptor->Accept();
+        CContext * context = static_cast<CContext *>(stream->data);
+        if (context) {
+            std::shared_ptr<CAcceptor> acceptor = context->acceptor_.lock();
+            if (acceptor) {
+                acceptor->Accept();
+            }
+        }
     }
 }

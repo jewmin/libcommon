@@ -9,6 +9,13 @@
 namespace NetWrapper {
     class CAcceptor : public CReactorHandler {
     public:
+        class CContext {
+        public:
+            CContext(const std::shared_ptr<CAcceptor> & acceptor);
+            ~CContext();
+            std::weak_ptr<CAcceptor> acceptor_;
+        };
+
         CAcceptor(CEventReactor * event_reactor);
         virtual ~CAcceptor();
         bool RegisterToReactor() override;

@@ -15,8 +15,6 @@ namespace NetWrapper {
         ~CEventReactor();
         bool Register(CReactorHandler * handler);
         bool UnRegister(CReactorHandler * handler);
-        void Dispatch();
-        void LoopBreak();
 
         inline void Dispatch() {
             uv_run(&loop_, UV_RUN_NOWAIT);

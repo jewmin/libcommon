@@ -22,11 +22,11 @@ namespace NetWrapper {
             ip_ = ip;
         }
 
-        inline uint16_t GetPort() const {
+        inline uint16_t getPort() const {
             return port_;
         }
 
-        inline void SetPort(uint16_t port) {
+        inline void setPort(uint16_t port) {
             port_ = port;
         }
 
