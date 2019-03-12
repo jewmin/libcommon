@@ -4,9 +4,12 @@
 #include <unordered_map>
 #include "net_wrapper/connection.h"
 #include "net_wrapper/event_handler.h"
+#include "net_wrapper/event_handler_register.h"
 
 namespace NetWrapper {
     class CConnectionMgr {
+        friend class CConnection;
+
     public:
         CConnectionMgr(std::string name);
         virtual ~CConnectionMgr();
@@ -27,21 +30,26 @@ namespace NetWrapper {
         virtual void InsertToNeedToShutdownList(uint32_t connection_id);
         virtual void CleanDeathPipe();
 
-        int GetConnectionCount();
+        size_t GetConnectionCount();
         CConnection * GetConnectionByID(uint32_t connection_id);
         CEventHandler * GetCEventHandler(int index);
         size_t GetAllConnInBufferSize();
         size_t GetAllConnOutBufferSize();
         size_t GetOneConnOutBufferUsedSize(uint32_t connection_id);
 
+        inline std::string GetName() const {
+            return name_;
+        }
+
+    protected:
+        std::unordered_map<uint32_t, CConnection *> * connections_;
+
     private:
         std::vector<CEventHandler *> * handlers_;
-        int handler_count_;
         std::string name_;
-        std::unordered_map<uint32_t, CConnection *> * connections_;
-        int connection_count_;
         std::list<uint32_t> * need_delete_list_;
         std::list<uint32_t> * need_shutdown_list_;
+        static uint32_t s_num_created_;
     };
 }
 

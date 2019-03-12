@@ -24,8 +24,8 @@ namespace NetWrapper {
         virtual int Write(const uint8_t * data, size_t len);
         virtual int Send(const uint8_t * data, size_t len);
 
-        virtual void NeedToShutdown(uint32_t connection_id);
-        virtual void NeedToShutdown(uint32_t connection_id, const char * reason);
+        virtual void NeedToShutdown();
+        virtual void NeedToShutdown(const char * reason);
         virtual void Shutdown();
         virtual void ShutdownNow();
         virtual void OnPreAppShutDown();

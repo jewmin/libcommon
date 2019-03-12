@@ -55,7 +55,8 @@
         "xtr1common": "cpp",
         "xhash": "cpp",
         "array": "cpp",
-        "atomic": "cpp"
+        "atomic": "cpp",
+        "unordered_map": "cpp"
     },
     "files.encoding": "gbk",
     "editor.renderWhitespace": "all",
