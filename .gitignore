@@ -23,13 +23,13 @@
 # Compiled Static libraries
 *.lai
 *.la
-#*.a
-#*.lib
+*.a
+*.lib
 
 # Executables
 *.exe
 *.out
 *.app
 
+# 文件夹
 build
-*.log
