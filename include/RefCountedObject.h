@@ -139,9 +139,6 @@ inline void RefCountedObject::Duplicate() const {
 }
 
 inline void RefCountedObject::Release() {
-	if (counter_ == 0) {
-		Log(kCrash, __FILE__, __LINE__, "counter_ == 0");
-	}
 	if (--counter_ == 0) {
 		delete this;
 	}

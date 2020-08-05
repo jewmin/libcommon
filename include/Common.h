@@ -43,6 +43,9 @@
 #include <stdexcept>
 #include <algorithm>
 #include <unordered_map>
+#include <mutex>
+#include <thread>
+#include <chrono>
 
 // C头文件
 #include <assert.h>
@@ -52,6 +55,10 @@
 #else
 #	include <unistd.h>
 #endif
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 // 标准描述符
 #ifndef STDIN_FILENO
