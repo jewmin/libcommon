@@ -32,15 +32,15 @@ namespace Common {
 template<class M>
 class CScopedLock : public CObject {
 public:
-	explicit ScopedLock(M & mutex) : mutex_(mutex) { mutex_.Lock(); }
-	virtual ~ScopedLock() { mutex_.Unlock(); }
+	explicit CScopedLock(M & mutex) : mutex_(mutex) { mutex_.Lock(); }
+	virtual ~CScopedLock() { mutex_.Unlock(); }
 
 private:
-	ScopedLock() = delete;
-	ScopedLock(ScopedLock &&) = delete;
-	ScopedLock(const ScopedLock &) = delete;
-	ScopedLock & operator=(ScopedLock &&) = delete;
-	ScopedLock & operator=(const ScopedLock &) = delete;
+	CScopedLock() = delete;
+	CScopedLock(CScopedLock &&) = delete;
+	CScopedLock(const CScopedLock &) = delete;
+	CScopedLock & operator=(CScopedLock &&) = delete;
+	CScopedLock & operator=(const CScopedLock &) = delete;
 
 private:
 	M & mutex_;

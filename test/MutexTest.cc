@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "Mutex.h"
 
-void MutexTest_thread_task(Logger::Mutex * mutex, i32 * count) {
+void MutexTest_thread_task(Common::CMutex * mutex, i32 * count) {
 	if (mutex) { mutex->Lock(); }
 	i32 tmp = *count;
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -9,12 +9,12 @@ void MutexTest_thread_task(Logger::Mutex * mutex, i32 * count) {
 	if (mutex) { mutex->Unlock(); }
 }
 
-void MutexTest_thread_task_scope(Logger::Mutex * mutex, i32 * count, i32 * mutex_count) {
+void MutexTest_thread_task_scope(Common::CMutex * mutex, i32 * count, i32 * mutex_count) {
 	i32 tmp = *count;
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	*count = tmp + 1;
 	{
-		Logger::Mutex::ScopedLock lock(*mutex);
+		Common::CMutex::ScopedLock lock(*mutex);
 		i32 mutex_tmp = *mutex_count;
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		*mutex_count = mutex_tmp + 1;
@@ -23,7 +23,7 @@ void MutexTest_thread_task_scope(Logger::Mutex * mutex, i32 * count, i32 * mutex
 
 TEST(MutexTest, mutex) {
 	i32 count = 0;
-	Logger::Mutex mutex;
+	Common::CMutex mutex;
 	std::thread threads[5];
 	for (i32 i = 0; i < 5; i++) {
 		threads[i] = std::thread(MutexTest_thread_task, &mutex, &count);
@@ -50,7 +50,7 @@ TEST(MutexTest, no_mutex) {
 
 TEST(MutexTest, scope) {
 	i32 count = 0, mutex_count = 0;
-	Logger::Mutex mutex;
+	Common::CMutex mutex;
 	std::thread threads[5];
 	for (i32 i = 0; i < 5; i++) {
 		threads[i] = std::thread(MutexTest_thread_task_scope, &mutex, &count, &mutex_count);

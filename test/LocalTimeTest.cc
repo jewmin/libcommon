@@ -4,7 +4,7 @@
 TEST(LocalTimeTest, use) {
 	std::time_t t = 1577808000;
 	std::tm tm;
-	Logger::LocalTime(&t, &tm);
+	jc_localtime(&t, &tm);
 	EXPECT_EQ(tm.tm_year, 120);
 	EXPECT_EQ(tm.tm_mon, 0);
 	EXPECT_EQ(tm.tm_mday, 1);

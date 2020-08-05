@@ -1,14 +1,14 @@
 #include "gtest/gtest.h"
 #include "Thread.h"
 
-class MockThread : public Logger::Thread {
+class MockThread : public Common::CThread {
 public:
 	MockThread(i32 milli_seconds) : milli_seconds_(milli_seconds) {}
 
 protected:
 	virtual void OnRountine() override {
 		while (!Terminated()) {
-			Logger::Thread::Sleep(milli_seconds_);
+			Common::CThread::Sleep(milli_seconds_);
 			std::cout << "OnRountine: " << GetThreadId() << std::endl;
 		}
 	}
@@ -37,16 +37,16 @@ TEST(ThreadTest, multi) {
 		t[i] = new MockThread((i + 1) * 5);
 		t[i]->Start();
 	}
-	Logger::Thread::Sleep(200);
+	Common::CThread::Sleep(200);
 	for (i32 i = 0; i < 5; ++i) {
 		t[i]->Terminate();
 	}
-	Logger::Thread::Sleep(300);
+	Common::CThread::Sleep(300);
 	for (i32 i = 0; i < 10; ++i) {
 		delete t[i];
 	}
 }
 
 TEST(ThreadTest, current_id) {
-	std::cout << "id: " << Logger::Thread::CurrentThreadId() << std::endl;
+	std::cout << "id: " << Common::CThread::CurrentThreadId() << std::endl;
 }

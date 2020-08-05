@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include "Common/Allocator.h"
+#include "Allocator.h"
 
-TEST(AllocatorTestSuite, replace) {
+TEST(AllocatorTest, replace) {
 	jc_malloc_func test_malloc[2] = { nullptr, std::malloc };
 	jc_realloc_func test_realloc[2] = { nullptr, std::realloc };
 	jc_calloc_func test_calloc[2] = { nullptr, std::calloc };
@@ -11,7 +11,7 @@ TEST(AllocatorTestSuite, replace) {
 	}
 }
 
-TEST(AllocatorTestSuite, alloc) {
+TEST(AllocatorTest, alloc) {
 	int * p = (int *)jc_malloc(sizeof(int));
 	EXPECT_TRUE(p != nullptr);
 	*p = 999;
