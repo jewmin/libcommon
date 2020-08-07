@@ -28,7 +28,11 @@ TEST(ThreadTest, id) {
 	MockThread t(10);
 	std::stringstream s;
 	s << t.GetThreadId();
+#ifdef _WIN32
 	EXPECT_STREQ(s.str().c_str(), "0");
+#else
+	EXPECT_STREQ(s.str().c_str(), "thread::id of a non-executing thread");
+#endif
 }
 
 TEST(ThreadTest, multi) {

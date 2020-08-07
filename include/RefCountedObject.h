@@ -50,7 +50,7 @@ private:
 	mutable std::atomic<i32> counter_;
 };
 
-class COMMON_EXTERN RefCountedObject : public CObject {
+class RefCountedObject : public CObject {
 public:
 	virtual ~RefCountedObject() {}
 
@@ -72,7 +72,7 @@ private:
 };
 
 class StrongRefObject;
-class COMMON_EXTERN WeakReference : public RefCountedObject {
+class WeakReference : public RefCountedObject {
 	friend class StrongRefObject;
 public:
 	virtual ~WeakReference() {}
@@ -86,7 +86,7 @@ private:
 	StrongRefObject * object_;
 };
 
-class COMMON_EXTERN StrongRefObject : public CObject {
+class StrongRefObject : public CObject {
 public:
 	StrongRefObject() : weak_reference_(nullptr) {}
 	virtual ~StrongRefObject() { ClearWeakReferences(); }
