@@ -71,7 +71,7 @@ SDString & SDString::Assign(const SDString & other) {
 	return Assign(other.sds_, other.Size());	
 }
 
-SDString & SDString::Assign(const SDString & other, const size_t pos, size_t count = SDString::npos) {
+SDString & SDString::Assign(const SDString & other, const size_t pos, size_t count) {
 	assert(pos <= other.Size());
 	count = std::min(count, other.Size() - pos);
 	return Assign(other.sds_ + pos, count);
@@ -120,7 +120,7 @@ SDString & SDString::Append(const SDString & other) {
 	return Append(other.sds_, other.Size());
 }
 
-SDString & SDString::Append(const SDString & other, const size_t pos, size_t count = SDString::npos) {
+SDString & SDString::Append(const SDString & other, const size_t pos, size_t count) {
 	assert(pos <= other.Size());
 	count = std::min(count, other.Size() - pos);
 	return Append(other.sds_ + pos, count);
@@ -184,29 +184,29 @@ i8 * SDString::NewSDS(const size_t count) {
 	switch (type) {
 		case SDS_TYPE_8: {
 			struct sdshdr8 * hdr = SDS_HDR(8, sds);
-			hdr->len = count;
-			hdr->alloc = count;
+			hdr->len = static_cast<u8>(count);
+			hdr->alloc = static_cast<u8>(count);
 			hdr->flags = type;
 			break;
 		}
 		case SDS_TYPE_16: {
 			struct sdshdr16 * hdr = SDS_HDR(16, sds);
-			hdr->len = count;
-			hdr->alloc = count;
+			hdr->len = static_cast<u16>(count);
+			hdr->alloc = static_cast<u16>(count);
 			hdr->flags = type;
 			break;
 		}
 		case SDS_TYPE_32: {
 			struct sdshdr32 * hdr = SDS_HDR(32, sds);
-			hdr->len = count;
-			hdr->alloc = count;
+			hdr->len = static_cast<u32>(count);
+			hdr->alloc = static_cast<u32>(count);
 			hdr->flags = type;
 			break;
 		}
 		case SDS_TYPE_64: {
 			struct sdshdr64 * hdr = SDS_HDR(64, sds);
-			hdr->len = count;
-			hdr->alloc = count;
+			hdr->len = static_cast<u64>(count);
+			hdr->alloc = static_cast<u64>(count);
 			hdr->flags = type;
 			break;
 		}

@@ -69,7 +69,6 @@ public:
 	SDString();
 	SDString(const size_t count, const i8 & ch);
 	explicit SDString(const i8 * s);
-	SDString(const i8 * s, const size_t count);
 	SDString(const SDString & other, const size_t pos, size_t count = SDString::npos);
 	SDString(SDString && other);
 	SDString(const SDString & other);
@@ -81,7 +80,6 @@ public:
 
 	bool Empty() const;
 	size_t Size() const;
-	size_t HdrSize(const u8 type) const;
 	size_t AllocSize() const;
 	size_t AvailSize() const;
 
@@ -111,9 +109,9 @@ public:
 	SDString & Append(const i8 * s, const size_t count);
 	SDString & Append(const size_t count, const i8 & ch);
 
-	SDString & operator+(const i8 * s);
-	SDString & operator+(const i8 & ch);
-	SDString & operator+(const SDString & other);
+	SDString operator+(const i8 * s);
+	SDString operator+(const i8 & ch);
+	SDString operator+(const SDString & other);
 
 	SDString & operator+=(const i8 * s);
 	SDString & operator+=(const i8 & ch);
@@ -135,6 +133,7 @@ public:
 	bool operator>=(const i8 * s);
 	bool operator>=(const SDString & other);
 
+	static size_t HdrSize(const u8 type);
 	static SDString Format(const i8 * format, ...);
 	static SDString FormatVa(const i8 * format, va_list args);
 
@@ -142,6 +141,7 @@ public:
 	static const size_t min_alloc = 16;
 
 protected:
+	SDString(const i8 * s, const size_t count);
 	u8 Type(const size_t count) const;
 	void SetSize(const size_t count);
 
@@ -154,11 +154,11 @@ private:
 };
 
 inline u8 SDString::Type(const size_t count) const {
-	if (count < (1 << 8)) {
+	if (count < 256) {
 		return SDS_TYPE_8;
-	} else if (count < (1 << 16)) {
+	} else if (count < 65536) {
 		return SDS_TYPE_16;
-	} else if (count < (1 << 32)) {
+	} else if (count < 4294967296) {
 		return SDS_TYPE_32;
 	} else {
 		return SDS_TYPE_64;
@@ -236,16 +236,16 @@ inline size_t SDString::AvailSize() const {
 inline void SDString::SetSize(const size_t count) {
 	switch (sds_[-1] & SDS_TYPE_MASK) {
 		case SDS_TYPE_8:
-			SDS_HDR(8, sds_)->len = count;
+			SDS_HDR(8, sds_)->len = static_cast<u8>(count);
 			break;
 		case SDS_TYPE_16:
-			SDS_HDR(16, sds_)->len = count;
+			SDS_HDR(16, sds_)->len = static_cast<u16>(count);
 			break;
 		case SDS_TYPE_32:
-			SDS_HDR(32, sds_)->len = count;
+			SDS_HDR(32, sds_)->len = static_cast<u32>(count);
 			break;
 		case SDS_TYPE_64:
-			SDS_HDR(64, sds_)->len = count;
+			SDS_HDR(64, sds_)->len = static_cast<u64>(count);
 			break;
 	}
 }
@@ -274,7 +274,7 @@ inline SDString SDString::SubStr(const size_t pos, size_t count) const {
 	return SDString(sds_ + pos, count);
 }
 
-inline SDString & SDString::operator+(const i8 * s) {
+inline SDString SDString::operator+(const i8 * s) {
 	size_t size1 = Size();
 	size_t size2 = s ? std::strlen(s) : 0;
 	if (0 == size1) {
@@ -290,7 +290,7 @@ inline SDString & SDString::operator+(const i8 * s) {
 	return new_s;
 }
 
-inline SDString & SDString::operator+(const i8 & ch) {
+inline SDString SDString::operator+(const i8 & ch) {
 	size_t size1 = Size();
 	if (0 == size1) {
 		return SDString(1, ch);
@@ -303,7 +303,7 @@ inline SDString & SDString::operator+(const i8 & ch) {
 	return new_s;
 }
 
-inline SDString & SDString::operator+(const SDString & other) {
+inline SDString SDString::operator+(const SDString & other) {
 	size_t size1 = Size();
 	size_t size2 = other.Size();
 	if (0 == size1) {
