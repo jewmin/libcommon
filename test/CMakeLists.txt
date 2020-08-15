@@ -14,6 +14,7 @@ SET(test_srcs
 	${PROJECT_SOURCE_DIR}/RefCountedObjectTest.cc
 	${PROJECT_SOURCE_DIR}/ThreadTest.cc
 	${PROJECT_SOURCE_DIR}/TimeStampTest.cc
+	${PROJECT_SOURCE_DIR}/StringTest.cc
 )
 
 # 生成可执行文件

@@ -46,6 +46,7 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
+#include <cctype>
 
 // C头文件
 #include <assert.h>
@@ -59,6 +60,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 // 标准描述符
 #ifndef STDIN_FILENO
