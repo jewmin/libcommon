@@ -183,7 +183,7 @@ inline size_t SDString::Size() const {
 	return 0;
 }
 
-inline size_t SDString::HdrSize(const u8 type) const {
+inline size_t SDString::HdrSize(const u8 type) {
 	switch (type & SDS_TYPE_MASK) {
 		case SDS_TYPE_8:
 			return sizeof(struct sdshdr8);
