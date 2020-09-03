@@ -12,13 +12,13 @@ TimeStamp::TimeStamp() {
 TimeStamp::TimeStamp(i64 seconds, i64 micro_seconds) : seconds_(seconds), micro_seconds_(micro_seconds) {
 }
 
-TimeStamp::TimeStamp(const TimeStamp & rhs) : seconds_(rhs.seconds_), micro_seconds_(rhs.micro_seconds_) {
+TimeStamp::TimeStamp(const TimeStamp & other) : seconds_(other.seconds_), micro_seconds_(other.micro_seconds_) {
 }
 
-TimeStamp & TimeStamp::operator=(const TimeStamp & rhs) {
-	if (this != &rhs) {
-		seconds_ = rhs.seconds_;
-		micro_seconds_ = rhs.micro_seconds_;
+TimeStamp & TimeStamp::operator=(const TimeStamp & other) {
+	if (this != std::addressof(other)) {
+		seconds_ = other.seconds_;
+		micro_seconds_ = other.micro_seconds_;
 	}
 	return *this;
 }

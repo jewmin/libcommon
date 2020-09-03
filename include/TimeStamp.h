@@ -33,8 +33,8 @@ class COMMON_EXTERN TimeStamp : public CObject {
 public:
 	TimeStamp();
 	TimeStamp(i64 seconds, i64 micro_seconds = 0);
-	TimeStamp(const TimeStamp & rhs);
-	TimeStamp & operator=(const TimeStamp & rhs);
+	TimeStamp(const TimeStamp & other);
+	TimeStamp & operator=(const TimeStamp & other);
 	virtual ~TimeStamp();
 
 	i64 GetSeconds() const;
