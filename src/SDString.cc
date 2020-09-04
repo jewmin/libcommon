@@ -142,13 +142,12 @@ SDString & SDString::Append(const i8 * s, const size_t count) {
 		}
 
 		size_t old_size = Size();
-		size_t new_size = count < min_alloc ? old_size + min_alloc : old_size + count;
+		size_t new_size = old_size + count;
 		i8 * new_sds = NewSDS(new_size);
 		std::memcpy(new_sds, sds_, old_size);
 		std::memcpy(new_sds + old_size, s, count);
 		DelSDS(sds_);
 		sds_ = new_sds;
-		SetSize(old_size + count);
 	}
 	return *this;
 }
@@ -164,13 +163,12 @@ SDString & SDString::Append(const size_t count, const i8 & ch) {
 		}
 
 		size_t old_size = Size();
-		size_t new_size = count < min_alloc ? old_size + min_alloc : old_size + count;
+		size_t new_size = old_size + count;
 		i8 * new_sds = NewSDS(new_size);
 		std::memcpy(new_sds, sds_, old_size);
 		std::memset(new_sds + old_size, ch, count);
 		DelSDS(sds_);
 		sds_ = new_sds;
-		SetSize(old_size + count);
 	}
 	return *this;
 }

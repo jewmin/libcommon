@@ -138,7 +138,6 @@ public:
 	static SDString FormatVa(const i8 * format, va_list args);
 
 	static const size_t npos = -1;
-	static const size_t min_alloc = 16;
 
 protected:
 	SDString(const i8 * s, const size_t count);
@@ -275,47 +274,46 @@ inline SDString SDString::SubStr(const size_t pos, size_t count) const {
 }
 
 inline SDString SDString::operator+(const i8 * s) {
-	size_t size1 = Size();
-	size_t size2 = s ? std::strlen(s) : 0;
-	if (0 == size1) {
-		return SDString(s);
+	size_t size = Size();
+	size_t other_size = s ? std::strlen(s) : 0;
+	if (0 == size) {
+		return SDString(s, other_size);
 	}
-	if (0 == size2) {
-		return SDString(*this);
+	if (0 == other_size) {
+		return SDString(sds_, size);
 	}
 
-	SDString new_s(nullptr, size1 + size2);
-	std::memcpy(new_s.sds_, sds_, size1);
-	std::memcpy(new_s.sds_ + size1, s, size2);
+	SDString new_s(nullptr, size + other_size);
+	std::memcpy(new_s.sds_, sds_, size);
+	std::memcpy(new_s.sds_ + size, s, other_size);
 	return new_s;
 }
 
 inline SDString SDString::operator+(const i8 & ch) {
-	size_t size1 = Size();
-	if (0 == size1) {
+	size_t size = Size();
+	if (0 == size) {
 		return SDString(1, ch);
 	}
 
-	SDString new_s(nullptr, size1 + min_alloc);
-	std::memcpy(new_s.sds_, sds_, size1);
-	std::memset(new_s.sds_ + size1, ch, 1);
-	new_s.SetSize(size1 + 1);
+	SDString new_s(nullptr, size + 1);
+	std::memcpy(new_s.sds_, sds_, size);
+	std::memset(new_s.sds_ + size, ch, 1);
 	return new_s;
 }
 
 inline SDString SDString::operator+(const SDString & other) {
-	size_t size1 = Size();
-	size_t size2 = other.Size();
-	if (0 == size1) {
-		return SDString(other);
+	size_t size = Size();
+	size_t other_size = other.Size();
+	if (0 == size) {
+		return SDString(other.sds_, other_size);
 	}
-	if (0 == size2) {
-		return SDString(*this);
+	if (0 == other_size) {
+		return SDString(sds_, size);
 	}
 
-	SDString new_s(nullptr, size1 + size2);
-	std::memcpy(new_s.sds_, sds_, size1);
-	std::memcpy(new_s.sds_ + size1, other.sds_, size2);
+	SDString new_s(nullptr, size + other_size);
+	std::memcpy(new_s.sds_, sds_, size);
+	std::memcpy(new_s.sds_ + size, other.sds_, other_size);
 	return new_s;
 }
 
