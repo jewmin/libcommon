@@ -32,7 +32,7 @@ namespace Common {
 class COMMON_EXTERN CObject {
 public:
 	CObject();
-	virtual ~CObject();
+	~CObject();
 
 	static void * operator new(std::size_t object_size);
 	static void operator delete(void * object, std::size_t object_size);

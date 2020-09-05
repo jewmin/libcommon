@@ -25,6 +25,7 @@
 #ifndef Common_TimeStamp_INCLUDED
 #define Common_TimeStamp_INCLUDED
 
+#include "Common.h"
 #include "CObject.h"
 
 namespace Common {
@@ -33,9 +34,9 @@ class COMMON_EXTERN TimeStamp : public CObject {
 public:
 	TimeStamp();
 	TimeStamp(i64 seconds, i64 micro_seconds = 0);
-	TimeStamp(const TimeStamp & rhs);
-	TimeStamp & operator=(const TimeStamp & rhs);
-	virtual ~TimeStamp();
+	TimeStamp(const TimeStamp & other);
+	TimeStamp & operator=(const TimeStamp & other);
+	~TimeStamp();
 
 	i64 GetSeconds() const;
 	i64 GetMilliSeconds() const;

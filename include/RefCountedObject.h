@@ -25,6 +25,7 @@
 #ifndef Common_RefCountedObject_INCLUDED
 #define Common_RefCountedObject_INCLUDED
 
+#include "Common.h"
 #include "CObject.h"
 
 namespace Common {
@@ -81,6 +82,12 @@ public:
 
 protected:
 	WeakReference() : object_(nullptr) {}
+
+private:
+	WeakReference(WeakReference &&) = delete;
+	WeakReference(const WeakReference &) = delete;
+	WeakReference & operator=(WeakReference &&) = delete;
+	WeakReference & operator=(const WeakReference &) = delete;
 
 private:
 	StrongRefObject * object_;
@@ -151,6 +158,7 @@ inline i32 RefCountedObject::ReferenceCount() const {
 //*********************************************************************
 //WeakReference
 //*********************************************************************
+
 inline StrongRefObject * WeakReference::Get() const {
 	return object_;
 }
@@ -158,6 +166,7 @@ inline StrongRefObject * WeakReference::Get() const {
 //*********************************************************************
 //StrongRefObject
 //*********************************************************************
+
 inline WeakReference * StrongRefObject::WeakRef() {
 	if (!weak_reference_) {
 		weak_reference_ = new WeakReference();

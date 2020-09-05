@@ -25,6 +25,7 @@
 #ifndef Common_Thread_INCLUDED
 #define Common_Thread_INCLUDED
 
+#include "Common.h"
 #include "CObject.h"
 
 namespace Common {
@@ -48,6 +49,12 @@ protected:
 
 private:
 	static void ThreadRoutine(CThread * thread);
+
+private:
+	CThread(CThread &&) = delete;
+	CThread(const CThread &) = delete;
+	CThread & operator=(CThread &&) = delete;
+	CThread & operator=(const CThread &) = delete;
 
 private:
 	std::thread * thread_;

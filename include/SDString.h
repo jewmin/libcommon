@@ -25,6 +25,7 @@
 #ifndef Common_SDString_INCLUDED
 #define Common_SDString_INCLUDED
 
+#include "Common.h"
 #include "CObject.h"
 
 namespace Common {
@@ -76,7 +77,7 @@ public:
 	SDString & operator=(const i8 & ch);
 	SDString & operator=(SDString && other);
 	SDString & operator=(const SDString & other);
-	virtual ~SDString();
+	~SDString();
 
 	bool Empty() const;
 	size_t Size() const;
@@ -122,16 +123,28 @@ public:
 	const i8 * operator*() const;
 	bool operator==(const i8 * s);
 	bool operator==(const SDString & other);
+	bool operator==(const i8 * s) const;
+	bool operator==(const SDString & other) const;
 	bool operator!=(const i8 * s);
 	bool operator!=(const SDString & other);
+	bool operator!=(const i8 * s) const;
+	bool operator!=(const SDString & other) const;
 	bool operator<(const i8 * s);
 	bool operator<(const SDString & other);
+	bool operator<(const i8 * s) const;
+	bool operator<(const SDString & other) const;
 	bool operator<=(const i8 * s);
 	bool operator<=(const SDString & other);
+	bool operator<=(const i8 * s) const;
+	bool operator<=(const SDString & other) const;
 	bool operator>(const i8 * s);
 	bool operator>(const SDString & other);
+	bool operator>(const i8 * s) const;
+	bool operator>(const SDString & other) const;
 	bool operator>=(const i8 * s);
 	bool operator>=(const SDString & other);
+	bool operator>=(const i8 * s) const;
+	bool operator>=(const SDString & other) const;
 
 	static size_t HdrSize(const u8 type);
 	static SDString Format(const i8 * format, ...);
@@ -353,11 +366,27 @@ inline bool SDString::operator==(const SDString & other) {
 	return std::strcmp(sds_, other.sds_) == 0;
 }
 
+inline bool SDString::operator==(const i8 * s) const {
+	return std::strcmp(sds_, s) == 0;
+}
+
+inline bool SDString::operator==(const SDString & other) const {
+	return std::strcmp(sds_, other.sds_) == 0;
+}
+
 inline bool SDString::operator!=(const i8 * s) {
 	return std::strcmp(sds_, s) != 0;
 }
 
 inline bool SDString::operator!=(const SDString & other) {
+	return std::strcmp(sds_, other.sds_) != 0;
+}
+
+inline bool SDString::operator!=(const i8 * s) const {
+	return std::strcmp(sds_, s) != 0;
+}
+
+inline bool SDString::operator!=(const SDString & other) const {
 	return std::strcmp(sds_, other.sds_) != 0;
 }
 
@@ -369,11 +398,27 @@ inline bool SDString::operator<(const SDString & other) {
 	return std::strcmp(sds_, other.sds_) < 0;
 }
 
+inline bool SDString::operator<(const i8 * s) const {
+	return std::strcmp(sds_, s) < 0;
+}
+
+inline bool SDString::operator<(const SDString & other) const {
+	return std::strcmp(sds_, other.sds_) < 0;
+}
+
 inline bool SDString::operator<=(const i8 * s) {
 	return std::strcmp(sds_, s) <= 0;
 }
 
 inline bool SDString::operator<=(const SDString & other) {
+	return std::strcmp(sds_, other.sds_) <= 0;
+}
+
+inline bool SDString::operator<=(const i8 * s) const {
+	return std::strcmp(sds_, s) <= 0;
+}
+
+inline bool SDString::operator<=(const SDString & other) const {
 	return std::strcmp(sds_, other.sds_) <= 0;
 }
 
@@ -385,11 +430,27 @@ inline bool SDString::operator>(const SDString & other) {
 	return std::strcmp(sds_, other.sds_) > 0;
 }
 
+inline bool SDString::operator>(const i8 * s) const {
+	return std::strcmp(sds_, s) > 0;
+}
+
+inline bool SDString::operator>(const SDString & other) const {
+	return std::strcmp(sds_, other.sds_) > 0;
+}
+
 inline bool SDString::operator>=(const i8 * s) {
 	return std::strcmp(sds_, s) >= 0;
 }
 
 inline bool SDString::operator>=(const SDString & other) {
+	return std::strcmp(sds_, other.sds_) >= 0;
+}
+
+inline bool SDString::operator>=(const i8 * s) const {
+	return std::strcmp(sds_, s) >= 0;
+}
+
+inline bool SDString::operator>=(const SDString & other) const {
 	return std::strcmp(sds_, other.sds_) >= 0;
 }
 

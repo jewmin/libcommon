@@ -25,6 +25,7 @@
 #ifndef Common_CExpection_INCLUDED
 #define Common_CExpection_INCLUDED
 
+#include "Common.h"
 #include "CObject.h"
 #include "SDString.h"
 
@@ -34,9 +35,11 @@ class COMMON_EXTERN CExpection : public CObject {
 public:
 	CExpection();
 	explicit CExpection(const i8 * message);
+	CExpection(CExpection && other);
 	CExpection(const CExpection & other);
+	CExpection & operator=(CExpection && other);
 	CExpection & operator=(const CExpection & other);
-	virtual ~CExpection();
+	~CExpection();
 
 	virtual const i8 * What() const;
 

@@ -25,6 +25,7 @@
 #ifndef Common_Mutex_INCLUDED
 #define Common_Mutex_INCLUDED
 
+#include "Common.h"
 #include "CObject.h"
 
 namespace Common {
@@ -33,7 +34,7 @@ template<class M>
 class CScopedLock : public CObject {
 public:
 	explicit CScopedLock(M & mutex) : mutex_(mutex) { mutex_.Lock(); }
-	virtual ~CScopedLock() { mutex_.Unlock(); }
+	~CScopedLock() { mutex_.Unlock(); }
 
 private:
 	CScopedLock() = delete;
@@ -51,7 +52,7 @@ public:
 	typedef CScopedLock<CMutex> ScopedLock;
 
 	CMutex() {}
-	virtual ~CMutex() {}
+	~CMutex() {}
 
 	void Lock();
 	bool TryLock();
