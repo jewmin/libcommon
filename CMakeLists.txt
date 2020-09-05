@@ -30,11 +30,12 @@ MESSAGE(STATUS "LINUX:" ${LINUX})
 # 添加源文件
 SET(all_srcs
 	${PROJECT_SOURCE_DIR}/src/Allocator.cc
+	${PROJECT_SOURCE_DIR}/src/CExpection.cc
 	${PROJECT_SOURCE_DIR}/src/CObject.cc
 	${PROJECT_SOURCE_DIR}/src/LocalTime.cc
+	${PROJECT_SOURCE_DIR}/src/SDString.cc
 	${PROJECT_SOURCE_DIR}/src/Thread.cc
 	${PROJECT_SOURCE_DIR}/src/TimeStamp.cc
-	${PROJECT_SOURCE_DIR}/src/SDString.cc
 )
 
 # 设置输出目录
