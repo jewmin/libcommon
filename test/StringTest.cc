@@ -13,18 +13,18 @@ TEST(StringTest, default_ctor) {
 	Common::SDString s;
 	EXPECT_STREQ(*s, "");
 	EXPECT_EQ(s.Empty(), true);
-	EXPECT_EQ(s.Size(), (size_t)0);
-	EXPECT_EQ(s.AllocSize(), (size_t)0);
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.Size(), static_cast<size_t>(0));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(0));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, char_ctor) {
 	Common::SDString s(10, 'S');
 	EXPECT_STREQ(*s, "SSSSSSSSSS");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)10);
-	EXPECT_EQ(s.AllocSize(), (size_t)10);
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.Size(), static_cast<size_t>(10));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(10));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, string_ctor) {
@@ -33,7 +33,7 @@ TEST(StringTest, string_ctor) {
 	EXPECT_EQ(s.Empty(), false);
 	EXPECT_EQ(s.Size(), std::strlen("hello world"));
 	EXPECT_EQ(s.AllocSize(), std::strlen("hello world"));
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, copy_ctor) {
@@ -51,15 +51,15 @@ TEST(StringTest, copy_ctor_sub) {
 	Common::SDString s1(s, 0, 5), s2(s, 6);
 	EXPECT_STREQ(*s1, "hello");
 	EXPECT_EQ(s1.Empty(), false);
-	EXPECT_EQ(s1.Size(), (size_t)5);
-	EXPECT_EQ(s1.AllocSize(), (size_t)5);
-	EXPECT_EQ(s1.AvailSize(), (size_t)0);
-	
+	EXPECT_EQ(s1.Size(), static_cast<size_t>(5));
+	EXPECT_EQ(s1.AllocSize(), static_cast<size_t>(5));
+	EXPECT_EQ(s1.AvailSize(), static_cast<size_t>(0));
+
 	EXPECT_STREQ(*s2, "world");
 	EXPECT_EQ(s2.Empty(), false);
-	EXPECT_EQ(s2.Size(), (size_t)5);
-	EXPECT_EQ(s2.AllocSize(), (size_t)5);
-	EXPECT_EQ(s2.AvailSize(), (size_t)0);
+	EXPECT_EQ(s2.Size(), static_cast<size_t>(5));
+	EXPECT_EQ(s2.AllocSize(), static_cast<size_t>(5));
+	EXPECT_EQ(s2.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, move_ctor) {
@@ -69,7 +69,7 @@ TEST(StringTest, move_ctor) {
 	EXPECT_EQ(s1.Empty(), false);
 	EXPECT_EQ(s1.Size(), std::strlen("hello world"));
 	EXPECT_EQ(s1.AllocSize(), std::strlen("hello world"));
-	EXPECT_EQ(s1.AvailSize(), (size_t)0);
+	EXPECT_EQ(s1.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, assign_char_ctor) {
@@ -77,9 +77,9 @@ TEST(StringTest, assign_char_ctor) {
 	s = 'M';
 	EXPECT_STREQ(*s, "M");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)1);
-	EXPECT_EQ(s.AllocSize(), (size_t)11);
-	EXPECT_EQ(s.AvailSize(), (size_t)10);
+	EXPECT_EQ(s.Size(), static_cast<size_t>(1));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(11));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(10));
 }
 
 TEST(StringTest, assign_string_ctor) {
@@ -89,27 +89,45 @@ TEST(StringTest, assign_string_ctor) {
 	EXPECT_EQ(s.Empty(), false);
 	EXPECT_EQ(s.Size(), std::strlen("I'm a programmer."));
 	EXPECT_EQ(s.AllocSize(), std::strlen("I'm a programmer."));
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, assign_copy_ctor) {
 	Common::SDString s("hello world");
-	s = "I'm a programmer.";
+	s = Common::SDString("I'm a programmer.");
 	EXPECT_STREQ(*s, "I'm a programmer.");
 	EXPECT_EQ(s.Empty(), false);
 	EXPECT_EQ(s.Size(), std::strlen("I'm a programmer."));
 	EXPECT_EQ(s.AllocSize(), std::strlen("I'm a programmer."));
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, assign_move_ctor) {
 	Common::SDString s("hello world");
-	s = Common::SDString("you are welcome");
+	s = std::move(Common::SDString("you are welcome"));
 	EXPECT_STREQ(*s, "you are welcome");
 	EXPECT_EQ(s.Empty(), false);
 	EXPECT_EQ(s.Size(), std::strlen("you are welcome"));
 	EXPECT_EQ(s.AllocSize(), std::strlen("you are welcome"));
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+}
+
+TEST(StringTest, s16_ctor) {
+	Common::SDString s(256, 'M');
+	EXPECT_EQ(s.Empty(), false);
+	EXPECT_EQ(s.Size(), static_cast<size_t>(256));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(256));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+	s.Clear();
+}
+
+TEST(StringTest, s32_ctor) {
+	Common::SDString s(65536, 'S');
+	EXPECT_EQ(s.Empty(), false);
+	EXPECT_EQ(s.Size(), static_cast<size_t>(65536));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(65536));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+	s.Clear();
 }
 
 TEST(StringTest, new_op) {
@@ -118,7 +136,7 @@ TEST(StringTest, new_op) {
 	EXPECT_EQ(s->Empty(), false);
 	EXPECT_EQ(s->Size(), std::strlen("hello world"));
 	EXPECT_EQ(s->AllocSize(), std::strlen("hello world"));
-	EXPECT_EQ(s->AvailSize(), (size_t)0);
+	EXPECT_EQ(s->AvailSize(), static_cast<size_t>(0));
 	delete s;
 }
 
@@ -127,7 +145,7 @@ TEST(StringTest, clear) {
 	s.Clear();
 	EXPECT_STREQ(*s, "");
 	EXPECT_EQ(s.Empty(), true);
-	EXPECT_EQ(s.Size(), (size_t)0);
+	EXPECT_EQ(s.Size(), static_cast<size_t>(0));
 	EXPECT_EQ(s.AllocSize(), std::strlen("hello world"));
 	EXPECT_EQ(s.AvailSize(), std::strlen("hello world"));
 }
@@ -139,14 +157,14 @@ TEST(StringTest, remove) {
 	EXPECT_EQ(s.Empty(), false);
 	EXPECT_EQ(s.Size(), std::strlen("helloworld"));
 	EXPECT_EQ(s.AllocSize(), std::strlen("hello world"));
-	EXPECT_EQ(s.AvailSize(), (size_t)1);
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(1));
 
 	s.RemoveAt(5, 5);
 	EXPECT_STREQ(*s, "hello");
 	EXPECT_EQ(s.Empty(), false);
 	EXPECT_EQ(s.Size(), std::strlen("hello"));
 	EXPECT_EQ(s.AllocSize(), std::strlen("hello world"));
-	EXPECT_EQ(s.AvailSize(), std::strlen("hello world") - std::strlen("hello"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(6));
 }
 
 TEST(StringTest, substr) {
@@ -156,7 +174,7 @@ TEST(StringTest, substr) {
 	EXPECT_EQ(s1.Empty(), false);
 	EXPECT_EQ(s1.Size(), std::strlen("world"));
 	EXPECT_EQ(s1.AllocSize(), std::strlen("world"));
-	EXPECT_EQ(s1.AvailSize(), (size_t)0);
+	EXPECT_EQ(s1.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, assign_char) {
@@ -164,9 +182,9 @@ TEST(StringTest, assign_char) {
 	s.Assign(10, 'M');
 	EXPECT_STREQ(*s, "MMMMMMMMMM");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)10);
-	EXPECT_EQ(s.AllocSize(), (size_t)10);
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.Size(), static_cast<size_t>(10));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(10));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, assign_string) {
@@ -176,7 +194,15 @@ TEST(StringTest, assign_string) {
 	EXPECT_EQ(s.Empty(), false);
 	EXPECT_EQ(s.Size(), std::strlen("welcome to my code world"));
 	EXPECT_EQ(s.AllocSize(), std::strlen("welcome to my code world"));
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+
+	Common::SDString s1;
+	s1.Assign("welcome to my code world", 7);
+	EXPECT_STREQ(*s1, "welcome");
+	EXPECT_EQ(s1.Empty(), false);
+	EXPECT_EQ(s1.Size(), std::strlen("welcome"));
+	EXPECT_EQ(s1.AllocSize(), std::strlen("welcome"));
+	EXPECT_EQ(s1.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, assign_copy) {
@@ -187,7 +213,19 @@ TEST(StringTest, assign_copy) {
 	EXPECT_EQ(s1.Empty(), false);
 	EXPECT_EQ(s1.Size(), std::strlen("hello world"));
 	EXPECT_EQ(s1.AllocSize(), std::strlen("hello world"));
-	EXPECT_EQ(s1.AvailSize(), (size_t)0);
+	EXPECT_EQ(s1.AvailSize(), static_cast<size_t>(0));
+}
+
+TEST(StringTest, assign) {
+	Common::SDString s(100, 'M');
+	s.Clear();
+	s.Assign(5, '*');
+	s.Assign("Welcome To My Code World");
+	EXPECT_STREQ(*s, "Welcome To My Code World");
+	EXPECT_EQ(s.Empty(), false);
+	EXPECT_EQ(s.Size(), std::strlen("Welcome To My Code World"));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(100));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(100) - std::strlen("Welcome To My Code World"));
 }
 
 TEST(StringTest, assign_copy_sub) {
@@ -198,53 +236,87 @@ TEST(StringTest, assign_copy_sub) {
 	EXPECT_EQ(s1.Empty(), false);
 	EXPECT_EQ(s1.Size(), std::strlen("world"));
 	EXPECT_EQ(s1.AllocSize(), std::strlen("world"));
-	EXPECT_EQ(s1.AvailSize(), (size_t)0);
+	EXPECT_EQ(s1.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, append) {
 	Common::SDString s;
 	EXPECT_STREQ(*s, "");
 	EXPECT_EQ(s.Empty(), true);
-	EXPECT_EQ(s.Size(), (size_t)0);
-	EXPECT_EQ(s.AllocSize(), (size_t)0);
-	EXPECT_EQ(s.AvailSize(), (size_t)0);
+	EXPECT_EQ(s.Size(), static_cast<size_t>(0));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(0));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 
 	s.Append(5, 'A');
 	EXPECT_STREQ(*s, "AAAAA");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)5);
-	EXPECT_EQ(s.AllocSize(), (size_t)16);
-	EXPECT_EQ(s.AvailSize(), (size_t)11);
+	EXPECT_EQ(s.Size(), std::strlen("AAAAA"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("AAAAA"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 
 	s.Append(" hello world");
 	EXPECT_STREQ(*s, "AAAAA hello world");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)17);
-	EXPECT_EQ(s.AllocSize(), (size_t)32);
-	EXPECT_EQ(s.AvailSize(), (size_t)15);
+	EXPECT_EQ(s.Size(), std::strlen("AAAAA hello world"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("AAAAA hello world"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+
+	s.Append(" and big world", 8);
+	EXPECT_STREQ(*s, "AAAAA hello world and big");
+	EXPECT_EQ(s.Empty(), false);
+	EXPECT_EQ(s.Size(), std::strlen("AAAAA hello world and big"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("AAAAA hello world and big"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 
 	s.Append(Common::SDString(" welcome to my code world"));
-	EXPECT_STREQ(*s, "AAAAA hello world welcome to my code world");
+	EXPECT_STREQ(*s, "AAAAA hello world and big welcome to my code world");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)42);
-	EXPECT_EQ(s.AllocSize(), (size_t)57);
-	EXPECT_EQ(s.AvailSize(), (size_t)15);
+	EXPECT_EQ(s.Size(), std::strlen("AAAAA hello world and big welcome to my code world"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("AAAAA hello world and big welcome to my code world"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 
-	s.Append(Common::SDString(" happy new year"), 0, 6);
-	EXPECT_STREQ(*s, "AAAAA hello world welcome to my code world happy");
+	s.Append(Common::SDString(" happy new year"), 6, 4);
+	EXPECT_STREQ(*s, "AAAAA hello world and big welcome to my code world new");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)48);
-	EXPECT_EQ(s.AllocSize(), (size_t)57);
-	EXPECT_EQ(s.AvailSize(), (size_t)9);
+	EXPECT_EQ(s.Size(), std::strlen("AAAAA hello world and big welcome to my code world new"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("AAAAA hello world and big welcome to my code world new"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, add) {
-	Common::SDString s = Common::SDString("I am ") + 'X' + "-Man";
+	Common::SDString s = Common::SDString("I ") + Common::SDString("am ") + 'X' + "-Man";
 	EXPECT_STREQ(*s, "I am X-Man");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)10);
-	EXPECT_EQ(s.AllocSize(), (size_t)21);
-	EXPECT_EQ(s.AvailSize(), (size_t)11);
+	EXPECT_EQ(s.Size(), std::strlen("I am X-Man"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("I am X-Man"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+}
+
+TEST(StringTest, add_char) {
+	Common::SDString s = Common::SDString("") + 'M';
+	EXPECT_STREQ(*s, "M");
+	EXPECT_EQ(s.Empty(), false);
+	EXPECT_EQ(s.Size(), std::strlen("M"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("M"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+}
+
+TEST(StringTest, add_string) {
+	Common::SDString s = Common::SDString("") + "SuperMan" + "";
+	EXPECT_STREQ(*s, "SuperMan");
+	EXPECT_EQ(s.Empty(), false);
+	EXPECT_EQ(s.Size(), std::strlen("SuperMan"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("SuperMan"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+}
+
+TEST(StringTest, add_other) {
+	Common::SDString s = Common::SDString("") + Common::SDString("Student") + Common::SDString("");
+	EXPECT_STREQ(*s, "Student");
+	EXPECT_EQ(s.Empty(), false);
+	EXPECT_EQ(s.Size(), std::strlen("Student"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("Student"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
 }
 
 TEST(StringTest, add_assign) {
@@ -254,9 +326,22 @@ TEST(StringTest, add_assign) {
 	s += "-Man";
 	EXPECT_STREQ(*s, "I am X-Man");
 	EXPECT_EQ(s.Empty(), false);
-	EXPECT_EQ(s.Size(), (size_t)10);
-	EXPECT_EQ(s.AllocSize(), (size_t)16);
-	EXPECT_EQ(s.AvailSize(), (size_t)6);
+	EXPECT_EQ(s.Size(), std::strlen("I am X-Man"));
+	EXPECT_EQ(s.AllocSize(), std::strlen("I am X-Man"));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(0));
+}
+
+TEST(StringTest, add_assign_avail) {
+	Common::SDString s(100, 'M');
+	s.Clear();
+	s += Common::SDString("I am ");
+	s += 'X';
+	s += "-Man";
+	EXPECT_STREQ(*s, "I am X-Man");
+	EXPECT_EQ(s.Empty(), false);
+	EXPECT_EQ(s.Size(), std::strlen("I am X-Man"));
+	EXPECT_EQ(s.AllocSize(), static_cast<size_t>(100));
+	EXPECT_EQ(s.AvailSize(), static_cast<size_t>(100) - std::strlen("I am X-Man"));
 }
 
 TEST(StringTest, at) {
@@ -340,4 +425,78 @@ TEST(StringTest, trim) {
 	Common::SDString s("   \t   \r\n  left    right   \t   \r\n  ");
 	s.TrimStartAndEndInline();
 	EXPECT_STREQ(*s, "left    right");
+}
+
+TEST(StringTest, trim_se) {
+	Common::SDString s("   \t   \r\n  left    right   \t   \r\n  ");
+	EXPECT_STREQ(*s.TrimStartAndEnd(), "left    right");
+	EXPECT_STREQ(*Common::SDString("   \t   \r\n  left    right   \t   \r\n  ").TrimStartAndEnd(), "left    right");
+}
+
+TEST(StringTest, trim_s) {
+	Common::SDString s("   \t   \r\n  left");
+	EXPECT_STREQ(*s.TrimStart(), "left");
+	EXPECT_STREQ(*Common::SDString("   \t   \r\n  left").TrimStart(), "left");
+}
+
+TEST(StringTest, trim_e) {
+	Common::SDString s("right   \t   \r\n  ");
+	EXPECT_STREQ(*s.TrimEnd(), "right");
+	EXPECT_STREQ(*Common::SDString("right   \t   \r\n  ").TrimEnd(), "right");
+}
+
+TEST(StringTest, eq_op) {
+	i8 buf[] = "1234567890";
+	Common::SDString s("1234567890"), s1("1234567890");
+	EXPECT_EQ(s, buf);
+	EXPECT_EQ(s, s1);
+	EXPECT_TRUE(s == "1234567890");
+	EXPECT_TRUE(s == Common::SDString("1234567890"));
+
+	EXPECT_LE(s, buf);
+	EXPECT_LE(s, s1);
+	EXPECT_TRUE(s <= "1234567890");
+	EXPECT_TRUE(s <= Common::SDString("1234567890"));
+
+	EXPECT_GE(s, buf);
+	EXPECT_GE(s, s1);
+	EXPECT_TRUE(s >= "1234567890");
+	EXPECT_TRUE(s >= Common::SDString("1234567890"));
+}
+
+TEST(StringTest, ne_op) {
+	i8 buf[] = "1234667890";
+	Common::SDString s("1234567890"), s1("1234667890");
+	EXPECT_NE(s, buf);
+	EXPECT_NE(s, s1);
+	EXPECT_TRUE(s != "1234667890");
+	EXPECT_TRUE(s != Common::SDString("1234667890"));
+}
+
+TEST(StringTest, lt_op) {
+	i8 buf[] = "1234667890";
+	Common::SDString s("1234567890"), s1("1234667890");
+	EXPECT_LT(s, buf);
+	EXPECT_LT(s, s1);
+	EXPECT_TRUE(s < "1234667890");
+	EXPECT_TRUE(s < Common::SDString("1234667890"));
+
+	EXPECT_LE(s, buf);
+	EXPECT_LE(s, s1);
+	EXPECT_TRUE(s <= "1234667890");
+	EXPECT_TRUE(s <= Common::SDString("1234667890"));
+}
+
+TEST(StringTest, gt_op) {
+	i8 buf[] = "123456789";
+	Common::SDString s("1234567890"), s1("123456789");
+	EXPECT_GT(s, buf);
+	EXPECT_GT(s, s1);
+	EXPECT_TRUE(s > "123456789");
+	EXPECT_TRUE(s > Common::SDString("123456789"));
+
+	EXPECT_GE(s, buf);
+	EXPECT_GE(s, s1);
+	EXPECT_TRUE(s >= "123456789");
+	EXPECT_TRUE(s >= Common::SDString("123456789"));
 }

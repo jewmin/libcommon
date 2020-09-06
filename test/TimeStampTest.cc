@@ -29,6 +29,7 @@ TEST(TimeStampTest, assign_ctor) {
 	std::printf("seconds: %lld, milliseconds: %lld, microseconds: %lld\n", s.GetSeconds(), s.GetMilliSeconds(), s.GetMicroSeconds());
 	Common::TimeStamp t;
 	std::printf("seconds: %lld, milliseconds: %lld, microseconds: %lld\n", t.GetSeconds(), t.GetMilliSeconds(), t.GetMicroSeconds());
+	t = t;
 	t = s;
 	EXPECT_EQ(s.GetSeconds(), t.GetSeconds());
 	EXPECT_EQ(s.GetMilliSeconds(), t.GetMilliSeconds());

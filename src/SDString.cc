@@ -228,7 +228,7 @@ SDString SDString::Format(const i8 * format, ...) {
 
 SDString SDString::FormatVa(const i8 * format, va_list args) {
 	size_t size = 1024;
-	i8 * buffer = new i8[size];
+	i8 * buffer = static_cast<i8 *>(jc_malloc(size));
 
 	while (true) {
 		va_list args_copy;
@@ -242,13 +242,12 @@ SDString SDString::FormatVa(const i8 * format, va_list args) {
 
 		if (n > -1 && static_cast<size_t>(n) < size) {
 			SDString s(buffer);
-			delete [] buffer;
+			jc_free(buffer);
 			return s;
 		}
 
 		size = n > -1 ? n + 1 : size << 1;
-		delete [] buffer;
-		buffer = new i8[size];
+		buffer = static_cast<i8 *>(jc_realloc(buffer, size));
 	}
 }
 

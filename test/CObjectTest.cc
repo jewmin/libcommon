@@ -6,9 +6,9 @@ class MockObject : public Common::CObject {
 public:
 	MockObject() : a(1), b(1.5), c(2), d(2.5) {}
 	virtual ~MockObject() {}
-	int a;
+	i32 a;
 	float b;
-	long c;
+	i64 c;
 	double d;
 };
 
@@ -27,8 +27,8 @@ TEST(CObjectTest, alloc) {
 	EXPECT_DOUBLE_EQ(object1->d, 2.5);
 	delete object1;
 
-	char buf[sizeof(MockObject)];
-	MockObject * object2 = reinterpret_cast<MockObject *>(const_cast<char *>(buf));
+	i8 buf[sizeof(MockObject)];
+	MockObject * object2 = reinterpret_cast<MockObject *>(const_cast<i8 *>(buf));
 	new(object2)MockObject();
 	EXPECT_EQ(object2->a, 1);
 	EXPECT_FLOAT_EQ(object2->b, 1.5);

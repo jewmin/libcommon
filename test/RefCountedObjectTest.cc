@@ -6,20 +6,60 @@ class MockRefCountedObject : public Common::RefCountedObject {
 public:
 	MockRefCountedObject() : a(1) {}
 	virtual ~MockRefCountedObject() {}
-	int a;
+	i32 a;
 };
 
-TEST(RefCountedObjectTestSuite, counter) {
-	Common::RefCounter counter;
-	EXPECT_EQ((int)counter, 1);
-	EXPECT_EQ((int)counter++, 1);
-	EXPECT_EQ((int)++counter, 3);
-	EXPECT_EQ((int)--counter, 2);
-	EXPECT_EQ((int)counter--, 2);
-	EXPECT_EQ((int)counter, 1);
+void RefCountedObjectTest_thread_ref_counter(Common::RefCounter * counter, i32 count) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	while (count-- > 0) {
+		(*counter)++;
+	}
 }
 
-TEST(RefCountedObjectTestSuite, ref) {
+void RefCountedObjectTest_thread_counter(i32 * counter, i32 count) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	while (count-- > 0) {
+		(*counter)++;
+	}
+}
+
+TEST(RefCountedObjectTest, counter) {
+	Common::RefCounter counter;
+	EXPECT_EQ(static_cast<i32>(counter), 1);
+	EXPECT_EQ(static_cast<i32>(counter++), 1);
+	EXPECT_EQ(static_cast<i32>(++counter), 3);
+	EXPECT_EQ(static_cast<i32>(--counter), 2);
+	EXPECT_EQ(static_cast<i32>(counter--), 2);
+	EXPECT_EQ(static_cast<i32>(counter), 1);
+}
+
+TEST(RefCountedObjectTest, multi_ref_counter) {
+	Common::RefCounter counter;
+	std::thread threads[5];
+	for (i32 i = 0; i < 5; i++) {
+		threads[i] = std::thread(RefCountedObjectTest_thread_ref_counter, &counter, 10);
+	}
+	for (auto & t: threads) {
+		t.join();
+	}
+	EXPECT_EQ(static_cast<i32>(counter), 51);
+	std::printf("multithread RefCounter count=%d\n", static_cast<i32>(counter));
+}
+
+TEST(RefCountedObjectTest, multi_counter) {
+	i32 counter = 0;
+	std::thread threads[5];
+	for (i32 i = 0; i < 5; i++) {
+		threads[i] = std::thread(RefCountedObjectTest_thread_counter, &counter, 10);
+	}
+	for (auto & t: threads) {
+		t.join();
+	}
+	EXPECT_LE(counter, 50);
+	std::printf("multithread Counter count=%d\n", counter);
+}
+
+TEST(RefCountedObjectTest, ref) {
 	MockRefCountedObject ref_object;
 	EXPECT_EQ(ref_object.ReferenceCount(), 1);
 	ref_object.Duplicate();
@@ -32,7 +72,7 @@ TEST(RefCountedObjectTestSuite, ref) {
 	EXPECT_EQ(ref_object.ReferenceCount(), 1);
 }
 
-TEST(RefCountedObjectTestSuite, ref_ptr) {
+TEST(RefCountedObjectTest, ref_ptr) {
 	MockRefCountedObject * ref_object = new MockRefCountedObject();
 	EXPECT_EQ(ref_object->ReferenceCount(), 1);
 	ref_object->Duplicate();
@@ -42,104 +82,115 @@ TEST(RefCountedObjectTestSuite, ref_ptr) {
 	ref_object->Release();
 }
 
-TEST(RefCountedObjectTestSuite, del) {
-	char buf[sizeof(MockRefCountedObject)];
-	MockRefCountedObject * ref_object = reinterpret_cast<MockRefCountedObject *>(const_cast<char *>(buf));
-	new(ref_object)MockRefCountedObject();
+TEST(RefCountedObjectTest, del) {
+	MockRefCountedObject * ref_object = new MockRefCountedObject();
 	EXPECT_EQ(ref_object->ReferenceCount(), 1);
-	ref_object->Duplicate();
-	EXPECT_EQ(ref_object->ReferenceCount(), 2);
-	ref_object->Release();
-	EXPECT_EQ(ref_object->ReferenceCount(), 1);
+	delete ref_object;
 }
 
-class MockStrongObject : public Common::StrongRefObject {
+class MockStrongRefObject : public Common::StrongRefObject {
 public:
-	MockStrongObject(i32 v) : value_(v) {}
-	virtual ~MockStrongObject() {}
+	MockStrongRefObject(i32 v) : value_(v) {}
+	virtual ~MockStrongRefObject() {}
 	i32 value_;
 };
 
-TEST(RefCountedObjectTestSuite, weak) {
-	MockStrongObject object(1);
+TEST(RefCountedObjectTest, strong_ref) {
+	MockStrongRefObject object(1);
+	EXPECT_EQ(object.ReferenceCount(), 1);
 	EXPECT_EQ(object.value_, 1);
 }
 
-TEST(RefCountedObjectTestSuite, weak2) {
-	MockStrongObject object(2);
+TEST(RefCountedObjectTest, weak_ref) {
+	MockStrongRefObject object(2);
+	EXPECT_EQ(object.ReferenceCount(), 1);
 	EXPECT_EQ(object.value_, 2);
-	Common::WeakReference * ref = object.WeakRef();
+	Common::WeakReference * ref = object.IncWeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
-	EXPECT_TRUE(ref->Get() == &object);
+	EXPECT_TRUE(ref->Lock() == &object);
+	EXPECT_EQ(object.ReferenceCount(), 2);
 	ref->Release();
 	EXPECT_EQ(ref->ReferenceCount(), 1);
+	object.Release();
+	EXPECT_EQ(object.ReferenceCount(), 1);
 }
 
-TEST(RefCountedObjectTestSuite, weak3) {
-	MockStrongObject * object = new MockStrongObject(3);
+TEST(RefCountedObjectTest, strong_release) {
+	MockStrongRefObject * object = new MockStrongRefObject(3);
+	EXPECT_EQ(object->ReferenceCount(), 1);
 	EXPECT_EQ(object->value_, 3);
-	delete object;
+	object->Release();
 }
 
-TEST(RefCountedObjectTestSuite, weak4) {
-	MockStrongObject * object = new MockStrongObject(4);
+TEST(RefCountedObjectTest, strong_del) {
+	MockStrongRefObject * object = new MockStrongRefObject(4);
+	EXPECT_EQ(object->ReferenceCount(), 1);
 	EXPECT_EQ(object->value_, 4);
-	Common::WeakReference * ref = object->WeakRef();
-	EXPECT_EQ(ref->ReferenceCount(), 2);
-	EXPECT_TRUE(ref->Get() == object);
-	Common::WeakReference * ref2 = object->WeakRef();
-	EXPECT_EQ(ref->ReferenceCount(), 3);
-	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
-	EXPECT_TRUE(ref->Get() == ref2->Get());
-	EXPECT_TRUE(ref2->Get() == object);
-	ref->Release();
-	ref2->Release();
 	delete object;
 }
 
-TEST(RefCountedObjectTestSuite, weak5) {
-	MockStrongObject * object = new MockStrongObject(5);
+TEST(RefCountedObjectTest, weak_inc) {
+	MockStrongRefObject * object = new MockStrongRefObject(5);
 	EXPECT_EQ(object->value_, 5);
-	Common::WeakReference * ref = object->WeakRef();
+	Common::WeakReference * ref = object->IncWeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
-	EXPECT_TRUE(ref->Get() == object);
-	Common::WeakReference * ref2 = object->WeakRef();
+	EXPECT_TRUE(ref->Lock() == object);
+	EXPECT_EQ(object->ReferenceCount(), 2);
+	Common::WeakReference * ref2 = object->IncWeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 3);
 	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
-	EXPECT_TRUE(ref->Get() == ref2->Get());
-	EXPECT_TRUE(ref2->Get() == object);
+	EXPECT_TRUE(ref->Lock() == ref2->Lock());
+	EXPECT_EQ(object->ReferenceCount(), 4);
+	EXPECT_TRUE(ref2->Lock() == object);
+	EXPECT_EQ(object->ReferenceCount(), 5);
 	ref->Release();
-	delete object;
 	ref2->Release();
+	delete object;
 }
 
-TEST(RefCountedObjectTestSuite, weak6) {
-	MockStrongObject * object = new MockStrongObject(6);
+TEST(RefCountedObjectTest, weak_release_after_delete) {
+	MockStrongRefObject * object = new MockStrongRefObject(6);
 	EXPECT_EQ(object->value_, 6);
-	Common::WeakReference * ref = object->WeakRef();
+	Common::WeakReference * ref = object->IncWeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
-	EXPECT_TRUE(ref->Get() == object);
-	Common::WeakReference * ref2 = object->WeakRef();
+	EXPECT_TRUE(ref->Lock() == object);
+	Common::WeakReference * ref2 = object->IncWeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 3);
 	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
-	EXPECT_TRUE(ref->Get() == ref2->Get());
-	EXPECT_TRUE(ref2->Get() == object);
+	EXPECT_TRUE(ref->Lock() == ref2->Lock());
+	EXPECT_TRUE(ref2->Lock() == object);
+	ref->Release();
+	delete object;
+	ref2->Release();
+}
+
+TEST(RefCountedObjectTest, weak_all_release_after_delete) {
+	MockStrongRefObject * object = new MockStrongRefObject(7);
+	EXPECT_EQ(object->value_, 7);
+	Common::WeakReference * ref = object->IncWeakRef();
+	EXPECT_EQ(ref->ReferenceCount(), 2);
+	EXPECT_TRUE(ref->Lock() == object);
+	Common::WeakReference * ref2 = object->IncWeakRef();
+	EXPECT_EQ(ref->ReferenceCount(), 3);
+	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
+	EXPECT_TRUE(ref->Lock() == ref2->Lock());
+	EXPECT_TRUE(ref2->Lock() == object);
 	delete object;
 	ref->Release();
 	ref2->Release();
 }
 
-TEST(RefCountedObjectTestSuite, weak7) {
-	MockStrongObject * object = new MockStrongObject(7);
-	EXPECT_EQ(object->value_, 7);
-	Common::WeakReference * ref = object->WeakRef();
+TEST(RefCountedObjectTest, weak_delete_after_release) {
+	MockStrongRefObject * object = new MockStrongRefObject(8);
+	EXPECT_EQ(object->value_, 8);
+	Common::WeakReference * ref = object->IncWeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
-	EXPECT_TRUE(ref->Get() == object);
-	Common::WeakReference * ref2 = object->WeakRef();
+	EXPECT_TRUE(ref->Lock() == object);
+	Common::WeakReference * ref2 = object->IncWeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 3);
 	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
-	EXPECT_TRUE(ref->Get() == ref2->Get());
-	EXPECT_TRUE(ref2->Get() == object);
+	EXPECT_TRUE(ref->Lock() == ref2->Lock());
+	EXPECT_TRUE(ref2->Lock() == object);
 	ref->Release();
 	ref2->Release();
 	delete object;

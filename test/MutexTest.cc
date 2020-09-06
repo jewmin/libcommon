@@ -21,6 +21,17 @@ void MutexTest_thread_task_scope(Common::CMutex * mutex, i32 * count, i32 * mute
 	}
 }
 
+void MutexTest_thread_task_try(Common::CMutex * mutex, i32 * count) {
+	if (mutex && mutex->TryLock()) {
+		i32 tmp = *count;
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		*count = tmp + 1;
+		mutex->Unlock();
+	} else {
+		std::printf("trylock false\n");
+	}
+}
+
 TEST(MutexTest, mutex) {
 	i32 count = 0;
 	Common::CMutex mutex;
@@ -32,7 +43,7 @@ TEST(MutexTest, mutex) {
 		t.join();
 	}
 	EXPECT_EQ(count, 5);
-	std::printf("count=%d\n", count);
+	std::printf("multithread mutex count=%d\n", count);
 }
 
 TEST(MutexTest, no_mutex) {
@@ -45,7 +56,7 @@ TEST(MutexTest, no_mutex) {
 		t.join();
 	}
 	EXPECT_NE(count, 5);
-	std::printf("count=%d\n", count);
+	std::printf("multithread no mutex count=%d\n", count);
 }
 
 TEST(MutexTest, scope) {
@@ -60,5 +71,19 @@ TEST(MutexTest, scope) {
 	}
 	EXPECT_NE(count, 5);
 	EXPECT_EQ(mutex_count, 5);
-	std::printf("count=%d mutex_count=%d\n", count, mutex_count);
+	std::printf("multithread scopedlock count=%d mutex_count=%d\n", count, mutex_count);
+}
+
+TEST(MutexTest, mutex_try) {
+	i32 count = 0;
+	Common::CMutex mutex;
+	std::thread threads[5];
+	for (i32 i = 0; i < 5; i++) {
+		threads[i] = std::thread(MutexTest_thread_task_try, &mutex, &count);
+	}
+	for (auto & t: threads) {
+		t.join();
+	}
+	EXPECT_LE(count, 5);
+	std::printf("multithread mutex try count=%d\n", count);
 }

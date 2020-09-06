@@ -28,7 +28,7 @@ MESSAGE(STATUS "WINDOWS:" ${WINDOWS})
 MESSAGE(STATUS "LINUX:" ${LINUX})
 
 # 添加源文件
-SET(all_srcs
+SET(common_srcs
 	${PROJECT_SOURCE_DIR}/src/Allocator.cc
 	${PROJECT_SOURCE_DIR}/src/CExpection.cc
 	${PROJECT_SOURCE_DIR}/src/CObject.cc
@@ -99,8 +99,8 @@ IF(VLD)
 ENDIF()
 
 # 生成静态库、动态库
-ADD_LIBRARY(common-static STATIC ${all_srcs})
-ADD_LIBRARY(common SHARED ${all_srcs})
+ADD_LIBRARY(common-static STATIC ${common_srcs})
+ADD_LIBRARY(common SHARED ${common_srcs})
 IF(WINDOWS)
 	TARGET_LINK_LIBRARIES(common ws2_32 iphlpapi psapi userenv)
 	TARGET_COMPILE_DEFINITIONS(common PRIVATE BUILDING_COMMON_SHARED)

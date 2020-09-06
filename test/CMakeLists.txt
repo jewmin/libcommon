@@ -8,13 +8,14 @@ PROJECT(unittest VERSION 1.0)
 SET(test_srcs
 	${PROJECT_SOURCE_DIR}/Main.cc
 	${PROJECT_SOURCE_DIR}/AllocatorTest.cc
+	${PROJECT_SOURCE_DIR}/CExpectionTest.cc
 	${PROJECT_SOURCE_DIR}/CObjectTest.cc
 	${PROJECT_SOURCE_DIR}/LocalTimeTest.cc
 	${PROJECT_SOURCE_DIR}/MutexTest.cc
 	${PROJECT_SOURCE_DIR}/RefCountedObjectTest.cc
+	${PROJECT_SOURCE_DIR}/StringTest.cc
 	${PROJECT_SOURCE_DIR}/ThreadTest.cc
 	${PROJECT_SOURCE_DIR}/TimeStampTest.cc
-	${PROJECT_SOURCE_DIR}/StringTest.cc
 )
 
 # 生成可执行文件

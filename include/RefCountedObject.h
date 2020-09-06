@@ -78,7 +78,7 @@ class WeakReference : public RefCountedObject {
 public:
 	virtual ~WeakReference() {}
 	
-	StrongRefObject * Get() const;
+	StrongRefObject * Lock() const;
 
 protected:
 	WeakReference() : object_(nullptr) {}
@@ -93,12 +93,12 @@ private:
 	StrongRefObject * object_;
 };
 
-class StrongRefObject : public CObject {
+class StrongRefObject : public RefCountedObject {
 public:
 	StrongRefObject() : weak_reference_(nullptr) {}
 	virtual ~StrongRefObject() { ClearWeakReferences(); }
 
-	WeakReference * WeakRef();
+	WeakReference * IncWeakRef();
 
 protected:
 	void ClearWeakReferences();
@@ -146,6 +146,7 @@ inline void RefCountedObject::Duplicate() const {
 }
 
 inline void RefCountedObject::Release() {
+	assert(counter_ > 0);
 	if (--counter_ == 0) {
 		delete this;
 	}
@@ -159,7 +160,10 @@ inline i32 RefCountedObject::ReferenceCount() const {
 //WeakReference
 //*********************************************************************
 
-inline StrongRefObject * WeakReference::Get() const {
+inline StrongRefObject * WeakReference::Lock() const {
+	if (object_) {
+		object_->Duplicate();
+	}
 	return object_;
 }
 
@@ -167,7 +171,7 @@ inline StrongRefObject * WeakReference::Get() const {
 //StrongRefObject
 //*********************************************************************
 
-inline WeakReference * StrongRefObject::WeakRef() {
+inline WeakReference * StrongRefObject::IncWeakRef() {
 	if (!weak_reference_) {
 		weak_reference_ = new WeakReference();
 		weak_reference_->object_ = this;
