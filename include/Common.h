@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef Common_INCLUDED
-#define Common_INCLUDED
+#ifndef Common_Common_INCLUDED
+#define Common_Common_INCLUDED
 
 // stl标准库头文件
 #include <new>

@@ -42,6 +42,19 @@ public:
 	i64 GetMilliSeconds() const;
 	i64 GetMicroSeconds() const;
 
+	bool operator==(const TimeStamp & other);
+	bool operator==(const TimeStamp & other) const;
+	bool operator!=(const TimeStamp & other);
+	bool operator!=(const TimeStamp & other) const;
+	bool operator<(const TimeStamp & other);
+	bool operator<(const TimeStamp & other) const;
+	bool operator<=(const TimeStamp & other);
+	bool operator<=(const TimeStamp & other) const;
+	bool operator>(const TimeStamp & other);
+	bool operator>(const TimeStamp & other) const;
+	bool operator>=(const TimeStamp & other);
+	bool operator>=(const TimeStamp & other) const;
+
 private:
 	i64 seconds_;
 	i64 micro_seconds_;
@@ -57,6 +70,54 @@ inline i64 TimeStamp::GetMilliSeconds() const {
 
 inline i64 TimeStamp::GetMicroSeconds() const {
 	return micro_seconds_;
+}
+
+inline bool TimeStamp::operator==(const TimeStamp & other) {
+	return (seconds_ == other.seconds_) && (micro_seconds_ == other.micro_seconds_);
+}
+
+inline bool TimeStamp::operator==(const TimeStamp & other) const {
+	return (seconds_ == other.seconds_) && (micro_seconds_ == other.micro_seconds_);
+}
+
+inline bool TimeStamp::operator!=(const TimeStamp & other) {
+	return (seconds_ != other.seconds_) || (micro_seconds_ != other.micro_seconds_);
+}
+
+inline bool TimeStamp::operator!=(const TimeStamp & other) const {
+	return (seconds_ != other.seconds_) || (micro_seconds_ != other.micro_seconds_);
+}
+
+inline bool TimeStamp::operator<(const TimeStamp & other) {
+	return (seconds_ < other.seconds_) || ((seconds_ == other.seconds_) && (micro_seconds_ < other.micro_seconds_));
+}
+
+inline bool TimeStamp::operator<(const TimeStamp & other) const {
+	return (seconds_ < other.seconds_) || ((seconds_ == other.seconds_) && (micro_seconds_ < other.micro_seconds_));
+}
+
+inline bool TimeStamp::operator<=(const TimeStamp & other) {
+	return (seconds_ < other.seconds_) || ((seconds_ == other.seconds_) && (micro_seconds_ <= other.micro_seconds_));
+}
+
+inline bool TimeStamp::operator<=(const TimeStamp & other) const {
+	return (seconds_ < other.seconds_) || ((seconds_ == other.seconds_) && (micro_seconds_ <= other.micro_seconds_));
+}
+
+inline bool TimeStamp::operator>(const TimeStamp & other) {
+	return (seconds_ > other.seconds_) || ((seconds_ == other.seconds_) && (micro_seconds_ > other.micro_seconds_));
+}
+
+inline bool TimeStamp::operator>(const TimeStamp & other) const {
+	return (seconds_ > other.seconds_) || ((seconds_ == other.seconds_) && (micro_seconds_ > other.micro_seconds_));
+}
+
+inline bool TimeStamp::operator>=(const TimeStamp & other) {
+	return (seconds_ > other.seconds_) || ((seconds_ == other.seconds_) && (micro_seconds_ >= other.micro_seconds_));
+}
+
+inline bool TimeStamp::operator>=(const TimeStamp & other) const {
+	return (seconds_ > other.seconds_) || ((seconds_ == other.seconds_) && (micro_seconds_ >= other.micro_seconds_));
 }
 
 }

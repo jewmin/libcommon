@@ -36,3 +36,63 @@ TEST(TimeStampTest, assign_ctor) {
 	EXPECT_EQ(s.GetMicroSeconds(), t.GetMicroSeconds());
 	std::printf("seconds: %lld, milliseconds: %lld, microseconds: %lld\n", t.GetSeconds(), t.GetMilliSeconds(), t.GetMicroSeconds());
 }
+
+TEST(TimeStampTest, eq_op) {
+	Common::TimeStamp s1(1234, 567890), s2(1234, 567890);
+	EXPECT_EQ(s1, s2);
+	EXPECT_LE(s1, s2);
+	EXPECT_GE(s1, s2);
+
+	EXPECT_TRUE(s1 == s2);
+	EXPECT_TRUE(s1 <= s2);
+	EXPECT_TRUE(s1 >= s2);
+}
+
+TEST(TimeStampTest, ne_op) {
+	Common::TimeStamp s1(1234, 567890), s2(1234, 567891), s3(1235, 567890);
+	EXPECT_NE(s1, s2);
+	EXPECT_NE(s2, s3);
+	EXPECT_NE(s1, s3);
+
+	EXPECT_TRUE(s1 != s2);
+	EXPECT_TRUE(s2 != s3);
+	EXPECT_TRUE(s1 != s3);
+}
+
+TEST(TimeStampTest, lt_op) {
+	Common::TimeStamp s1(1234, 567890), s2(1234, 567891), s3(1235, 567890);
+	EXPECT_LT(s1, s2);
+	EXPECT_LT(s2, s3);
+	EXPECT_LT(s1, s3);
+
+	EXPECT_LE(s1, s2);
+	EXPECT_LE(s2, s3);
+	EXPECT_LE(s1, s3);
+
+	EXPECT_TRUE(s1 < s2);
+	EXPECT_TRUE(s2 < s3);
+	EXPECT_TRUE(s1 < s3);
+
+	EXPECT_TRUE(s1 <= s2);
+	EXPECT_TRUE(s2 <= s3);
+	EXPECT_TRUE(s1 <= s3);
+}
+
+TEST(TimeStampTest, gt_op) {
+	Common::TimeStamp s1(1234, 567890), s2(1234, 567891), s3(1235, 567890);
+	EXPECT_GT(s2, s1);
+	EXPECT_GT(s3, s2);
+	EXPECT_GT(s3, s1);
+
+	EXPECT_GE(s2, s1);
+	EXPECT_GE(s3, s2);
+	EXPECT_GE(s3, s1);
+
+	EXPECT_TRUE(s2 > s1);
+	EXPECT_TRUE(s3 > s2);
+	EXPECT_TRUE(s3 > s1);
+
+	EXPECT_TRUE(s2 >= s1);
+	EXPECT_TRUE(s3 >= s2);
+	EXPECT_TRUE(s3 >= s1);
+}
