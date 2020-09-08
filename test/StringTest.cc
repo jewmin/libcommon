@@ -2,7 +2,7 @@
 #include "SDString.h"
 
 TEST(StringTest, hdr) {
-	EXPECT_EQ(Common::SDString::HdrSize(0), 0);
+	EXPECT_EQ(Common::SDString::HdrSize(0), static_cast<size_t>(0));
 	EXPECT_EQ(Common::SDString::HdrSize(SDS_TYPE_8), sizeof(struct Common::sdshdr8));
 	EXPECT_EQ(Common::SDString::HdrSize(SDS_TYPE_16), sizeof(struct Common::sdshdr16));
 	EXPECT_EQ(Common::SDString::HdrSize(SDS_TYPE_32), sizeof(struct Common::sdshdr32));
