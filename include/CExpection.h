@@ -39,7 +39,7 @@ public:
 	CExpection(const CExpection & other);
 	CExpection & operator=(CExpection && other);
 	CExpection & operator=(const CExpection & other);
-	~CExpection();
+	virtual ~CExpection();
 
 	virtual const i8 * What() const;
 
