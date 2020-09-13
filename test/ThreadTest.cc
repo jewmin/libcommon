@@ -37,16 +37,16 @@ TEST(ThreadTest, id) {
 
 TEST(ThreadTest, multi) {
 	MockThread * t[10];
-	for (i32 i = 0; i < 10; ++i) {
+	for (i32 i = 0; i < 10; i++) {
 		t[i] = new MockThread((i + 1) * 5);
 		t[i]->Start();
 	}
 	Common::CThread::Sleep(200);
-	for (i32 i = 0; i < 5; ++i) {
+	for (i32 i = 0; i < 5; i++) {
 		t[i]->Terminate();
 	}
 	Common::CThread::Sleep(300);
-	for (i32 i = 0; i < 10; ++i) {
+	for (i32 i = 0; i < 10; i++) {
 		delete t[i];
 	}
 }

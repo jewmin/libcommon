@@ -272,7 +272,7 @@ void SDString::TrimStartInline() {
 	size_t pos = 0;
 	size_t size = Size();
 	while (pos < size && std::isspace(sds_[pos])) {
-		++pos;
+		pos++;
 	}
 	RemoveAt(0, pos);
 }
@@ -293,7 +293,7 @@ void SDString::TrimEndInline() {
 	size_t size = Size();
 	size_t end = size;
 	while (end > 0 && std::isspace(sds_[end - 1])) {
-		--end;
+		end--;
 	}
 	RemoveAt(end, size - end);
 }

@@ -6,7 +6,7 @@ TEST(AllocatorTest, replace) {
 	jc_realloc_func test_realloc[2] = { nullptr, std::realloc };
 	jc_calloc_func test_calloc[2] = { nullptr, std::calloc };
 	jc_free_func test_free[2] = { nullptr, std::free };
-	for (i32 i = 0; i < 16; ++i) {
+	for (i32 i = 0; i < 16; i++) {
 		EXPECT_EQ(i == 15, jc_replace_allocator(test_malloc[i & 1], test_realloc[(i >> 1) & 1], test_calloc[(i >> 2) & 1], test_free[(i >> 3) & 1]));
 	}
 }
