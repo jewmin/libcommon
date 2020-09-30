@@ -553,7 +553,7 @@ TEST_F(CListTest, it) {
 }
 
 TEST_F(CListTest, cit) {
-	Common::TList<i32> * i_move_list = new Common::TList<i32>(std::move(i_list_));
+	const Common::TList<i32> * i_move_list = new Common::TList<i32>(std::move(i_list_));
 	Common::TList<i32>::ConstIterator it = i_move_list->Begin();
 	EXPECT_EQ(*it, i_move_list->Front());
 	for (i32 i = 0; i < i_move_list->Size(); i++) {
@@ -577,7 +577,7 @@ TEST_F(CListTest, oit) {
 }
 
 TEST_F(CListTest, ocit) {
-	Common::TList<CListTest_MockObject> * o_move_list = new Common::TList<CListTest_MockObject>(std::move(o_list_));
+	const Common::TList<CListTest_MockObject> * o_move_list = new Common::TList<CListTest_MockObject>(std::move(o_list_));
 	Common::TList<CListTest_MockObject>::ConstIterator it = o_move_list->Begin();
 	EXPECT_EQ(*it, o_move_list->Front());
 	for (i32 i = 0; i < o_move_list->Size(); i++) {

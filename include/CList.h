@@ -210,7 +210,7 @@ public:
 	Iterator Erase(Iterator it);
 
 protected:
-	void SetSize(i32 count);
+	// void SetSize(i32 count);
 	void IncSize(i32 count);
 	void DecSize(i32 count);
 	void FreeAllNode();
@@ -368,10 +368,10 @@ inline i32 TList<T>::Size() const {
 	return head_.count_;
 }
 
-template<typename T>
-inline void TList<T>::SetSize(i32 count) {
-	head_.count_ = count;
-}
+// template<typename T>
+// inline void TList<T>::SetSize(i32 count) {
+// 	head_.count_ = count;
+// }
 
 template<typename T>
 inline void TList<T>::IncSize(i32 count) {

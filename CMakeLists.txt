@@ -1,5 +1,5 @@
 # cmake版本
-CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
 
 # 项目名
 PROJECT(libcommon VERSION 1.0)
@@ -30,6 +30,18 @@ MESSAGE(STATUS "PROJECT_SOURCE_DIR:" ${PROJECT_SOURCE_DIR})
 
 # 添加源文件
 SET(srcs
+	${PROJECT_SOURCE_DIR}/include/Allocator.h
+	${PROJECT_SOURCE_DIR}/include/CExpection.h
+	${PROJECT_SOURCE_DIR}/include/CList.h
+	${PROJECT_SOURCE_DIR}/include/CObject.h
+	${PROJECT_SOURCE_DIR}/include/Common.h
+	${PROJECT_SOURCE_DIR}/include/LocalTime.h
+	${PROJECT_SOURCE_DIR}/include/Mutex.h
+	${PROJECT_SOURCE_DIR}/include/RefCountedObject.h
+	${PROJECT_SOURCE_DIR}/include/SDString.h
+	${PROJECT_SOURCE_DIR}/include/Thread.h
+	${PROJECT_SOURCE_DIR}/include/TimeStamp.h
+
 	${PROJECT_SOURCE_DIR}/src/Allocator.cc
 	${PROJECT_SOURCE_DIR}/src/CExpection.cc
 	${PROJECT_SOURCE_DIR}/src/CObject.cc
@@ -38,6 +50,9 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/src/Thread.cc
 	${PROJECT_SOURCE_DIR}/src/TimeStamp.cc
 )
+
+# 生成目录结构
+SOURCE_GROUP(TREE ${PROJECT_SOURCE_DIR} FILES ${srcs})
 
 # 设置输出目录
 SET(CMAKE_DEBUG_POSTFIX "d")
