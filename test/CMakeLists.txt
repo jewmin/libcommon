@@ -9,6 +9,7 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/Main.cc
 	${PROJECT_SOURCE_DIR}/AllocatorTest.cc
 	${PROJECT_SOURCE_DIR}/CExpectionTest.cc
+	${PROJECT_SOURCE_DIR}/CListTest.cc
 	${PROJECT_SOURCE_DIR}/CObjectTest.cc
 	${PROJECT_SOURCE_DIR}/LocalTimeTest.cc
 	${PROJECT_SOURCE_DIR}/MutexTest.cc

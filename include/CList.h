@@ -34,13 +34,45 @@ namespace Common {
 class CListNode : public CObject {
 public:
 	CListNode() : next_(nullptr), prev_(nullptr) {}
+	CListNode(CListNode * next, CListNode * prev): next_(next), prev_(prev) {}
 	virtual ~CListNode() {}
+	// 在指定node前插入
 	void Link(CListNode * node);
 	void Unlink();
 
-protected:
+private:
+	CListNode(CListNode &&) = delete;
+	CListNode(const CListNode &) = delete;
+	CListNode & operator=(CListNode &&) = delete;
+	CListNode & operator=(const CListNode &) = delete;
+
+public:
 	CListNode * next_;
 	CListNode * prev_;
+};
+
+class CListNodeHeader : public CListNode {
+public:
+	CListNodeHeader() : CListNode(this, this), count_(0) {}
+	CListNodeHeader(CListNodeHeader && other) : CListNode(other.next_, other.prev_), count_(other.count_) {
+		if (other.next_ == std::addressof(other)) {
+			next_ = prev_ = this;
+		} else {
+			next_->prev_ = prev_->next_ = this;
+			other.Init();
+		}
+	}
+	virtual ~CListNodeHeader() {}
+
+	void Init();
+
+private:
+	CListNodeHeader(const CListNodeHeader &) = delete;
+	CListNodeHeader & operator=(CListNodeHeader &&) = delete;
+	CListNodeHeader & operator=(const CListNodeHeader &) = delete;
+
+public:
+	i32 count_;
 };
 
 template<typename T>
@@ -50,12 +82,26 @@ public:
 	template<typename... Args> TListNode(Args &&... args) : data_(std::forward<Args>(args)...) {}
 	virtual ~TListNode() {}
 
-protected:
+private:
+	TListNode(TListNode &&) = delete;
+	TListNode(const TListNode &) = delete;
+	TListNode & operator=(TListNode &&) = delete;
+	TListNode & operator=(const TListNode &) = delete;
+
+public:
 	T data_;
 };
 
 template<typename T>
+class TList;
+
+template<typename T>
+class TListConstIterator;
+
+template<typename T>
 class TListIterator : public CObject {
+	friend class TList<T>;
+	friend class TListConstIterator<T>;
 	typedef TListIterator<T>	Self;
 	typedef TListNode<T>		Node;
 	typedef T					Value;
@@ -65,6 +111,13 @@ class TListIterator : public CObject {
 public:
 	TListIterator() : node_(nullptr) {}
 	explicit TListIterator(CListNode * node) : node_(node) {}
+	TListIterator(const TListIterator & other) : node_(other.node_) {}
+	TListIterator & operator=(const TListIterator & other) {
+		if (this != std::addressof(other)) {
+			node_ = other.node_;
+		}
+		return *this;
+	}
 
 	Reference operator*() const;
 	Pointer operator->() const;
@@ -81,6 +134,7 @@ private:
 
 template<typename T>
 class TListConstIterator : public CObject {
+	friend class TList<T>;
 	typedef TListConstIterator<T>	Self;
 	typedef const TListNode<T>		Node;
 	typedef TListIterator<T>		Iterator;
@@ -92,6 +146,13 @@ public:
 	TListConstIterator() : node_(nullptr) {}
 	explicit TListConstIterator(const CListNode * node) : node_(node) {}
 	TListConstIterator(const Iterator & iter) : node_(iter.node_) {}
+	TListConstIterator(const TListConstIterator & other) : node_(other.node_) {}
+	TListConstIterator & operator=(const TListConstIterator & other) {
+		if (this != std::addressof(other)) {
+			node_ = other.node_;
+		}
+		return *this;
+	}
 
 	Reference operator*() const;
 	Pointer operator->() const;
@@ -107,25 +168,8 @@ private:
 };
 
 template<typename T>
-class CList : public CObject {
-	typedef TListNode<T> Node;
-
+class TList : public CObject {
 public:
-	CList() { Init(); }
-	~CList() { Clear(); }
-
-protected:
-	void Init();
-	void Clear();
-	Node * Alloc();
-	void Free(Node * node);
-
-protected:
-	CListNode node_;
-};
-
-template<typename T>
-class TList : public CList {
 	typedef T						Value;
 	typedef TListNode<T>			Node;
 	typedef T *						Pointer;
@@ -136,14 +180,56 @@ class TList : public CList {
 	typedef TListConstIterator<T>	ConstIterator;
 
 public:
+	TList() {}
+	TList(TList && other) : head_(std::move(other.head_)) {}
+	~TList() { FreeAllNode(); }
+
+	i32 Size() const;
+	bool Empty() const;
+	void Clear();
+
+	Iterator Begin();
+	ConstIterator Begin() const;
+	Iterator End();
+	ConstIterator End() const;
+	Reference Front();
+	ConstReference Front() const;
+	Reference Back();
+	ConstReference Back() const;
+
+	void PushFront(const Value & value);
+	void PushFront(Value && value);
+	template<typename... Args> void EmplaceFront(Args &&... args);
+	void PopFront();
+
+	void PushBack(const Value & value);
+	void PushBack(Value && value);
+	template<typename... Args> void EmplaceBack(Args &&... args);
+	void PopBack();
+
+	Iterator Erase(Iterator it);
 
 protected:
+	void SetSize(i32 count);
+	void IncSize(i32 count);
+	void DecSize(i32 count);
+	void FreeAllNode();
+	Node * AllocNode();
+	void FreeNode(Node * node);
 	Node * CreateNode(const Value & value);
-	template<typename... Args>
-	Node * CreateNode(Args &&... args);
+	template<typename... Args> Node * CreateNode(Args &&... args);
+	void DestroyNode(Node * node);
+	void InsertNode(Iterator it, const Value & value);
+	template<typename... Args> void InsertNode(Iterator it, Args &&... args);
+	void EraseNode(Iterator it);
 
 private:
+	TList(const TList &) = delete;
+	TList & operator=(TList &&) = delete;
+	TList & operator=(const TList &) = delete;
 
+private:
+	CListNodeHeader head_;
 };
 
 //*********************************************************************
@@ -165,40 +251,49 @@ inline void CListNode::Unlink() {
 }
 
 //*********************************************************************
+//CListNodeHeader
+//*********************************************************************
+
+inline void CListNodeHeader::Init() {
+	next_ = prev_ = this;
+	count_ = 0;
+}
+
+//*********************************************************************
 //TListIterator
 //*********************************************************************
 
 template<typename T>
-inline TListIterator<T>::Reference TListIterator<T>::operator*() const {
+inline typename TListIterator<T>::Reference TListIterator<T>::operator*() const {
 	return static_cast<Node *>(node_)->data_;
 }
 
 template<typename T>
-inline TListIterator<T>::Pointer TListIterator<T>::operator->() const {
+inline typename TListIterator<T>::Pointer TListIterator<T>::operator->() const {
 	return std::addressof(static_cast<Node *>(node_)->data_);
 }
 
 template<typename T>
-inline TListIterator<T>::Self & TListIterator<T>::operator++() {
+inline typename TListIterator<T>::Self & TListIterator<T>::operator++() {
 	node_ = node_->next_;
 	return *this;
 }
 
 template<typename T>
-inline TListIterator<T>::Self TListIterator<T>::operator++(i32) {
+inline typename TListIterator<T>::Self TListIterator<T>::operator++(i32) {
 	Self tmp = *this;
 	node_ = node_->next_;
 	return tmp;
 }
 
 template<typename T>
-inline TListIterator<T>::Self & TListIterator<T>::operator--() {
+inline typename TListIterator<T>::Self & TListIterator<T>::operator--() {
 	node_ = node_->prev_;
 	return *this;
 }
 
 template<typename T>
-inline TListIterator<T>::Self TListIterator<T>::operator--(i32) {
+inline typename TListIterator<T>::Self TListIterator<T>::operator--(i32) {
 	Self tmp = *this;
 	node_ = node_->prev_;
 	return tmp;
@@ -219,36 +314,36 @@ inline bool TListIterator<T>::operator!=(const Self & other) const {
 //*********************************************************************
 
 template<typename T>
-inline TListConstIterator<T>::Reference TListConstIterator<T>::operator*() const {
+inline typename TListConstIterator<T>::Reference TListConstIterator<T>::operator*() const {
 	return static_cast<Node *>(node_)->data_;
 }
 
 template<typename T>
-inline TListConstIterator<T>::Pointer TListConstIterator<T>::operator->() const {
+inline typename TListConstIterator<T>::Pointer TListConstIterator<T>::operator->() const {
 	return std::addressof(static_cast<Node *>(node_)->data_);
 }
 
 template<typename T>
-inline TListConstIterator<T>::Self & TListConstIterator<T>::operator++() {
+inline typename TListConstIterator<T>::Self & TListConstIterator<T>::operator++() {
 	node_ = node_->next_;
 	return *this;
 }
 
 template<typename T>
-inline TListConstIterator<T>::Self TListConstIterator<T>::operator++(i32) {
+inline typename TListConstIterator<T>::Self TListConstIterator<T>::operator++(i32) {
 	Self tmp = *this;
 	node_ = node_->next_;
 	return tmp;
 }
 
 template<typename T>
-inline TListConstIterator<T>::Self & TListConstIterator<T>::operator--() {
+inline typename TListConstIterator<T>::Self & TListConstIterator<T>::operator--() {
 	node_ = node_->prev_;
 	return *this;
 }
 
 template<typename T>
-inline TListConstIterator<T>::Self TListConstIterator<T>::operator--(i32) {
+inline typename TListConstIterator<T>::Self TListConstIterator<T>::operator--(i32) {
 	Self tmp = *this;
 	node_ = node_->prev_;
 	return tmp;
@@ -265,34 +360,196 @@ inline bool TListConstIterator<T>::operator!=(const Self & other) const {
 }
 
 //*********************************************************************
-//CList
+//TList
 //*********************************************************************
 
 template<typename T>
-inline void CList<T>::Init() {
-	node_.next_ = &node_;
-	node_.prev_ = &node_;
+inline i32 TList<T>::Size() const {
+	return head_.count_;
 }
 
 template<typename T>
-inline void CList<T>::Clear() {
-	Node * cur = static_cast<Node *>(node_.next_);
-	while (cur != &node_) {
-		Node * tmp = cur;
-		cur = static_cast<Node *>(cur->next_);
-		tmp->~TListNode();
-		Free(tmp);
+inline void TList<T>::SetSize(i32 count) {
+	head_.count_ = count;
+}
+
+template<typename T>
+inline void TList<T>::IncSize(i32 count) {
+	head_.count_ += count;
+}
+
+template<typename T>
+inline void TList<T>::DecSize(i32 count) {
+	head_.count_ -= count;
+}
+
+template<typename T>
+inline bool TList<T>::Empty() const {
+	return head_.next_ == &head_;
+}
+
+template<typename T>
+inline void TList<T>::Clear() {
+	FreeAllNode();
+	head_.Init();
+}
+
+template<typename T>
+inline typename TList<T>::Iterator TList<T>::Begin() {
+	return Iterator(head_.next_);
+}
+
+template<typename T>
+inline typename TList<T>::ConstIterator TList<T>::Begin() const {
+	return ConstIterator(head_.next_);
+}
+
+template<typename T>
+inline typename TList<T>::Iterator TList<T>::End() {
+	return Iterator(&head_);
+}
+
+template<typename T>
+inline typename TList<T>::ConstIterator TList<T>::End() const {
+	return ConstIterator(&head_);
+}
+
+template<typename T>
+inline typename TList<T>::Reference TList<T>::Front() {
+	return *Begin();
+}
+
+template<typename T>
+inline typename TList<T>::ConstReference TList<T>::Front() const {
+	return *Begin();
+}
+
+template<typename T>
+inline typename TList<T>::Reference TList<T>::Back() {
+	Iterator tmp(End());
+	--tmp;
+	return *tmp;
+}
+
+template<typename T>
+inline typename TList<T>::ConstReference TList<T>::Back() const {
+	ConstIterator tmp(End());
+	--tmp;
+	return *tmp;
+}
+
+template<typename T>
+inline void TList<T>::PushFront(const Value & value) {
+	InsertNode(Begin(), value);
+}
+
+template<typename T>
+inline void TList<T>::PushFront(Value && value) {
+	InsertNode(Begin(), std::move(value));
+}
+
+template<typename T>
+template<typename... Args>
+inline void TList<T>::EmplaceFront(Args &&... args) {
+	InsertNode(Begin(), std::forward<Args>(args)...);
+}
+
+template<typename T>
+inline void TList<T>::PopFront() {
+	EraseNode(Begin());
+}
+
+template<typename T>
+inline void TList<T>::PushBack(const Value & value) {
+	InsertNode(End(), value);
+}
+
+template<typename T>
+inline void TList<T>::PushBack(Value && value) {
+	InsertNode(End(), std::move(value));
+}
+
+template<typename T>
+template<typename... Args>
+inline void TList<T>::EmplaceBack(Args &&... args) {
+	InsertNode(End(), std::forward<Args>(args)...);
+}
+
+template<typename T>
+inline void TList<T>::PopBack() {
+	EraseNode(Iterator(head_.prev_));
+}
+
+template<typename T>
+inline typename TList<T>::Iterator TList<T>::Erase(Iterator it) {
+	Iterator next(it.node_->next_);
+	EraseNode(it);
+	return next;
+}
+
+template<typename T>
+inline void TList<T>::FreeAllNode() {
+	CListNode * cur = head_.next_;
+	while (cur != &head_) {
+		Node * tmp = static_cast<Node *>(cur);
+		cur = cur->next_;
+		DestroyNode(tmp);
+		FreeNode(tmp);
 	}
 }
 
 template<typename T>
-inline CList<T>::Node * CList<T>::Alloc() {
+inline typename TList<T>::Node * TList<T>::AllocNode() {
 	return static_cast<Node *>(jc_malloc(sizeof(Node)));
 }
 
 template<typename T>
-inline void CList<T>::Free(Node * node) {
+inline void TList<T>::FreeNode(Node * node) {
 	jc_free(node);
+}
+
+template<typename T>
+inline typename TList<T>::Node * TList<T>::CreateNode(const Value & value) {
+	Node * node = AllocNode();
+	new(node)Node(value);
+	return node;
+}
+
+template<typename T>
+template<typename... Args>
+inline typename TList<T>::Node * TList<T>::CreateNode(Args &&... args) {
+	Node * node = AllocNode();
+	new(node)Node(std::forward<Args>(args)...);
+	return node;
+}
+
+template<typename T>
+inline void TList<T>::DestroyNode(Node * node) {
+	node->~TListNode();
+}
+
+template<typename T>
+inline void TList<T>::InsertNode(Iterator it, const Value & value) {
+	Node * node = CreateNode(value);
+	node->Link(it.node_);
+	IncSize(1);
+}
+
+template<typename T>
+template<typename... Args>
+inline void TList<T>::InsertNode(Iterator it, Args &&... args) {
+	Node * node = CreateNode(std::forward<Args>(args)...);
+	node->Link(it.node_);
+	IncSize(1);
+}
+
+template<typename T>
+inline void TList<T>::EraseNode(Iterator it) {
+	DecSize(1);
+	it.node_->Unlink();
+	Node * tmp = static_cast<Node *>(it.node_);
+	DestroyNode(tmp);
+	FreeNode(tmp);
 }
 
 }
