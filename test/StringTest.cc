@@ -385,6 +385,13 @@ TEST(StringTest, format) {
 	std::printf("%s\n", *s);
 }
 
+TEST(StringTest, format_sds) {
+	Common::SDString a("1234567890"), b("abcdefg");
+	Common::SDString s = Common::SDString::Format("%s %d %lld %s", *a, 1234567890, 9876543210, *b);
+	EXPECT_STREQ(*s, "1234567890 1234567890 9876543210 abcdefg");
+	std::printf("%s\n", *s);
+}
+
 TEST(StringTest, renew_format) {
 	i8 buf[1200];
 	std::memset(buf, 'b', sizeof(buf) - 1);
@@ -499,4 +506,22 @@ TEST(StringTest, gt_op) {
 	EXPECT_GE(s, s1);
 	EXPECT_TRUE(s >= "123456789");
 	EXPECT_TRUE(s >= Common::SDString("123456789"));
+}
+
+TEST(StringTest, find) {
+	Common::SDString s("abccababcdabcdef");
+	size_t pos = s.Find("abcd");
+	EXPECT_EQ(pos, static_cast<size_t>(6));
+	pos = s.Find("abc", pos + 4);
+	EXPECT_EQ(pos, static_cast<size_t>(10));
+}
+
+TEST(StringTest, find_error) {
+	Common::SDString s("abccababcdabcdef");
+	size_t pos = s.Find(nullptr);
+	EXPECT_EQ(pos, Common::SDString::npos);
+	pos = s.Find("");
+	EXPECT_EQ(pos, Common::SDString::npos);
+	pos = s.Find("hijklmn");
+	EXPECT_EQ(pos, Common::SDString::npos);
 }

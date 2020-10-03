@@ -310,4 +310,27 @@ SDString SDString::TrimEnd() && {
 	return s;
 }
 
+size_t SDString::Find(const i8 * s, size_t pos) const {
+	if (!s) {
+		return npos;
+	}
+	size_t size = std::strlen(s);
+	if (0 == size) {
+		return npos;
+	}
+	return Find(s, pos, size);
+}
+
+size_t SDString::Find(const i8 * s, size_t pos, size_t n) const {
+	size_t size = Size();
+	size_t xpos = pos;
+	const i8 * data = sds_;
+	for (; xpos + n <= size; xpos++) {
+		if (std::strncmp(data + xpos, s, n) == 0) {
+			return xpos;
+		}
+	}
+	return npos;
+}
+
 }
