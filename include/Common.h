@@ -61,6 +61,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <limits.h>
 
 // 标准描述符
 #ifndef STDIN_FILENO
@@ -85,6 +86,10 @@ typedef unsigned char		u8;
 typedef unsigned short		u16;
 typedef unsigned int		u32;
 typedef unsigned long long	u64;
+
+#ifdef _WIN32
+typedef i32					mode_t;
+#endif
 
 // 动态库
 #ifdef _WIN32
