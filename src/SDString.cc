@@ -333,4 +333,29 @@ size_t SDString::Find(const i8 * s, size_t pos, size_t n) const {
 	return npos;
 }
 
+size_t SDString::RFind(const i8 * s, size_t pos) const {
+	if (!s) {
+		return npos;
+	}
+	size_t size = std::strlen(s);
+	if (0 == size) {
+		return npos;
+	}
+	return RFind(s, pos, size);
+}
+
+size_t SDString::RFind(const i8 * s, size_t pos, size_t n) const {
+	size_t size = Size();
+	if (n <= size) {
+		size_t xpos = std::min(size - n, pos);
+		const i8 * data = sds_;
+		do {
+			if (std::strncmp(data + xpos, s, n) == 0) {
+				return xpos;
+			}
+		} while (xpos-- > 0);
+	}
+	return npos;
+}
+
 }

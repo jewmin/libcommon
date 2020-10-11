@@ -88,6 +88,7 @@ public:
 	void RemoveAt(size_t pos, size_t count = 1);
 	SDString SubStr(const size_t pos = 0, size_t count = SDString::npos) const;
 	size_t Find(const i8 * s, size_t pos = 0) const;
+	size_t RFind(const i8 * s, size_t pos = SDString::npos) const;
 
 	void TrimStartAndEndInline();
 	SDString TrimStartAndEnd() const &;
@@ -158,6 +159,7 @@ protected:
 	u8 Type(const size_t count) const;
 	void SetSize(const size_t count);
 	size_t Find(const i8 * s, size_t pos, size_t n) const;
+	size_t RFind(const i8 * s, size_t pos, size_t n) const;
 
 private:
 	i8 * NewSDS(const size_t count);
