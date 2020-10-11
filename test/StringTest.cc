@@ -519,33 +519,33 @@ TEST(StringTest, find) {
 TEST(StringTest, find_error) {
 	Common::SDString s("abccababcdabcdef");
 	size_t pos = s.Find(nullptr);
-	EXPECT_EQ(pos, Common::SDString::npos);
+	EXPECT_EQ(pos, static_cast<size_t>(Common::SDString::npos));
 	pos = s.Find("");
-	EXPECT_EQ(pos, Common::SDString::npos);
+	EXPECT_EQ(pos, static_cast<size_t>(Common::SDString::npos));
 	pos = s.Find("hijklmn");
-	EXPECT_EQ(pos, Common::SDString::npos);
+	EXPECT_EQ(pos, static_cast<size_t>(Common::SDString::npos));
 }
 
 TEST(StringTest, rfind) {
 	Common::SDString s("mavericks, santa cruz");
 	size_t pos = s.RFind(nullptr);
-	EXPECT_EQ(pos, Common::SDString::npos);
+	EXPECT_EQ(pos, static_cast<size_t>(Common::SDString::npos));
 	pos = s.RFind("");
-	EXPECT_EQ(pos, Common::SDString::npos);
+	EXPECT_EQ(pos, static_cast<size_t>(Common::SDString::npos));
 	pos = s.RFind("abcdefghijklmnopqrstuv");
-	EXPECT_EQ(pos, Common::SDString::npos);
+	EXPECT_EQ(pos, static_cast<size_t>(Common::SDString::npos));
 	pos = s.RFind(*s);
-	EXPECT_EQ(pos, 0);
+	EXPECT_EQ(pos, static_cast<size_t>(0));
 	pos = s.RFind(*s, 4);
-	EXPECT_EQ(pos, 0);
+	EXPECT_EQ(pos, static_cast<size_t>(0));
 	pos = s.RFind("mave", 3);
-	EXPECT_EQ(pos, 0);
+	EXPECT_EQ(pos, static_cast<size_t>(0));
 	pos = s.RFind("mave");
-	EXPECT_EQ(pos, 0);
+	EXPECT_EQ(pos, static_cast<size_t>(0));
 	pos = s.RFind("s, s");
-	EXPECT_EQ(pos, 8);
+	EXPECT_EQ(pos, static_cast<size_t>(8));
 	pos = s.RFind("s, s", 3);
-	EXPECT_EQ(pos, Common::SDString::npos);
+	EXPECT_EQ(pos, static_cast<size_t>(Common::SDString::npos));
 	pos = s.RFind("s, s", 12);
-	EXPECT_EQ(pos, 8);
+	EXPECT_EQ(pos, static_cast<size_t>(8));
 }
