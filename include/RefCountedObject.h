@@ -30,10 +30,10 @@
 
 namespace Common {
 
-class RefCounter : public CObject {
+class COMMON_EXTERN RefCounter : public CObject {
 public:
-	RefCounter() : counter_(1) {}
-	~RefCounter() {}
+	RefCounter();
+	~RefCounter();
 
 	i32 operator++();
 	i32 operator++(i32);
@@ -51,16 +51,16 @@ private:
 	mutable std::atomic<i32> counter_;
 };
 
-class RefCountedObject : public CObject {
+class COMMON_EXTERN RefCountedObject : public CObject {
 public:
-	virtual ~RefCountedObject() {}
+	virtual ~RefCountedObject();
 
 	void Duplicate() const;
 	void Release();
 	i32 ReferenceCount() const;
 
 protected:
-	RefCountedObject() {}
+	RefCountedObject();
 
 private:
 	RefCountedObject(RefCountedObject &&) = delete;
@@ -73,15 +73,15 @@ private:
 };
 
 class StrongRefObject;
-class WeakReference : public RefCountedObject {
+class COMMON_EXTERN WeakReference : public RefCountedObject {
 	friend class StrongRefObject;
 public:
-	virtual ~WeakReference() {}
+	virtual ~WeakReference();
 	
 	StrongRefObject * Lock() const;
 
 protected:
-	WeakReference() : object_(nullptr) {}
+	WeakReference();
 
 private:
 	WeakReference(WeakReference &&) = delete;
@@ -93,10 +93,10 @@ private:
 	StrongRefObject * object_;
 };
 
-class StrongRefObject : public RefCountedObject {
+class COMMON_EXTERN StrongRefObject : public RefCountedObject {
 public:
-	StrongRefObject() : weak_reference_(nullptr) {}
-	virtual ~StrongRefObject() { ClearWeakReferences(); }
+	StrongRefObject();
+	virtual ~StrongRefObject();
 
 	WeakReference * IncWeakRef();
 
@@ -165,27 +165,6 @@ inline StrongRefObject * WeakReference::Lock() const {
 		object_->Duplicate();
 	}
 	return object_;
-}
-
-//*********************************************************************
-//StrongRefObject
-//*********************************************************************
-
-inline WeakReference * StrongRefObject::IncWeakRef() {
-	if (!weak_reference_) {
-		weak_reference_ = new WeakReference();
-		weak_reference_->object_ = this;
-	}
-	weak_reference_->Duplicate();
-	return weak_reference_;
-}
-
-inline void StrongRefObject::ClearWeakReferences() {
-	if (weak_reference_) {
-		weak_reference_->object_ = nullptr;
-		weak_reference_->Release();
-		weak_reference_ = nullptr;
-	}
 }
 
 }

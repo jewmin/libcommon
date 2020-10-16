@@ -46,6 +46,7 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/src/CExpection.cc
 	${PROJECT_SOURCE_DIR}/src/CObject.cc
 	${PROJECT_SOURCE_DIR}/src/LocalTime.cc
+	${PROJECT_SOURCE_DIR}/src/RefCountedObject.cc
 	${PROJECT_SOURCE_DIR}/src/SDString.cc
 	${PROJECT_SOURCE_DIR}/src/Thread.cc
 	${PROJECT_SOURCE_DIR}/src/TimeStamp.cc
