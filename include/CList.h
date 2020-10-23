@@ -254,9 +254,9 @@ public:
 	Pointer Next(CListNode * node);
 	Pointer Prev(CListNode * node);
 
-	void PushFront(ConstPointer node);
+	void PushFront(Pointer node);
 	Pointer PopFront();
-	void PushBack(ConstPointer node);
+	void PushBack(Pointer node);
 	Pointer PopBack();
 
 protected:
@@ -639,7 +639,7 @@ inline typename CList<T>::Pointer CList<T>::Prev(CListNode * node) {
 }
 
 template<typename T>
-inline void CList<T>::PushFront(ConstPointer node) {
+inline void CList<T>::PushFront(Pointer node) {
 	InsertNode(head_.next_, node);
 }
 
@@ -649,7 +649,7 @@ inline typename CList<T>::Pointer CList<T>::PopFront() {
 }
 
 template<typename T>
-inline void CList<T>::PushBack(ConstPointer node) {
+inline void CList<T>::PushBack(Pointer node) {
 	InsertNode(&head_, node);
 }
 
