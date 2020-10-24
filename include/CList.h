@@ -242,6 +242,21 @@ public:
 	typedef const T &	ConstReference;
 
 public:
+	class BaseNode : public CListNode {
+		friend class CList;
+	public:
+		BaseNode() : lst_(nullptr) {}
+		virtual ~BaseNode() { RemoveFromList(); }
+
+		void RemoveFromList();
+		Pointer Next();
+		Pointer Prev();
+
+	private:
+		CList * lst_;
+	};
+
+public:
 	CList() {}
 	CList(CList && other) : head_(std::move(other.head_)) {}
 	~CList() {}
@@ -251,8 +266,6 @@ public:
 
 	Pointer Front();
 	Pointer Back();
-	Pointer Next(CListNode * node);
-	Pointer Prev(CListNode * node);
 
 	void PushFront(Pointer node);
 	Pointer PopFront();
@@ -262,8 +275,8 @@ public:
 protected:
 	void IncSize(i32 count);
 	void DecSize(i32 count);
-	void InsertNode(CListNode * before, CListNode * node);
-	CListNode * EraseNode(CListNode * node);
+	void InsertNode(CListNode * before, BaseNode * node);
+	BaseNode * EraseNode(BaseNode * node);
 
 private:
 	CList(const CList &) = delete;
@@ -595,6 +608,27 @@ inline void TList<T>::EraseNode(Iterator it) {
 }
 
 //*********************************************************************
+//BaseNode
+//*********************************************************************
+
+template<typename T>
+inline void CList<T>::BaseNode::RemoveFromList() {
+	if (lst_) {
+		lst_->EraseNode(this);
+	}
+}
+
+template<typename T>
+inline typename CList<T>::Pointer CList<T>::BaseNode::Next() {
+	return (!lst_ || next_ == &lst_->head_) ? nullptr : static_cast<Pointer>(next_);
+}
+
+template<typename T>
+inline typename CList<T>::Pointer CList<T>::BaseNode::Prev() {
+	return (!lst_ || prev_ == &lst_->head_) ? nullptr : static_cast<Pointer>(prev_);
+}
+
+//*********************************************************************
 //CList
 //*********************************************************************
 
@@ -620,54 +654,48 @@ inline bool CList<T>::Empty() const {
 
 template<typename T>
 inline typename CList<T>::Pointer CList<T>::Front() {
-	return Empty() ? nullptr : static_cast<Pointer>(head_.next_);
+	return Empty() ? nullptr : dynamic_cast<Pointer>(head_.next_);
 }
 
 template<typename T>
 inline typename CList<T>::Pointer CList<T>::Back() {
-	return Empty() ? nullptr : static_cast<Pointer>(head_.prev_);
-}
-
-template<typename T>
-inline typename CList<T>::Pointer CList<T>::Next(CListNode * node) {
-	return (!node || node->next_ == &head_) ? nullptr : static_cast<Pointer>(node->next_);
-}
-
-template<typename T>
-inline typename CList<T>::Pointer CList<T>::Prev(CListNode * node) {
-	return (!node || node->prev_ == &head_) ? nullptr : static_cast<Pointer>(node->prev_);
+	return Empty() ? nullptr : dynamic_cast<Pointer>(head_.prev_);
 }
 
 template<typename T>
 inline void CList<T>::PushFront(Pointer node) {
+	node->RemoveFromList();
 	InsertNode(head_.next_, node);
 }
 
 template<typename T>
 inline typename CList<T>::Pointer CList<T>::PopFront() {
-	return static_cast<Pointer>(EraseNode(head_.next_));
+	return static_cast<Pointer>(EraseNode(dynamic_cast<BaseNode *>(head_.next_)));
 }
 
 template<typename T>
 inline void CList<T>::PushBack(Pointer node) {
+	node->RemoveFromList();
 	InsertNode(&head_, node);
 }
 
 template<typename T>
 inline typename CList<T>::Pointer CList<T>::PopBack() {
-	return static_cast<Pointer>(EraseNode(head_.prev_));
+	return static_cast<Pointer>(EraseNode(dynamic_cast<BaseNode *>(head_.prev_)));
 }
 
 template<typename T>
-inline void CList<T>::InsertNode(CListNode * before, CListNode * node) {
+inline void CList<T>::InsertNode(CListNode * before, BaseNode * node) {
 	node->Link(before);
+	node->lst_ = this;
 	IncSize(1);
 }
 
 template<typename T>
-inline CListNode * CList<T>::EraseNode(CListNode * node) {
+inline typename CList<T>::BaseNode * CList<T>::EraseNode(BaseNode * node) {
 	DecSize(1);
 	node->Unlink();
+	node->lst_ = nullptr;
 	return node;
 }
 

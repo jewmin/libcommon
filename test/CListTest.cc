@@ -645,7 +645,7 @@ TEST_F(TListTest, oerase) {
 	}
 }
 
-class CListTest_MockNode : public Common::CListNode {
+class CListTest_MockNode : public Common::CList<CListTest_MockNode>::BaseNode {
 public:
 	CListTest_MockNode(const i8 * value) : value_(value) {}
 	virtual ~CListTest_MockNode() {}
@@ -658,10 +658,11 @@ TEST(CListTest, ctor) {
 	EXPECT_EQ(lst.Empty(), true);
 	EXPECT_TRUE(lst.Front() == nullptr);
 	EXPECT_TRUE(lst.Back() == nullptr);
-	EXPECT_TRUE(lst.Next(lst.Front()) == nullptr);
-	EXPECT_TRUE(lst.Prev(lst.Front()) == nullptr);
-	EXPECT_TRUE(lst.Next(lst.Back()) == nullptr);
-	EXPECT_TRUE(lst.Prev(lst.Back()) == nullptr);
+
+	CListTest_MockNode * n1 = new CListTest_MockNode("a");
+	EXPECT_TRUE(n1->Next() == nullptr);
+	EXPECT_TRUE(n1->Prev() == nullptr);
+	delete n1;
 }
 
 TEST(CListTest, push) {
@@ -673,10 +674,10 @@ TEST(CListTest, push) {
 	EXPECT_EQ(lst.Empty(), false);
 	EXPECT_TRUE(lst.Front() == n1);
 	EXPECT_TRUE(lst.Back() == n1);
-	EXPECT_TRUE(lst.Next(lst.Front()) == nullptr);
-	EXPECT_TRUE(lst.Prev(lst.Front()) == nullptr);
-	EXPECT_TRUE(lst.Next(lst.Back()) == nullptr);
-	EXPECT_TRUE(lst.Prev(lst.Back()) == nullptr);
+	EXPECT_TRUE(lst.Front()->Next() == nullptr);
+	EXPECT_TRUE(lst.Front()->Prev() == nullptr);
+	EXPECT_TRUE(lst.Back()->Next() == nullptr);
+	EXPECT_TRUE(lst.Back()->Prev() == nullptr);
 
 	// h -> n2 -> n1
 	CListTest_MockNode * n2 = new CListTest_MockNode("b");
@@ -685,10 +686,10 @@ TEST(CListTest, push) {
 	EXPECT_EQ(lst.Empty(), false);
 	EXPECT_TRUE(lst.Front() == n2);
 	EXPECT_TRUE(lst.Back() == n1);
-	EXPECT_TRUE(lst.Next(lst.Front()) == n1);
-	EXPECT_TRUE(lst.Prev(lst.Front()) == nullptr);
-	EXPECT_TRUE(lst.Next(lst.Back()) == nullptr);
-	EXPECT_TRUE(lst.Prev(lst.Back()) == n2);
+	EXPECT_TRUE(lst.Front()->Next() == n1);
+	EXPECT_TRUE(lst.Front()->Prev() == nullptr);
+	EXPECT_TRUE(lst.Back()->Next() == nullptr);
+	EXPECT_TRUE(lst.Back()->Prev() == n2);
 
 	// h -> n2 -> n1 -> n3
 	CListTest_MockNode * n3 = new CListTest_MockNode("c");
@@ -697,10 +698,10 @@ TEST(CListTest, push) {
 	EXPECT_EQ(lst.Empty(), false);
 	EXPECT_TRUE(lst.Front() == n2);
 	EXPECT_TRUE(lst.Back() == n3);
-	EXPECT_TRUE(lst.Next(lst.Front()) == n1);
-	EXPECT_TRUE(lst.Prev(lst.Front()) == nullptr);
-	EXPECT_TRUE(lst.Next(lst.Back()) == nullptr);
-	EXPECT_TRUE(lst.Prev(lst.Back()) == n1);
+	EXPECT_TRUE(lst.Front()->Next() == n1);
+	EXPECT_TRUE(lst.Front()->Prev() == nullptr);
+	EXPECT_TRUE(lst.Back()->Next() == nullptr);
+	EXPECT_TRUE(lst.Back()->Prev() == n1);
 
 	// h -> n2 -> n1 -> n3 -> n4
 	CListTest_MockNode * n4 = new CListTest_MockNode("d");
@@ -709,10 +710,10 @@ TEST(CListTest, push) {
 	EXPECT_EQ(lst.Empty(), false);
 	EXPECT_TRUE(lst.Front() == n2);
 	EXPECT_TRUE(lst.Back() == n4);
-	EXPECT_TRUE(lst.Next(lst.Front()) == n1);
-	EXPECT_TRUE(lst.Prev(lst.Front()) == nullptr);
-	EXPECT_TRUE(lst.Next(lst.Back()) == nullptr);
-	EXPECT_TRUE(lst.Prev(lst.Back()) == n3);
+	EXPECT_TRUE(lst.Front()->Next() == n1);
+	EXPECT_TRUE(lst.Front()->Prev() == nullptr);
+	EXPECT_TRUE(lst.Back()->Next() == nullptr);
+	EXPECT_TRUE(lst.Back()->Prev() == n3);
 
 	CListTest_MockNode * n = nullptr;
 	while (!lst.Empty()) {
@@ -757,4 +758,44 @@ TEST(CListTest, move_ctor) {
 	while (!move_lst.Empty()) {
 		delete move_lst.PopBack();
 	}
+}
+
+TEST(CListTest, erase) {
+	CListTest_MockNode * n = new CListTest_MockNode("d");
+	Common::CList<CListTest_MockNode> lst;
+	lst.PushBack(new CListTest_MockNode("e"));
+	lst.PushBack(new CListTest_MockNode("f"));
+	lst.PushBack(new CListTest_MockNode("g"));
+	lst.PushFront(n);
+	lst.PushFront(new CListTest_MockNode("c"));
+	lst.PushFront(new CListTest_MockNode("b"));
+	lst.PushFront(new CListTest_MockNode("a"));
+	EXPECT_EQ(lst.Size(), 7);
+	n->RemoveFromList();
+	EXPECT_EQ(lst.Size(), 6);
+	while (!lst.Empty()) {
+		delete lst.PopBack();
+	}
+	delete n;
+}
+
+TEST(CListTest, swap) {
+	CListTest_MockNode * n = new CListTest_MockNode("d");
+	Common::CList<CListTest_MockNode> lst;
+	lst.PushBack(new CListTest_MockNode("e"));
+	lst.PushBack(new CListTest_MockNode("f"));
+	lst.PushBack(new CListTest_MockNode("g"));
+	lst.PushFront(n);
+	lst.PushFront(new CListTest_MockNode("c"));
+	lst.PushFront(new CListTest_MockNode("b"));
+	lst.PushFront(new CListTest_MockNode("a"));
+	EXPECT_EQ(lst.Size(), 7);
+	Common::CList<CListTest_MockNode> copy_lst;
+	copy_lst.PushBack(n);
+	EXPECT_EQ(lst.Size(), 6);
+	EXPECT_EQ(copy_lst.Size(), 1);
+	while (!lst.Empty()) {
+		delete lst.PopBack();
+	}
+	delete n;
 }
