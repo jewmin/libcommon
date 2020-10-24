@@ -754,7 +754,6 @@ TEST(CListTest, move_ctor) {
 	Common::CList<CListTest_MockNode> move_lst(std::move(lst));
 	EXPECT_EQ(lst.Size(), 0);
 	EXPECT_EQ(move_lst.Size(), 7);
-	CListTest_MockNode * n = nullptr;
 	while (!move_lst.Empty()) {
 		delete move_lst.PopBack();
 	}
