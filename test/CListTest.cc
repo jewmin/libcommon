@@ -740,3 +740,22 @@ TEST(CListTest, pop) {
 		delete n;
 	}
 }
+
+TEST(CListTest, move_ctor) {
+	Common::CList<CListTest_MockNode> lst;
+	lst.PushBack(new CListTest_MockNode("e"));
+	lst.PushBack(new CListTest_MockNode("f"));
+	lst.PushBack(new CListTest_MockNode("g"));
+	lst.PushFront(new CListTest_MockNode("d"));
+	lst.PushFront(new CListTest_MockNode("c"));
+	lst.PushFront(new CListTest_MockNode("b"));
+	lst.PushFront(new CListTest_MockNode("a"));
+	EXPECT_EQ(lst.Size(), 7);
+	Common::CList<CListTest_MockNode> move_lst(std::move(lst));
+	EXPECT_EQ(lst.Size(), 0);
+	EXPECT_EQ(move_lst.Size(), 7);
+	CListTest_MockNode * n = nullptr;
+	while (!move_lst.Empty()) {
+		delete move_lst.PopBack();
+	}
+}
