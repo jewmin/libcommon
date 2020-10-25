@@ -17,6 +17,7 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/StringTest.cc
 	${PROJECT_SOURCE_DIR}/ThreadTest.cc
 	${PROJECT_SOURCE_DIR}/TimeStampTest.cc
+	${PROJECT_SOURCE_DIR}/CBufferTest.cc
 )
 
 # 单元测试

@@ -41,6 +41,9 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/include/SDString.h
 	${PROJECT_SOURCE_DIR}/include/Thread.h
 	${PROJECT_SOURCE_DIR}/include/TimeStamp.h
+	${PROJECT_SOURCE_DIR}/include/Buffer/CBuffer.h
+	${PROJECT_SOURCE_DIR}/include/Buffer/StraightBuffer.h
+	${PROJECT_SOURCE_DIR}/include/Buffer/BipBuffer.h
 
 	${PROJECT_SOURCE_DIR}/src/Allocator.cc
 	${PROJECT_SOURCE_DIR}/src/CExpection.cc
@@ -50,6 +53,8 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/src/SDString.cc
 	${PROJECT_SOURCE_DIR}/src/Thread.cc
 	${PROJECT_SOURCE_DIR}/src/TimeStamp.cc
+	${PROJECT_SOURCE_DIR}/src/Buffer/StraightBuffer.cc
+	${PROJECT_SOURCE_DIR}/src/Buffer/BipBuffer.cc
 )
 
 # 生成目录结构
